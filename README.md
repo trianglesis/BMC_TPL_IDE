@@ -80,39 +80,7 @@ SYNTAX AND TPLPreproc AND UPLOAD AND Scan (pattern):
 
 Build file format example:
 This is a code sections from Sublime build file:
-build file format:
-{
-    "selector": "source.tplpre",
-    "cmd": ["C:\\Python27\\python.exe", "$packages\\bmc_tplpre\\TPLPreprocessor.py", "-q", "-f", "$file"],
-    "working_dir": "$file_path",
-    "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
-    "variants": [
-
-        { "name": "Dummy",
-          "cmd": ["Dummy"]
-        },
-
-        { "name": "Dummy",
-          "cmd": ["Dummy"]
-        }
-    ]
-}
-
-BUILD system element:
-
-        // Run TPLPreprocessor after tpl Syntax check and upload current pattern to ADDM and run Scan in Discovery
-        { "name": "bob dis 11.2 (pattern) 10.49.32.139, 10.49.32.140",
-          "cmd": ["C:\\Python34\\python.exe", "$packages\\bmc_tplpre\\check.py",
-                  "-wd", "$file_path",
-                  "-full_path", "$file",
-                  "-tpl", "10.2",
-                  "-addm", "192.168.5.6",
-                  "-u", "root", "-p", "local_R00T",
-                  "-host_list", "10.49.32.139, 10.49.32.140",
-                  "-disco_mode", "standard"
-                  ]
-        },
-
+build file format attached in \bmc_tplpre\tplpre_various.sublime-build
 
 
 =======
