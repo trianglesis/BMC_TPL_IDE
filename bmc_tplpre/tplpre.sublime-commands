@@ -1,0 +1,30 @@
+[
+    {
+        "caption": "TPL: Example command",
+        "command": "example"
+    },
+    {
+        "caption": "TPL: Run Tplpreproc",
+        "command": "tpl_preproc"
+    },
+    {
+        "caption": "TPL: Run Syntax Check",
+        "command": "syntax_check"
+    },
+    {
+        "caption": "TPL: Move expected data",
+        "command": "move_expected"
+    },
+    {
+        "caption": "TPL: Run TEST Window",
+        "command": "test_window"
+    },
+    {
+        "caption": "TPL: Run TEST Text and Window",
+        "command": "window_testing"
+    },
+    {
+        "caption": "TPL: Run TEST Text",
+        "command": "test_text"
+    }
+]

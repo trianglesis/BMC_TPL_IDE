@@ -1,0 +1,98 @@
+{
+	"added_words":
+	[
+		"Versioning",
+		"hostname"
+	],
+	"align_indent": true,
+	"alignment_chars":
+	[
+		":=",
+		"->"
+	],
+	"alignment_prefix_chars":
+	[
+		"+",
+		"-",
+		"&",
+		"|",
+		"<",
+		">",
+		"!",
+		"~",
+		"%",
+		"/",
+		"*",
+		".",
+		":"
+	],
+	"alignment_space_chars":
+	[
+		":"
+	],
+	"always_show_minimap_viewport": false,
+	"bmc_tplpre_settings":
+	{
+		"addm_dev": "/usr/tideway/TKU",
+		"p4_wd": "D:\\perforce",
+		"python27": "C:\\Python27",
+		"python34": "C:\\Python34",
+		"tideway_usr": "/usr/tideway",
+		"tpl_max_ver": "113",
+		"tpl_min_ver": "16"
+	},
+	"bold_folder_labels": true,
+	"caret_extra_bottom": 1,
+	"caret_extra_top": 1,
+	"caret_extra_width": 1,
+	"caret_style": "phase",
+	"color_scheme": "Packages/User/SublimeLinter/Monokai JSON+ (SL).tmTheme",
+	"copy_with_empty_selection": true,
+	"draw_indent_guides": true,
+	"draw_white_space": "selection",
+	"fade_fold_buttons": false,
+	"fold_buttons": true,
+	"font_face": "Courier New",
+	"font_options":
+	[
+	],
+	"font_size": 10,
+	"gutter": true,
+	"highlight_line": true,
+	"hightlight_modified_tabs": true,
+	"ignored_packages":
+	[
+		"Vintage"
+	],
+	"ignored_words":
+	[
+		"Nagios",
+		"bcom",
+		"bin/nagios",
+		"bjava",
+		"exe",
+		"grep",
+		"inetd/xinetd",
+		"nagiosxi",
+		"nrpe",
+		"reposerver",
+		"wm"
+	],
+	"indent_guide_options":
+	[
+		"draw_active"
+	],
+	"line_numbers": true,
+	"line_padding_bottom": 0,
+	"line_padding_top": 0,
+	"margin": 4,
+	"match_tags": true,
+	"mid_line_tabs": false,
+	"scroll_past_end": true,
+	"shift_tab_unindent": true,
+	"show_definitions": true,
+	"smart_indent": true,
+	"tab_size": 4,
+	"translate_tabs_to_spaces": true,
+	"trim_trailing_white_space_on_save": true
+}

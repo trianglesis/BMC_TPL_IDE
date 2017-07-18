@@ -1,0 +1,72 @@
+{
+    "extensions": ["tpl"],
+
+    // "font_face": "OCR A Extended",
+    // "font_face": "Palatino Linotype",
+    // "font_face": "Lucida Console",
+    // "font_face": "Courier New",
+    "font_face": "Consolas",
+    // "font_face": "Segoe UI",
+    // "font_face": "Fixedsys",
+    // "font_face": "MS Serif",
+    // "font_face": "Terminal",
+    "font_size": 9,
+    // Valid values: bold, italic, no_antialias, gray_antialias, subpixel_antialias, directwrite (Windows).
+    "font_options":[],
+
+    "draw_white_space": "selection",
+    // The number of spaces a tab is considered equal to
+    "tab_size": 4,
+
+    // Set to true to insert spaces when tab is pressed
+    "translate_tabs_to_spaces": true,
+    "trim_trailing_white_space_on_save": true,
+
+    "align_indent": true,
+    "smart_indent": true,
+    "shift_tab_unindent": true,
+    "copy_with_empty_selection": true,
+
+    "gutter": true,
+    "line_numbers": true,
+    "margin": 4,
+
+    "fold_buttons": true, //If true, you will see triangles next to lines that can be folded.
+    "fade_fold_buttons": false, // If true, the fold buttons will be hidden until you hover the mouse over the gutter.
+
+    "highlight_line": true, // If true, highlights lines where a caret is present.
+
+    "line_padding_top": 0,
+    "line_padding_bottom": 0,
+    "caret_style": "phase", // Valid values: smooth, phase, blink, solid.
+
+    "caret_extra_top": 1,
+    "caret_extra_bottom": 1,
+    "caret_extra_width": 3,
+
+    "scroll_past_end": true,
+    "match_tags": true,
+
+    "draw_indent_guides": true, // The color of the indentation guides is controlled via the .tmTheme settings: guide, activeGuide and stackGuide.
+    // The draw_active option will cause the indent guide containing the caret to be shown in a different color.
+    // Valid options: draw_normal, draw_active.
+    "indent_guide_options": ["draw_active"],
+
+    "show_definitions": true,
+    "hightlight_modified_tabs": true,
+    "bold_folder_labels": true,
+
+
+
+    "mid_line_tabs": false,
+
+    "always_show_minimap_viewport": false,
+
+    "alignment_chars": [":=", "->"],
+
+    "alignment_space_chars": [":"],
+
+    "alignment_prefix_chars": [
+        "+", "-", "&", "|", "<", ">", "!", "~", "%", "/", "*", ".", ":"
+    ]
+}

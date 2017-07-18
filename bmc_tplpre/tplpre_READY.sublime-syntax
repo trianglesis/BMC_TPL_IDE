@@ -1,0 +1,831 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+
+name: tplpre
+file_extensions:
+  - tplpre
+scope: source.tplpre
+
+
+contexts:
+# AT FIRST
+# Captures basic parts of pattern and constants
+  main:
+    - include: doc_strings
+    - include: comment_TODO_line
+    - include: comment_line
+    - include: metadata_2
+    - include: overwiev
+    - include: simple_identifiers
+    - include: if_addm
+
+
+# Experimental functions START
+
+# Experimental functions END
+
+  # tpl $$TPLVERSION$$ module NAME;
+    - match: tpl\s+?(\$\$TPLVERSION\$\$|\d+\.\d+)\s+?module\s(.*);
+      captures:
+        1: constant.character.tplpre
+        2: constant.character.tplpre
+
+  # pattern import section
+    - match: from\s(\w+)(?:\.(\w+))?(?:\.(\w+))?\simport\s(\S+)\s(\d+(?:\.\d+)+);
+      captures:
+        1: entity.name.function.tplpre
+        2: storage.type.tplpre
+        3: variable.parameter.tplpre
+        4: entity.name.function.tplpre
+        5: constant.numeric.tplpre
+
+  # Highlight configuration sections
+    - match: ^(configuration)\s(\S+)\s(\d+\.\d+)
+      captures:
+        1: keyword.control.tplpre
+        2: entity.name.function.tplpre
+        3: constant.numeric.tplpre
+      push:
+        - match: ^(end\sconfiguration;)
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: comment_line
+        - include: doc_strings
+        - include: lines
+        - include: if_addm
+
+  # Highlight table sections
+    - match: ^(table)\s(\S+)\s(\d+(?:\.\d+)+)
+      captures:
+        1: keyword.control.tplpre
+        2: entity.name.function
+        3: constant.numeric.tplpre
+        4: comment.block.documentation.tplpre
+      push:
+        - match: ^(end\stable;)
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: comment_line
+        - include: main
+        - match: .
+          scope: comment.block.documentation.tplpre
+
+  # Highlight definitions sections
+    - match: ^(definitions)\s(\S+)\s(\d+(?:\.\d+)+)
+      captures:
+        1: keyword.control.tplpre
+        2: entity.name.function.tplpre
+        3: constant.numeric.tplpre
+      push:
+        - match: ^(end\sdefinitions;)
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: comment_line
+        - include: doc_strings
+        - include: define
+        - include: alt_define
+        - include: lines
+        - include: if_addm
+
+  # Highlight pattern sections
+    - match: ^\b(pattern)\s+(\w+)\s(\d+(?:\.\d+)+)\s+$
+      captures:
+        1: keyword.control.tplpre
+        3: constant.numeric.tplpre
+      push:
+        - match: \b(end\spattern;)
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: comment_TODO_line
+        - include: comment_line
+        - include: doc_strings
+        - include: metadata
+        - include: overwiev
+        - include: constants
+        - include: triggers
+        - include: removal
+        - include: body
+        - include: if_addm
+
+# repository: OLD FORMAT DO NOT UNCOMMENT!
+
+
+
+# Small blocks:
+  tags:
+    - match: \s+(tags)\s+(.*?);
+      comment: Tags
+      scope: constant.other.tplpre
+  tags_TKU:
+    - match: (TKU_\d+_\d+_\d+)
+      comment: Tags TKU
+      scope: constant.other.tplpre
+
+# Highlight metadata sections
+  metadata:
+    - match: '^\s{4}(metadata)\s+?$'
+      captures:
+        1: keyword.control.tplpre
+      push:
+        - match: '^\s{4}(end\smetadata;)\s+?$'
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: comment_line
+        - include: lines
+        - include: if_addm
+  metadata_2:
+    - match: ^(metadata)\s+?$
+      captures:
+        1: keyword.control.tplpre
+      push:
+        - match: ^(end\smetadata;)\s+?$
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: comment_line
+        - include: lines
+        - include: if_addm
+
+# Highlight overview sections
+  overwiev:
+    - match: '^\s{4}(overview)\s+?$'
+      captures:
+        1: keyword.control.tplpre
+      push:
+        - meta_scope: overwiev.complex.tplpre
+        - match: '^\s{4}(end\soverview;)\s+?$'
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: comment_line
+        - include: tags_TKU
+        - include: keywords_all
+        - include: if_addm
+
+# Highlight constants sections
+  constants:
+    - match: \b(constants)\s+?$
+      captures:
+        1: keyword.control.tplpre
+      push:
+        - meta_scope: constants.complex.tplpre
+        - match: \b(end\sconstants;)\s+?$
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: lines
+        - include: all_functions
+        - include: if_addm
+
+# Highlight trigger sections
+  triggers:
+    - match: '^\s{4}(triggers)\s+?$'
+      captures:
+        1: keyword.control.tplpre
+      push:
+        - meta_scope: overwiev.complex.tplpre
+        - match: '^\s{4}(end\striggers;)\s+?$'
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: lines
+        - include: all_functions
+        - include: all_controls
+        - include: keywords_cmd_indentify_trigger
+        - include: if_addm
+
+# Highlight body sections
+  body:
+    - match: '^\s{4}(body)$'
+      captures:
+        1: keyword.control.tplpre
+      push:
+        - meta_scope: body.complex.tplpre
+        - match: '^\s{4}(end\sbody;)$'
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: dev_keys
+        - include: doc_strings
+        - include: lines
+        - include: all_functions
+        - include: all_controls
+        - include: if_addm
+
+# Highlight removal sections
+  removal:
+    - match: '^\s{4}(removal)'
+      captures:
+        1: keyword.control.tplpre
+      push:
+        - meta_scope: constants.complex.tplpre
+        - match: '^\s{4}(end\sremoval;)'
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: lines
+        - include: all_functions
+        - include: all_controls
+        - include: if_addm
+
+# Lines and comments and quotes:
+  # // THIS LINE
+  comment_line:
+    - match: //.*
+      scope: comment.line.tplpre
+  comment_TODO_line:
+    - match: (//)\s?(TODO\:)
+      comment: variable.parameter.tplpre
+      captures:
+        1: comment.line.tplpre
+        2: keyword.control.tplpre
+      push:
+        - match: (.*)
+          captures:
+            1: variable.parameter.tplpre
+          pop: true
+  # %THIS LINE%
+  percent_line:
+    - match: '(\%((?:[^\%]|\\\\|\\%)*)\%)'
+      comment: There is one experimental regex now used. Old one is commented.
+      scope: keyword.control.tplpre
+      captures:
+        1: keyword.control.tplpre
+        2: string.quoted.single.tplpre
+  # 'THIS LINE'
+  qouted_line:
+    - match: '(\''((?:[^\'']|\\\\|\\'')*)\'')'
+      comment: There is one experimental regex now used. Old one is commented.
+      captures:
+        1: keyword.control.tplpre
+        2: string.quoted.single.tplpre
+  # "THIS LINE"
+  double_qouted_line:
+    - match: '(\"((?:[^\"]|\\\\|\\")*)\")'
+      comment: There is one experimental regex now used. Old one is commented.
+      captures:
+        1: keyword.control.tplpre
+        2: string.quoted.single.tplpre
+  # [THIS]
+  square_brackets_line_word:
+    - match: '\[(\w+[^\d+])\]'
+      captures:
+        1: variable.parameter.tplpre
+  # [9]
+  square_brackets_line_int:
+    - match: '\[(-?\d+)\]'
+      captures:
+        1: constant.numeric.tplpre
+  lines:
+    - include: percent_line
+    - include: comment_TODO_line
+    - include: comment_line
+    - include: qouted_line
+    - include: double_qouted_line
+    - include: regexes
+    - include: square_brackets_line_word
+    - include: square_brackets_line_int
+    - include: all_keys
+    - include: brackets
+
+# Keys
+  # plus +
+  plus:
+    - match: \+
+      scope: keyword.operator.assignment.tplpre
+  # var :=
+  var_assign:
+    - match: \:\=
+      scope: keyword.operator.assignment.tplpre
+  # var := ""
+  double_q:
+    - match: '(\"\"){1}'
+      scope: comment.tplpre
+  # var := ''
+  single_q:
+    - match: '(\''\''){1}'
+      scope: comment.tplpre
+  # var1 = var2
+  equal:
+    - match: \=
+      scope: keyword.operator.assignment.tplpre
+  # var1 < var2
+  less:
+    - match: \<
+      scope: keyword.operator.tplpre
+  # var2 > var1
+  more:
+    - match: \>
+      scope: keyword.operator.tplpre
+  # var2 >= var1
+  more_equal:
+    - match: \>\=
+      scope: keyword.operator.tplpre
+  # var1 <= var2
+  less_equal:
+    - match: \<\=
+      scope: keyword.operator.tplpre
+  # 5 - currenly can't work
+  decimal:
+    - match: \s\d+\s
+      scope: constant.numeric.integer.tplpre
+  # -5 - currenly can't work
+  minus_decimal:
+    - match: \s\-\d+\s
+      scope: constant.numeric.integer.tplpre
+  # just dot "."
+  just_do:
+    - match: (\.)
+      scope: punctuation.accessor.tplpre
+      captures:
+        1: keyword.operator.tplpre
+  all_keys:
+    - include: var_assign
+    - include: equal
+    - include: less
+    - include: more
+    - include: more_equal
+    - include: less_equal
+    - include: plus
+    - include: decimal
+    - include: minus_decimal
+    - include: just_do
+
+# Regex functions:
+  regex:
+    - match: \b(regex)\s+
+      scope: regex.tplpre
+      captures:
+        1: keyword.control.tplpre
+  regex_2_lines:
+    - match: (regex)
+      scope: regex.tplpre
+      captures:
+        1: keyword.control.tplpre
+  regex_raw:
+    - match: \b(raw)\s+('|")(\\\d+)('|")
+      captures:
+        1: keyword.control.tplpre
+        3: variable.parameter.tplpre
+  content_raw:
+    - match: \s\b(raw)\s+
+      captures:
+        1: keyword.control.tplpre
+  regexes:
+    - include: regex_raw
+    - include: regex
+    - include: content_raw
+
+# Functions
+  # Discovery mark
+  discovery_functions:
+      # name: discovery.function.tplpre
+    - match: (discovery)(\.)(fileGet|fileInfo|getNames|listDirectory|listRegistry|registryKey|wmiQuery|wbemQuery|wbemEnumInstances|runCommand|snmpGet|snmpGetTable|restfulGet|restfulPost|vSphereFindObjects|vSphereTraverseToObjects|vSphereGetProperties|vSphereGetPropertyTable)
+      captures:
+        1: support.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: support.constant.tplpre
+      push:
+        - match: \;
+          captures:
+            1: disabled.tplpre
+          pop: true
+        - include: lines
+        - include: all_controls
+        - include: regex
+  model_functions:
+    # name: model.function.tplpre
+    - match: ((model)(\.)(addContainment|setContainment|destroy|withdraw|setRemovalGroup|anchorRemovalGroup|suppressRemovalGroup|host|hosts|findPackages|addDisplayAttribute|removeDisplayAttribute|kind))
+      captures:
+        1: entity.name.function.tplpre
+        2: support.function.tplpre
+        3: punctuation.accessor.tplpre
+        4: support.constant.tplpre
+      push:
+        - match: \;
+          captures:
+            1: disabled.tplpre
+          pop: true
+        - include: lines
+        - include: all_controls
+        - include: regex
+  model_rel_functions:
+    # name: model.function.tplpre
+    - match: ((model)(\.)(rel|uniquerel)(\.)(Communication|Containment|Dependency|Detail|HostContainment|HostedFile|HostedSoftware|Management|RelatedFile|SoftwareService|SoftwareContainment|StorageUse))
+      captures:
+        1: entity.name.function.tplpre
+        2: support.function.tplpre
+        3: punctuation.accessor.tplpre
+        4: support.constant.tplpre
+      push:
+        - match: \;
+          captures:
+            1: disabled.tplpre
+          pop: true
+        - include: lines
+        - include: all_controls
+        - include: regex
+  model_SI_functions:
+    # name: entity.name.function.tplpre
+    - match: ((model)(\.)(SoftwareInstance))
+      captures:
+        1: entity.name.function.tplpre
+        2: support.function.tplpre
+        3: punctuation.accessor.tplpre
+        4: support.constant.tplpre
+      push:
+        - match: \;
+          captures:
+            1: disabled.tplpre
+          pop: true
+        - include: lines
+        - include: all_controls
+        - include: regex
+  log_functions:
+    # name: log.function.tplpre
+    - match: (log\.(?:debug|info|warn|error|critical))
+      captures:
+        1: storage.type.tplpre
+  text_functions:
+    # name: text.function.tplpre
+    - match: (text)(\.)(lower|upper|toNumber|replace|join|split|strip|leftStrip|rightStrip|hash|ordinal)
+      captures:
+        1: support.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: support.constant.tplpre
+  number_functions:
+    # name: number.function.tplpre
+    - match: (number)(\.)(toChar|toText|range)
+      captures:
+        1: support.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: support.constant.tplpre
+  regex_functions:
+    # name: regex.function.tplpre
+    - match: (regex)(\.)(extract|extractAll)
+      captures:
+        1: keyword.control.tplpre
+        2: punctuation.accessor.tplpre
+        3: variable.parameter.tplpre
+  xpath_functions:
+    # name: xpath.function.tplpre
+    - match: (xpath)(\.)(evaluate|openDocument|closeDocument)
+      captures:
+        1: keyword.control.tplpre
+        2: punctuation.accessor.tplpre
+        3: variable.parameter.tplpre
+  discovery_manipulation_functions:
+    # name: discovery.function.tplpre
+    - match: (discovery)(\.)(process|children|descendents|parent|allProcesses|access)
+      captures:
+        1: support.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: support.constant.tplpre
+  binary_functions:
+    # name: binary.function.tplpre
+    - match: (binary)(\.)(toHexString|toIPv4|toIPv4z|toIPv6|toIPv6z|toMACAddress|toValue|toWWN)
+      captures:
+        1: support.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: support.constant.tplpre
+  json_functions:
+    # name: binary.function.tplpre
+    - match: (json)(\.)(encode|decode)
+      captures:
+        1: keyword.control.tplpre
+        2: punctuation.accessor.tplpre
+        3: variable.parameter.tplpre
+  related_functions:
+    # name: time.function.tplpre
+    - match: (related)(\.)(detailContainer|host\b|hostingNode)
+      captures:
+        1: support.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: support.constant.tplpre
+  mail_functions:
+    # name: mail.function.tplpre
+    - match: (mail)(\.)(send)
+      captures:
+        1: keyword.control.tplpre
+        2: punctuation.accessor.tplpre
+        3: variable.parameter.tplpre
+  time_functions:
+    # name: time.function.tplpre
+    - match: (time)(\.)(current|delta|parseLocal|parseUTC|formatLocal|formatUTC|toTicks|fromTicks)
+      captures:
+        1: keyword.control.tplpre
+        2: punctuation.accessor.tplpre
+        3: variable.parameter.tplpre
+  inference_functions:
+    # name: inference.function.tplpre
+    - match: (inference)(\.)(associate|contributor|primary|relation|withdrawal|destruction)
+      captures:
+        1: support.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: support.constant.tplpre
+  ConversionFunctions:
+    # name: ConversionFunctions.function.tplpre
+    - match: (ConversionFunctions)(\.)(isValidSerialNumber|convertToCharString|convertToBytes)
+      captures:
+        1: entity.name.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: entity.name.function.tplpre
+  DiscoveryFunctions:
+    # name: DiscoveryFunctions.function.tplpre
+    - match: (DiscoveryFunctions)(\.)(pathNormalization|getCleanedupPath|getMaxVersion|getExeCwdPath|sortList|runActiveCommand|locateCommands|checkCommandList)
+      captures:
+        1: entity.name.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: entity.name.function.tplpre
+  RDBMSFunctions:
+    # name: RDBMSFunctions.function.tplpre
+    - match: (RDBMSFunctions)(\.)(oracleOraFileParser|performRdbmsSisSearch|oracleNetServiceNameSearch|dsnRdbmsServers|parseJDBC)
+      captures:
+        1: entity.name.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: entity.name.function.tplpre
+  rdbms_functions:
+    # name: rdbms_functions.function.tplpre
+    - match: (rdbms_functions)(\.)(oracle_ora_file_parser|perform_rdbms_sis_search|related_rdbms_sis_search|related_rdbms_sis_search_extended|oracle_net_service_name_search|dsn_rdbms_servers|parseJDBC|jdbc_search|find_db_server)
+      captures:
+        1: entity.name.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: entity.name.function.tplpre
+  SearchFunctions:
+    # name: SearchFunctions.function.tplpre
+    - match: (SearchFunctions)(\.)(getNodeIp|getHostingNodes|getSoftwareNodes|getSI|identifyHostWithUuid|relatedSisSearchOnMultipleHosts)
+      captures:
+        1: entity.name.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: entity.name.function.tplpre
+  common_functions:
+    # name: common_functions.function.tplpre
+    - match: (functions)(\.)(validate_host_address_format|domain_lookup|identify_host_perform_search|identify_host_perform_search_in_scope|identify_host|identify_host_extended|related_sis_search\b|related_sis_search_on_multiple_hosts|related_sis_search_on_multiple_hosts_extended|related_sis_search_extended|related_si_types_search|path_normalization|links_management|get_cleanedup_path|get_max_version|get_exe_cwd_path|sort_list|run_priv_cmd|has_process|isValidSerialNumber|convertToCharString|wmiFollowAssociations|checkForDecimal|convertToBytes|identify_host_with_uuid|locateCommands|find_server|checkCommandList)
+      captures:
+        1: entity.name.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: entity.name.function.tplpre
+  local_functions:
+    # name: local_functions.tplpre
+    - match: (local_functions|localFunctions)(\.)(\w+)
+      captures:
+        1: entity.name.function.tplpre
+        2: punctuation.accessor.tplpre
+        3: entity.name.function.tplpre
+  all_functions:
+    - include: discovery_functions
+    - include: model_functions
+    - include: model_SI_functions
+    - include: model_rel_functions
+    - include: log_functions
+    - include: log_functions
+    - include: text_functions
+    - include: number_functions
+    - include: regex_functions
+    - include: xpath_functions
+    - include: discovery_manipulation_functions
+    - include: binary_functions
+    - include: json_functions
+    - include: related_functions
+    - include: mail_functions
+    - include: time_functions
+    - include: inference_functions
+    - include: ConversionFunctions
+    - include: SearchFunctions
+    - include: rdbms_functions
+    - include: RDBMSFunctions
+    - include: DiscoveryFunctions
+    - include: common_functions
+    - include: local_functions
+
+
+# keyword.control.conditional
+  # if, else, end if, for, end for
+  if_statement:
+    - match: '(?:[^(end)])(if)(?:[^;\w])'
+      scope: keyword.control.conditional.tplpre
+  then_statement:
+    - match: \bthen\s+?
+      scope: keyword.control.conditional.tplpre
+  elif_statement:
+    - match: \belif\s+?
+      scope: keyword.control.conditional.tplpre
+  else_statement:
+    - match: \belse\s+?
+      scope: keyword.control.conditional.tplpre
+  end_if_statement:
+    - match: \bend\sif;\s+?
+      scope: keyword.control.conditional.tplpre
+
+  for_statement:
+    - match: \bfor\s
+      scope: keyword.control.tplpre
+  end_for_statement:
+    - match: \bend\sfor;\s+?
+      scope: keyword.control.tplpre
+
+  keywords_all:
+    - match: \b(aged|and|as|at|break|by|configuration|continue|created|default|desc|deleted|do|enumeration|exists|expand|explode|false|flags|from|has|in|is|locale|matches|modified|nodes|nodecount|none|not|on|or|order|out|overrides|processwith|relationship|removal|requires|search|show|step|stop|substring|subword|summary|tags|taxonomy|traverse|true|unconfirmed|where|with|void)\b
+      scope: support.type.tplpre
+  keywords_cmd:
+    - match: \b(unix_cmd|windows_cmd)
+      captures:
+        1: keyword.operator.tplpre
+  keywords_cmd_indentify_trigger:
+    - match: \b(unix_cmd|windows_cmd|cmd|args)
+      captures:
+        1: keyword.operator.tplpre
+
+
+  if_ADDM_statement:
+    - match: "#IFADDM"
+      scope: keyword.control.conditional.tplpre
+  else_ADDM_statement:
+    - match: '#ELSE\s+?'
+      scope: keyword.control.conditional.tplpre
+  end_if_ADDM_statement:
+    - match: '#ENDIFADDM\s+?'
+      scope: keyword.control.conditional.tplpre
+  if_addm:
+    - include: if_ADDM_statement
+    - include: else_ADDM_statement
+    - include: end_if_ADDM_statement
+
+  all_controls:
+    - include: if_statement
+    - include: elif_statement
+    - include: then_statement
+    - include: else_statement
+    - include: end_if_statement
+    - include: for_statement
+    - include: end_for_statement
+    - include: if_addm
+    - include: keywords_all
+    - include: keywords_cmd
+    - include: all_keys
+
+
+# DOC DOUBLE Q string section:
+  # """
+  # THIS BLOCK
+  # """
+  doc_strings_block_doulbe_q:
+    - match: '(\"{3})'
+      captures:
+        1: comment.block.documentation.tplpre
+      push:
+        - match: '(\"{3})'
+          captures:
+            1: comment.block.documentation.tplpre
+          pop: true
+        - include: main
+        - match: '(\d{2,4}\-\d{2,4}\-\d{2,4})(.*)?(\d{2,4}\-\d{2,4}\-\d{2,4})?'
+          scope: variable.parameter.tplpre
+          captures:
+            1: variable.other.tplpre
+            2: comment.block.documentation.tplpre
+        - include: main
+        - match: .
+          scope: comment.block.documentation.tplpre
+  # '''
+  # THIS BLOCK
+  # '''
+  doc_strings_block_single_q:
+    - match: "('{3})"
+      captures:
+        1: comment.block.documentation.tplpre
+      push:
+        - match: "('{3})"
+          captures:
+            1: comment.block.documentation.tplpre
+          pop: true
+        - include: main
+        - match: '(\d{2,4}\-\d{2,4}\-\d{2,4})(.*)?(\d{2,4}\-\d{2,4}\-\d{2,4})?'
+          scope: variable.parameter.tplpre
+          captures:
+            1: variable.other.tplpre
+            2: comment.block.documentation.tplpre
+        - include: main
+        - match: .
+          scope: comment.block.documentation.tplpre
+  # ''' THIS STRING '''
+  doc_strings_single_simple:
+    - match: "('{3}([^']+?)'{3})"
+      scope: comment.block.documentation.tplpre
+      captures:
+        1: string.quoted.triple.tplpre
+        2: string.quoted.triple.tplpre
+        3: string.quoted.triple.tplpre
+  doc_strings:
+    - include: doc_strings_block_doulbe_q
+    - include: doc_strings_block_single_q
+    - include: doc_strings_single_simple
+
+#  define section
+  define:
+    - match: \s+(define)\s+(\S+)\((.*?)\)(\s\S+\s(.*))?
+      captures:
+        1: keyword.control.tplpre
+        2: entity.name.function.tplpre
+        3: variable.parameter.tplpre
+        4: constant.numeric.tplpre
+      push:
+        - meta_scope: define.complex.tplpre
+        - match: \s+(end\sdefine;\s+?$)
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: doc_strings
+        - include: all_functions
+        - include: lines
+        - include: all_controls
+        - include: if_addm
+        - include: dev_keys
+
+# Altermate define
+  alt_define:
+    - match: \s+(define)\s+(\S+)(\s\S+\s(.*))?
+      captures:
+        1: keyword.control.tplpre
+        2: entity.name.function.tplpre
+        3: variable.parameter.tplpre
+      push:
+        - meta_scope: alt_define.complex.tplpre
+        - match: \s+(end\sdefine;)
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: doc_strings
+        - include: all_functions
+        - include: lines
+        - include: all_controls
+        - include: if_addm
+        - include: dev_keys
+
+# * Simple Identifiers *
+  simple_identifiers:
+    - match: \b(identify)\s+(\w+)\s(\d+(?:\.\d+)+)
+      captures:
+        1: keyword.control.tplpre
+        3: constant.numeric.tplpre
+      push:
+        - match: (end\sidentify;)
+          captures:
+            1: keyword.control.tplpre
+          pop: true
+        - include: lines
+        - include: keywords_cmd
+        - include: keywords_all
+        - include: regexes
+        - include: keywords_cmd_indentify_trigger
+        - include: if_addm
+
+
+
+# DEVELOPMENT
+
+# Attributes
+  keywords_attributes:
+    - include: keywords_attrs
+  keywords_attrs:
+    - match: \b(key|name|type|version|short_name|install_root|listening_ports|product_version|full_version)\b
+      captures:
+        1: variable.parameter.tplpre
+
+  traverse:
+    - match: \#(?:(\w+)(:|\.))+(\w+)
+      scope: entity.name.function.model
+      captures:
+        3: keyword.control.model
+
+  dev_keys:
+    - include: keywords_attributes
+    - include: traverse
+
+# Experimental functions START
+
+  # bracket_open:
+  # - match: (\()
+  #   captures:
+  #     1: keyword.control.model
+  #   push: brackets
+  # bracket_close:
+  # - match: (\))
+  #   scope: invalid.illegal.stray-bracket-end.tplpre
+  #   captures:
+  #     1: keyword.control.model
+  # brackets_block:
+  # - include: bracket_open
+  # - include: bracket_close
+
+  # brackets:
+  #   - match: (\))
+  #     pop: true
+  #   - include: brackets_block
+# Experimental functions END

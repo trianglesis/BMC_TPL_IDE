@@ -1,0 +1,108 @@
+{
+
+    "color_scheme": "Packages/Color Scheme - Default/Monokai.tmTheme",
+    // "color_scheme": "Packages/User/SublimeLinter/Monokai Bright (SL).tmTheme",
+    // "color_scheme": "Packages/User/SublimeLinter/Blackboard (SL).tmTheme",
+    // "color_scheme": "Packages/User/SublimeLinter/Pastels on Dark (SL).tmTheme",
+    // "color_scheme": "Packages/User/SublimeLinter/Twilight (SL).tmTheme",
+    // "font_face": "OCR A Extended",
+    // "font_face": "Palatino Linotype",
+    // "font_face": "Lucida Console",
+    // "font_face": "Courier New",
+    "font_face": "Consolas",
+    // "font_face": "Segoe UI",
+    // "font_face": "Fixedsys",
+    // "font_face": "MS Serif",
+    // "font_face": "Terminal",
+    "font_size": 9,
+    // Valid values: bold, italic, no_antialias, gray_antialias, subpixel_antialias, directwrite (Windows).
+    "font_options":[],
+
+    "draw_white_space": "selection",
+    // The number of spaces a tab is considered equal to
+    "tab_size": 4,
+
+    // Set to true to insert spaces when tab is pressed
+    "translate_tabs_to_spaces": true,
+    "trim_trailing_white_space_on_save": true,
+    "trim_automatic_white_space": true,
+
+
+    "align_indent": true,
+    "smart_indent": true,
+    "shift_tab_unindent": true,
+    "copy_with_empty_selection": true,
+
+    "gutter": true,
+    "line_numbers": true,
+    "margin": 4,
+
+    "fold_buttons": true, //If true, you will see triangles next to lines that can be folded.
+    "fade_fold_buttons": false, // If true, the fold buttons will be hidden until you hover the mouse over the gutter.
+
+    "highlight_line": true, // If true, highlights lines where a caret is present.
+
+    "line_padding_top": 0,      // Add intervals into lines in px
+    "line_padding_bottom": 0,   // Add intervals into lines in px
+    "caret_style": "phase",     // Valid values: smooth, phase, blink, solid.
+
+    "caret_extra_top": 1,
+    "caret_extra_bottom": 1,
+    "caret_extra_width": 3,
+
+    "scroll_past_end": true,
+    "match_tags": true,
+
+    "draw_indent_guides": true, // The color of the indentation guides is controlled via the .tmTheme settings: guide, activeGuide and stackGuide.
+    // The draw_active option will cause the indent guide containing the caret to be shown in a different color.
+    // Valid options: draw_normal, draw_active.
+    "indent_guide_options": ["draw_active"],
+
+    "show_definitions": true,
+    "hightlight_modified_tabs": true,
+    "bold_folder_labels": true,
+
+    "theme_autocomplete_item_selected_colored": true,
+    "theme_bar": true,
+    "theme_find_panel_atomized": true,
+    "theme_find_panel_font_xs": true,
+    "theme_icon_button_highlighted": true,
+    "theme_icons_materialized": true,
+    "theme_popup_border_visible": true,
+    "theme_scrollbar_rounded": true,
+    "theme_sidebar_disclosure": true,
+    "theme_sidebar_folder_mono": true,
+    "theme_sidebar_highlight_selected_text_only": true,
+    "theme_sidebar_highlight_text_only": true,
+    "theme_sidebar_indent_md": true,
+    "theme_sidebar_size_xxs": true,
+    "theme_size_sm": true,
+    "theme_statusbar_font_lg": true,
+    "theme_tab_close_always_visible": true,
+    "theme_tab_font_sm": true,
+    "theme_tab_line_size_sm": true,
+    "theme_tab_selected_underlined": true,
+    "theme_tab_separator": true,
+    "theme_tab_width_auto": true,
+    "theme_tooltips_font_md": true,
+    "theme_unified": true,
+
+    "always_show_minimap_viewport": true,
+
+    "match_brackets": true,
+    "match_brackets_content": true,
+    "match_brackets_square": true,
+    "match_brackets_braces": true,
+    "match_brackets_angle": true,
+    "show_encoding": true,
+
+    "mid_line_tabs": false,
+
+    "alignment_chars": [":=", "->"],
+
+    "alignment_space_chars": [":"],
+
+    "alignment_prefix_chars": [
+        "+", "-", "&", "|", "<", ">", "!", "~", "%", "/", "*", ".", ":"
+    ]
+}
