@@ -4,22 +4,21 @@ Syntax hightlight for BMC Discovery (ADDM) language - TPL (tideway pattern langu
 
 http://www.bmc.com/it-solutions/discovery-dependency-mapping.html And: https://discovery.bmc.com/
 
-Designed for Sublmime text 3
+### Designed for Sublmime text 3
 
 
-=======
-Current features:
+## Current features:
 - tpl\tplpre syntax highlight
 - code autocompletions
 - pattern uploading
 - auto scan start
 
-Removed from public version:
+## Removed from public version:
 (but some of them are present in python code)
 - engine for local syntax check before upload
 - engine for tplpre -> tpl convert
 
-Can be added soon:
+## Can be added soon:
 - REST API usage for BMC Discovery
 - Pattern upload without checks
 - root or not-root user
@@ -30,19 +29,14 @@ Can be added soon:
 - tests
 
 
-=======
-Install:
+### Install:
 
 Copy:
 - folder: 'bmc_tplpre' to 'C:\Users\USER\AppData\Roaming\Sublime Text 3\Packages\bmc_tplpre'
-
 - files from: 'User' to 'C:\Users\o.danylchenko\AppData\Roaming\Sublime Text 3\Packages\User'
 
 Set your settings or use preconfigured ones.
 
-
-
-=======
 
 How to use Pattern upload:
 
@@ -82,6 +76,5 @@ Build file format example:
 This is a code sections from Sublime build file:
 build file format attached in \bmc_tplpre\tplpre_various.sublime-build
 
-
-=======
+# NOTE:
 Some features are not working, will update them for public use and add soon!
