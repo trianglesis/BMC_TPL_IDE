@@ -5,3 +5,4 @@ TPLPreprocessor.py
 taxonomy
 tplint
 .idea
+*.pyc

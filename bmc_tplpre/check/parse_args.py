@@ -2,6 +2,7 @@ import re
 import paramiko
 
 from check.logger import i_log
+
 log = i_log(level='DEBUG', name=__name__)
 
 
@@ -130,6 +131,70 @@ def tpl_version_check(tpl_ver):
     return tpl_folder, tpl_version
 
 
+def full_path_parse(full_path):
+    """
+    Input the full path arg and tries to parse it for further usage in different scenarios:
+
+    Example 1:
+    - When full path if for PATTEN (tpl or TPLPRE)
+        d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\BMCRemedyARSystem.tplpre
+        d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl110\BMCRemedyARSystem.tpl
+
+
+    Output: dictionary with configured arguments for further usage.
+
+    :param full_path:
+    :return:
+    """
+
+    path_parse_re = re.compile('(?P<workspace>\S+)'
+                               '(?P<tku_path>\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)'
+                               '(?P<pattern_lib>[^\\\\]+)\\\\'
+                               '(?P<pattern_folder>[^\\\\]+)\\\\'
+                               '(?P<file_name>\S+)\.(?P<file_ext>\S+)')
+
+    perforce_tree_re = re.compile('(\S+)(\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)')
+    path_file_re = re.compile('\w:\S+\.(?:tplpre|tpl)')
+    tpl_file_re = re.compile('\w:\S+\.(tpl)$')
+    tplpre_file_re = re.compile('\w:\S+\.(tplpre)')
+
+    if full_path:
+        log.debug("-full_path is: " + full_path)
+        log.debug("Parsing path for options.")
+        check_path = path_file_re.match(full_path)
+        path_parse = path_parse_re.match(full_path)
+
+        if path_parse:
+            args_dict = {'workspace': path_parse.group('workspace'),
+                         'tku_path': path_parse.group('tku_path'),
+                         'pattern_lib': path_parse.group('pattern_lib'),
+                         'pattern_folder': path_parse.group('pattern_folder'),
+                         'file_name': path_parse.group('file_name'),
+                         'file_ext': path_parse.group('file_ext')}
+            log.debug("Path matched and parsing")
+            log.info("Arguments from file path: " + str(args_dict))
+        else:
+            log.warn("Did not match TKU pattern path tree! Will use another way to parse.")
+
+        if check_path:
+            log.debug("This is pattern file. Check if tplpre")
+            check_tplpre = tplpre_file_re.match(full_path)
+            check_tpl = tpl_file_re.match(full_path)
+            if check_tplpre:
+                log.debug("This is tplpre file.")
+            elif check_tpl:
+                if check_tpl:
+                    log.debug("This is tpl file.")
+                else:
+                    log.warn("'-full_path' has a wrong format. I expect: '\w:\S+\.(tpl)$")
+            else:
+                log.warn("'-full_path' did not match -tpl or -tplpre.")
+        else:
+            log.warn("'-full_path' has a wrong format. I expect: '\w:\S+\.(?:tplpre|tpl)'")
+    else:
+        log.warn("No '-full_path' argument was set.")
+
+
 def full_current_path_check(full_curr_path, working_dir, tpl_folder):
     """
     Check arg "-full_path", "--FULL_CURRENT_PATH"
@@ -157,7 +222,7 @@ def full_current_path_check(full_curr_path, working_dir, tpl_folder):
 
     if full_curr_path:
         log.debug("Full path arg: " + full_curr_path)
-        file_path = working_dir+'\\'+tpl_folder+'\\'
+        file_path = working_dir + '\\' + tpl_folder + '\\'
         check = full_curr_path_check.match(full_curr_path)
         if check:
             pattern_path = full_curr_path
@@ -172,11 +237,11 @@ def full_current_path_check(full_curr_path, working_dir, tpl_folder):
                     log.debug("Path to single file which can be uploaded to ADDM: " + " " * 7 + str(file_path))
         else:
             if full_curr_path:
-                log.error("'-full_path' should have format"+" "*3+"'\w:\S+\.tplpre'")
+                log.error("'-full_path' should have format" + " " * 3 + "'\w:\S+\.tplpre'")
     else:
-        file_path = working_dir+'\\'+tpl_folder+'\\'
+        file_path = working_dir + '\\' + tpl_folder + '\\'
         if full_curr_path:
-            log.error("'-full_path' should have format"+" "*3+"'\w:\S+\.tplpre'")
+            log.error("'-full_path' should have format" + " " * 3 + "'\w:\S+\.tplpre'")
 
     return file_path, pattern_name, pattern_path, pattern_file_path
 

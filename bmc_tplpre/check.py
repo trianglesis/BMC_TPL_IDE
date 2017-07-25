@@ -84,6 +84,9 @@ log.debug("Using script path as: " + sublime_working_dir)
 # Checking of working dir set correctly (It's a folder where patter lies):
 working_dir, dir_label = check_working_dir(args.working_dir)
 
+
+full_path_parse(args.full_curr_path)
+
 if working_dir:
 
     '''
