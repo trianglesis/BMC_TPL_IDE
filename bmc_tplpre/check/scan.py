@@ -1,4 +1,8 @@
 
+from check.logger import i_log
+log = i_log(level='DEBUG', name=__name__)
+
+
 '''
 1. If pattern module uploaded successfully and activated - start this (input)
 1.1 Open saved SSH session if exist. (input)
@@ -18,7 +22,6 @@ def addm_scan(ssh, disco_mode, host_list, dir_label):
     :param dir_label:
     :param log_lvl:
     """
-    messages = []
     if disco_mode:
         stdin, stdout, stderr = ssh.exec_command("/usr/tideway/bin/tw_disco_control -p system --"+disco_mode)
     else:
@@ -26,19 +29,18 @@ def addm_scan(ssh, disco_mode, host_list, dir_label):
 
     if stdout:
         result = stdout.readlines()
-        messages.append({"log":"debug", "msg":"DEBUG: Discovery mode is:"+" "*40+result[0]+"Discovery status:"+" "*47+result[1]})
-        messages.append({"log":"info", "msg":"="*150+"\nINFO: Discovery started"})
+        log.debug("Discovery mode is: " + result[0]+"Discovery status:" + result[1])
+        log.info("=" * 15 + "\nDiscovery started")
 
-    messages.append({"log":"info", "msg":"INFO: Host(s) to scan:"+" "*42+host_list})
-    messages.append({"log":"info", "msg":"INFO: Scan will be named as:"+" "*36+dir_label})
+    log.info("Host(s) to scan: " + host_list)
+    log.info("Scan will be named as: " + dir_label)
 
     ssh.exec_command("/usr/tideway/bin/tw_scan_control -p system --start")
     stdin, stdout, stderr = ssh.exec_command("/usr/tideway/bin/tw_scan_control -p system --add --label="+dir_label+" --loglevel=debug --list "+host_list)
     if stdout:
         result = stdout.read().decode()
-        messages.append({"log":"info", "msg":"INFO: Scan has been added to the Currently Processing Runs:\n"+result})
+        log.info("Scan has been added to the Currently Processing Runs: \n"+result)
 
-    return messages
 
 
 def addm_scan_check(ssh, scan_id):

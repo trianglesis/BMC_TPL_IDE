@@ -1,15 +1,16 @@
 
-
 import argparse
+# import logging
+
+from check.logger import i_log
 from check.parse_args import *
 from check.upload import *
 from check.syntax_checker import syntax_check, parse_syntax_result
 from check.preproc import tpl_preprocessor
 from check.scan import addm_scan
 
-# from check.imports import *
-# from check.internal import *
-
+from check.imports import *
+from check.internal import *
 
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("-wd", "--workingDirectory",
@@ -69,16 +70,19 @@ parser.add_argument("-l", "--logLevel",
 known_args, extra_args = parser.parse_known_args()
 args = known_args
 
-log, message = log_check(args.log_lvl)
-message_print(message, log)
+log_level = i_log_check(args.log_lvl)
+log = i_log(level=log_level, name=__name__)
+
+log.warn("WARN TEST")
+log.critical("CRITICAL TEST")
 
 # Path to this script and tplint binaries
 sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
 # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
+log.debug("Using script path as: " + sublime_working_dir)
 
 # Checking of working dir set correctly (It's a folder where patter lies):
-working_dir, dir_label, message = check_working_dir(args.working_dir)
-message_print(message, log)
+working_dir, dir_label = check_working_dir(args.working_dir)
 
 if working_dir:
 
@@ -88,18 +92,15 @@ if working_dir:
     No need to use it now.
     '''
 
-    # import_included_modules, message = import_modules(working_dir)
-    # message_print(message, log)
+    # import_included_modules = import_modules(working_dir)
 
     ''' Check if tpl version arguments set. Required for syntax check and upload after tplpreproc '''
-    tpl_folder, version_tpl, message = tpl_version_check(args.version_tpl)
-    message_print(message, log)
+    tpl_folder, version_tpl = tpl_version_check(args.version_tpl)
 
     ''' Check if full path to currently working patten set or will run on the whole folder with bunch of patterns '''
-    result_file_path, pattern_name, pattern_path, pattern_file_path, message = full_current_path_check(args.full_curr_path,
+    result_file_path, pattern_name, pattern_path, pattern_file_path = full_current_path_check(args.full_curr_path,
                                                                                     working_dir=working_dir,
                                                                                     tpl_folder=tpl_folder)
-    message_print(message, log)
     # print("pattern_file_path PATH: "+str(pattern_file_path))
     # print("result_file_path PATH: "+str(result_file_path))
 
@@ -114,19 +115,17 @@ if working_dir:
     '''
     preproc_result = False
     if tpl_folder and result_file_path:
-        preproc_result, message = tpl_preprocessor(sublime_working_dir=sublime_working_dir,
-                                                   working_dir=working_dir,
-                                                   dir_label=dir_label,
-                                                   full_curr_path=pattern_path,
-                                                   file_path=result_file_path)
-        message_print(message, log)
+        preproc_result = tpl_preprocessor(sublime_working_dir=sublime_working_dir,
+                                          working_dir=working_dir,
+                                          dir_label=dir_label,
+                                          full_curr_path=pattern_path,
+                                          file_path=result_file_path)
 
     syntax_passed = False
     if preproc_result:
-        syntax_passed, message, result = syntax_check(curr_work_dir=sublime_working_dir,
-                                                      working_dir=result_file_path,
-                                                      tpl_version=version_tpl)
-        message_print(message, log)
+        syntax_passed, result = syntax_check(curr_work_dir=sublime_working_dir,
+                                             working_dir=result_file_path,
+                                             tpl_version=version_tpl)
 
         # Make output as STDERR for linter plugin with "-l quiet"
         if log == 4:
@@ -151,40 +150,33 @@ if working_dir:
     ssh = ''
     uploaded_activated = False
     if syntax_passed and (args.addm_host and args.user and args.password):
-        ssh, message = addm_host_check(addm_host=args.addm_host,
-                                       user=args.user,
-                                       password=args.password)
-        message_print(message, log)
+        ssh = addm_host_check(addm_host=args.addm_host,
+                              user=args.user,
+                              password=args.password)
 
         if ssh.get_transport().is_active():
             if log == (1 or 2 or 3 or 0):
                 print("SSH connection os ON!")
 
-            folders, message = check_folders(path="/usr/tideway/TKU/Tpl_DEV", ssh=ssh)
-            message_print(message, log)
+            folders = check_folders(path="/usr/tideway/TKU/Tpl_DEV", ssh=ssh)
 
             if pattern_file_path:
-                output, uploaded_activated, message = upload_knowledge(ssh, pattern_name, dir_label, pattern_file_path)
-                message_print(message, log)
+                output, uploaded_activated = upload_knowledge(ssh, pattern_name, dir_label, pattern_file_path)
             else:
-                output, uploaded_activated, message = upload_knowledge(ssh, pattern_name, dir_label, result_file_path)
-                message_print(message, log)
+                output, uploaded_activated = upload_knowledge(ssh, pattern_name, dir_label, result_file_path)
 
     elif args.addm_host and args.user and args.password and not preproc_result:
-        ssh, message = addm_host_check(addm_host=args.addm_host,
-                                       user=args.user,
-                                       password=args.password)
-        message_print(message, log)
+        ssh = addm_host_check(addm_host=args.addm_host,
+                              user=args.user,
+                              password=args.password)
 
         if ssh.get_transport().is_active():
             if log == (1 or 2 or 3 or 0):
                 print("SSH connection os ON!")
 
-            folders, message = check_folders(path="/usr/tideway/TKU/Tpl_DEV", ssh=ssh)
-            message_print(message, log)
+            folders = check_folders(path="/usr/tideway/TKU/Tpl_DEV", ssh=ssh)
 
-            output, uploaded_activated, message = upload_knowledge(ssh, pattern_name, dir_label, result_file_path)
-            message_print(message, log)
+            output, uploaded_activated = upload_knowledge(ssh, pattern_name, dir_label, result_file_path)
 
     '''
     This section will start if upload_knowledge() returnt True in :uploaded_activated
@@ -195,13 +187,10 @@ if working_dir:
     '''
     if uploaded_activated:
 
-        disco_mode, message = discovery_mode_check(disco_mode=args.disco_mode)
-        message_print(message, log)
+        disco_mode = discovery_mode_check(disco_mode=args.disco_mode)
 
-        host_list, message = host_list_check(host_list=args.scan_host_list)
-        message_print(message, log)
+        host_list = host_list_check(host_list=args.scan_host_list)
 
         if host_list and disco_mode:
             start_scan = addm_scan(ssh, disco_mode, host_list, dir_label)
-            message_print(start_scan, log)
             ssh.close()

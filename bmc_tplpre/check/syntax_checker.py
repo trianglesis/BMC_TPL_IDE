@@ -2,6 +2,10 @@ import subprocess
 import re
 import sys
 
+
+from check.logger import i_log
+log = i_log(level='DEBUG', name=__name__)
+
 '''
 1. Use working dir and tpl ver and run syntax check (input)
 2. Save syntax check result
@@ -26,7 +30,7 @@ def syntax_check(curr_work_dir, working_dir, tpl_version):
 
     result = ''
     syntax_passed = False
-    messages = [{"log": "debug", "msg": "DEBUG: Will check all files in path: " + " " * 27 + str(working_dir)}]
+    log.debug("Will check all files in path: " + str(working_dir))
 
     # print('"' + curr_work_dir + '\\tplint\\tplint.exe" --discovery-versions=' + tpl_version + ' --loglevel=WARN -t "'+ curr_work_dir + '\\taxonomy\\00taxonomy.xml"')
     # print("WORK DIR CWD: "+str(working_dir))
@@ -37,20 +41,20 @@ def syntax_check(curr_work_dir, working_dir, tpl_version):
         result = open_path.stdout.read().decode()
         if "No issues found!" in result:
             syntax_passed = True
-            messages.append({"log": "info", "msg": "INFO: Syntax:" + " " * 51 + "PASSED!"})
+            log.info("Syntax: PASSED!")
         elif match_result.findall(result):
             error_modules = mod_re.findall(result)
             errors = errors_re.findall(result)
-            messages.append({"log": "error", "msg": "ERROR: Some issues found!"
-                                                    "\n" + "Module " + str(error_modules) + "\nErrors: " + str(errors)})
+            log.error("ERROR: Some issues found!""\n" + "Module " + str(error_modules) + "\nErrors: " + str(errors))
         else:
-            print("Something is not OK: ")
+            print("Something is not OK")
             print(result)
+            log.debug("Something is not OK" + str(result))
     except:
-        messages.append({"log": "error", "msg": "ERROR: Tplint cannot run, check if working dir is present!"})
-        messages.append({"log": "error", "msg": "ERROR: Tplint use path:" + " " * 5 + curr_work_dir})
+        log.error("Tplint cannot run, check if working dir is present!")
+        log.error("Tplint use path: " +  curr_work_dir)
 
-    return syntax_passed, messages, result
+    return syntax_passed, result
 
 
 def parse_syntax_result(result):

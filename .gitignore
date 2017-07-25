@@ -1,1 +1,7 @@
-/
+*.pyc
+*/__pycache__
+tplpreprocessor.log
+TPLPreprocessor.py
+taxonomy
+tplint
+.idea

@@ -3,8 +3,9 @@
 import re, os
 import shutil
 import stat
-
 import subprocess
+
+from check.logger import i_log
 
 pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
 core_from_wd_r = re.compile("\S+tku_patterns\\\CORE\\\\")
@@ -221,19 +222,18 @@ def import_modules(working_dir):
     :param working_dir: str
     :return:
     """
-    messages = []
 
     pattern_path_list = list_folder(working_dir)
     module_imports = read_pattern(pattern_path_list)
     import_list = pattern_imports(import_modules=module_imports, folder_path=working_dir)
-    # if import_list:
-    #     messages.append({"log":"debug", "msg":"DEBUG: Importing patterns:"+" "*25+str(import_list)})
-    # else:
-    #     messages.append({"log":"debug", "msg":"DEBUG: Import modules not found in pattern file"})
+    if import_list:
+        log.debug("DEBUG: Importing patterns:"+" "*25+str(import_list))
+    else:
+        log.debug("DEBUG: Import modules not found in pattern file")
     import_tkn(import_list, working_dir)
 
 
-    return True, messages
+    return True
 
 
 def _del_old_imports(path):

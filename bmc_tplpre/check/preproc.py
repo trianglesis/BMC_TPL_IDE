@@ -1,6 +1,9 @@
 import os
 import subprocess
 
+from check.logger import i_log
+log = i_log(level='DEBUG', name=__name__)
+
 '''
 1. If syntax_passed = True after Notepad_IDE/Sublime/check/syntax_checker.py run TPLPreprocessor (input)
 2. Run TPLPreprocessor with passed args - "with imports/without", "tpl ver"  (input)
@@ -24,10 +27,9 @@ def tpl_preprocessor(sublime_working_dir, working_dir, dir_label, full_curr_path
     :return:
     """
 
-    messages = []
     python_v = "C:\\Python27\\python.exe"
     if full_curr_path:
-        messages.append({"log": "info", "msg": "INFO: TPLPreprocessor run on one file:" + " " * 26 + full_curr_path})
+        log.info("TPLPreprocessor run on one file: "  + full_curr_path)
         try:
             run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
                                            + sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
@@ -35,13 +37,12 @@ def tpl_preprocessor(sublime_working_dir, working_dir, dir_label, full_curr_path
             run_preproc.wait()  # wait until command finished
             tpl_preproc = os.path.exists(file_path)  # True
             if tpl_preproc:
-                messages.append({"log": "debug", "msg": "DEBUG: TPLPreprocessor success:" + " " * 26 + file_path})
+                log.debug("TPLPreprocessor success: "  + file_path)
         except:
-            messages.append({"log": "error", "msg": "ERROR: TPL_Preprocessor won't run!"})
+            log.error("TPL_Preprocessor won't run!")
     # NO IMPORTS - run on folder
     else:
-        messages.append({"log": "debug",
-                         "msg": "DEBUG: TPLPreprocessor run all on all files in directory:" + " " * 7 + dir_label})
+        log.debug("TPLPreprocessor run all on all files in directory: " + dir_label)
         try:
             run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
                                            + sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
@@ -49,8 +50,8 @@ def tpl_preprocessor(sublime_working_dir, working_dir, dir_label, full_curr_path
             run_preproc.wait()  # wait until command finished
             tpl_preproc = os.path.exists(file_path)  # True
             if tpl_preproc:
-                messages.append({"log": "debug", "msg": "DEBUG: TPLPreprocessor success:" + " " * 26 + file_path})
+                log.debug("TPLPreprocessor success: "  + file_path)
         except:
-            messages.append({"log": "error", "msg": "ERROR: TPL_Preprocessor won't run!"})
+            log.error("TPL_Preprocessor won't run!")
 
-    return tpl_preproc, messages
+    return tpl_preproc
