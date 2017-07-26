@@ -36,46 +36,47 @@ def i_log_check(log_lvl):
     return log_lvl
 
 
-def check_working_dir(working_dir):
-    """
-    Function will check if --workingDirectory argument is present.
-    If path have windows format - will use a first approach, if unix (like Sublime do) - will use second approach.
-    If format incorrect - will warn.
-    Also function tries to get parent directory name which further will be used for scan name
-    if arg -full_path was not set.
-
-    :param working_dir: path to folder where edited pattern lies.
-
-    :return working_dir, dir_label
-    """
-    file_path_check = re.compile("\w:\\\\")  # File paths
-    file_path_check2 = re.compile("/w:/")  # File paths
-
-    dir_label = ''
-    if working_dir:
-        check = file_path_check.match(working_dir)
-        if check:
-            working_dir = working_dir
-            dir_label = re.findall('(\w+)$', working_dir)
-            dir_label = dir_label[0]
-            log.debug('Working directory is: ' + working_dir)
-
-        elif not check:
-            check2 = file_path_check2.match(working_dir)
-            if check2:
-                working_dir = working_dir
-                dir_label = re.findall('(\w+)$', working_dir)
-                dir_label = dir_label[0]
-                log.info('Working directory is: ' + working_dir)
-
-            else:
-                log.error('-wd argument could have wrong format!')
-        else:
-            log.error('-wd argument could have wrong format!')
-    else:
-        log.error('-wd argument could have wrong format!')
-
-    return working_dir, dir_label
+# Disabling. New version will use full_path_parse() to obtain wd argument if possible.
+# def check_working_dir(working_dir):
+#     """
+#     Function will check if --workingDirectory argument is present.
+#     If path have windows format - will use a first approach, if unix (like Sublime do) - will use second approach.
+#     If format incorrect - will warn.
+#     Also function tries to get parent directory name which further will be used for scan name
+#     if arg -full_path was not set.
+#
+#     :param working_dir: path to folder where edited pattern lies.
+#
+#     :return working_dir, dir_label
+#     """
+#     file_path_check = re.compile("\w:\\\\")  # File paths
+#     file_path_check2 = re.compile("/w:/")  # File paths
+#
+#     dir_label = ''
+#     if working_dir:
+#         check = file_path_check.match(working_dir)
+#         if check:
+#             working_dir = working_dir
+#             dir_label = re.findall('(\w+)$', working_dir)
+#             dir_label = dir_label[0]
+#             log.debug('Working directory is: ' + working_dir)
+#
+#         elif not check:
+#             check2 = file_path_check2.match(working_dir)
+#             if check2:
+#                 working_dir = working_dir
+#                 dir_label = re.findall('(\w+)$', working_dir)
+#                 dir_label = dir_label[0]
+#                 log.info('Working directory is: ' + working_dir)
+#
+#             else:
+#                 log.error('-wd argument could have wrong format!')
+#         else:
+#             log.error('-wd argument could have wrong format!')
+#     else:
+#         log.error('-wd argument could have wrong format!')
+#
+#     return working_dir, dir_label
 
 
 def tpl_version_check(tpl_ver):
@@ -142,59 +143,181 @@ def full_path_parse(full_path):
 
 
     Output: dictionary with configured arguments for further usage.
+    Arguments from file path: {'file_name': 'BMCRemedyARSystem',
+                               'pattern_folder': 'BMCRemedyARSystem',
+                               'tku_patterns': 'tku_patterns',
+                               'tkn_main': 'tkn_main',
+                               'workspace': 'd:\\perforce\\',
+                               'file_ext': 'tplpre',
+                               'pattern_lib': 'CORE',
+                               'addm': 'addm'}
 
     :param full_path:
     :return:
     """
 
+    args_dict = dict()
+    win_sep = '\\'
+    unix_sep = '/'
+
+    dev_path_re = re.compile('(\S+)(\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)')
     path_parse_re = re.compile('(?P<workspace>\S+)'
-                               '(?P<tku_path>\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)'
+                               '(?P<addm>addm)\\\\'
+                               '(?P<tkn_main>tkn_main)\\\\'
+                               '(?P<tku_patterns>tku_patterns)\\\\'
                                '(?P<pattern_lib>[^\\\\]+)\\\\'
                                '(?P<pattern_folder>[^\\\\]+)\\\\'
                                '(?P<file_name>\S+)\.(?P<file_ext>\S+)')
 
-    perforce_tree_re = re.compile('(\S+)(\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)')
-    path_file_re = re.compile('\w:\S+\.(?:tplpre|tpl)')
-    tpl_file_re = re.compile('\w:\S+\.(tpl)$')
-    tplpre_file_re = re.compile('\w:\S+\.(tplpre)')
+    alone_pattern_re = re.compile('([^"]+)\.(tplpre|tpl)')
+    alone_tplpre_re = re.compile('([^"]+)\.tplpre')
+    alone_tpl_re = re.compile('([^"]+)\.tpl')
 
     if full_path:
-        log.debug("-full_path is: " + full_path)
-        log.debug("Parsing path for options.")
-        check_path = path_file_re.match(full_path)
-        path_parse = path_parse_re.match(full_path)
+        log.info("-full_path is: " + full_path)
+        # Checking for different paths logic
+        dev_path_check = dev_path_re.match(full_path)
 
-        if path_parse:
-            args_dict = {'workspace': path_parse.group('workspace'),
-                         'tku_path': path_parse.group('tku_path'),
-                         'pattern_lib': path_parse.group('pattern_lib'),
-                         'pattern_folder': path_parse.group('pattern_folder'),
-                         'file_name': path_parse.group('file_name'),
-                         'file_ext': path_parse.group('file_ext')}
-            log.debug("Path matched and parsing")
-            log.info("Arguments from file path: " + str(args_dict))
-        else:
-            log.warn("Did not match TKU pattern path tree! Will use another way to parse.")
+        # Check path as typical DEV tree:
+        # Should match 'd:\perforce\addm\tkn_main\tku_patterns'
+        if dev_path_check:
+            log.debug("This is dev path.")
 
-        if check_path:
-            log.debug("This is pattern file. Check if tplpre")
-            check_tplpre = tplpre_file_re.match(full_path)
-            check_tpl = tpl_file_re.match(full_path)
-            if check_tplpre:
-                log.debug("This is tplpre file.")
-            elif check_tpl:
-                if check_tpl:
-                    log.debug("This is tpl file.")
+            # Check full arguments:
+            path_parse = path_parse_re.match(full_path)
+            if path_parse:
+                log.debug("Parsing path for options.")
+
+                workspace      = path_parse.group('workspace')
+                addm           = path_parse.group('addm')
+                tkn_main       = path_parse.group('tkn_main')
+                tku_patterns   = path_parse.group('tku_patterns')
+                pattern_lib    = path_parse.group('pattern_lib')
+                pattern_folder = path_parse.group('pattern_folder')
+                file_name      = path_parse.group('file_name')
+                file_ext       = path_parse.group('file_ext')
+
+                # Check if this is a tplpre file from: PatternFolder\PatternName.tplpre
+                if re.match('tplpre', file_ext):
+
+                    # TODO: Experimental - probably better to use -wd in other way
+                    # Composing working dir to allow syntax check for all content in folder.
+                    working_dir = workspace + win_sep \
+                                + addm + win_sep \
+                                + tkn_main + win_sep \
+                                + tku_patterns + win_sep \
+                                + pattern_lib + win_sep \
+                                + pattern_folder
+
+                    args_dict = {'workspace': workspace,
+                                 'addm': addm,
+                                 'tkn_main': tkn_main,
+                                 'tku_patterns': tku_patterns,
+                                 'pattern_lib': pattern_lib,
+                                 'pattern_folder': pattern_folder,
+                                 'file_name': file_name,
+                                 'file_ext': file_ext,
+                                 'working_dir': working_dir}
+                    log.info("Arguments from file path: " + str(args_dict))
+                    return args_dict
+
+                # Check if this is a tpl file from: PatternFolder\tpl110\PatternName.tpl
+                elif re.match('tpl\d+', file_ext):
+                    log.debug("File extension matched tpl pattern.")
+                    args_dict = {'workspace': workspace,
+                                 'addm': addm,
+                                 'tkn_main': tkn_main,
+                                 'tku_patterns': tku_patterns,
+                                 'pattern_lib': pattern_lib,
+                                 'pattern_folder': pattern_folder,
+                                 'file_name': file_name,
+                                 'file_ext': file_ext}
+                    log.info("Arguments from file path: " + str(args_dict))
+                    return args_dict
+
+                # Check if this is a dml file from: ..\tests\dml\DML_DATA.dml
+                elif re.match('dml', file_ext):
+                    log.debug("This is DML file.")
+                    args_dict = {'workspace': workspace,
+                                 'addm': addm,
+                                 'tkn_main': tkn_main,
+                                 'tku_patterns': tku_patterns,
+                                 'pattern_lib': pattern_lib,
+                                 'pattern_folder': pattern_folder,
+                                 'file_name': file_name,
+                                 'file_ext': file_ext}
+                    log.info("Arguments from file path: " + str(args_dict))
+                    return args_dict
+
+                # Check if this is a model file from: \tests\actuals\SI_MODEL.model
+                elif re.match('model', file_ext):
+                    log.debug("This is model file.")
+                    args_dict = {'workspace': workspace,
+                                 'addm': addm,
+                                 'tkn_main': tkn_main,
+                                 'tku_patterns': tku_patterns,
+                                 'pattern_lib': pattern_lib,
+                                 'pattern_folder': pattern_folder,
+                                 'file_name': file_name,
+                                 'file_ext': file_ext}
+                    log.info("Arguments from file path: " + str(args_dict))
+                    return args_dict
+
+                # Check if this is a py file from: ..\tests\test.py
+                elif re.match('py', file_ext):
+                    log.debug("This is py file. Will check if this is a 'test.py'")
+                    args_dict = {'workspace': workspace,
+                                 'addm': addm,
+                                 'tkn_main': tkn_main,
+                                 'tku_patterns': tku_patterns,
+                                 'pattern_lib': pattern_lib,
+                                 'pattern_folder': pattern_folder,
+                                 'file_name': file_name,
+                                 'file_ext': file_ext}
+                    log.info("Arguments from file path: " + str(args_dict))
+                    return args_dict
+
+                # If this file has an extension I do not support:
                 else:
-                    log.warn("'-full_path' has a wrong format. I expect: '\w:\S+\.(tpl)$")
+                    log.warn("Did not match any file extension I can use: tpl, tplpre, dml, model, test.py")
+                    log.debug("File extension is: ")
+                log.debug("Path matched and parsed.")
             else:
-                log.warn("'-full_path' did not match -tpl or -tplpre.")
+                log.warn("Did not match TKU DEV pattern path tree! Will use another way to parse.")
+                log.debug("I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
+
+        # When path to file has no tku_tree in. This is probably standalone file from anywhere.
         else:
-            log.warn("'-full_path' has a wrong format. I expect: '\w:\S+\.(?:tplpre|tpl)'")
+            log.debug('There is no dev path in -full_path - I expect "..\\addm\\tkn_main\\tku_patterns\\.."\n '
+                      'Trying to locate place for alone pattern file.')
+
+            # To be sure I have here - is a pattern file with tpl or tplre ext.
+            # Also checking full path to file. No spaces or extra sumbols allowed.
+            alone_pattern_check = alone_pattern_re.match(full_path)
+            if alone_pattern_check:
+                alone_tplpre_check = alone_tplpre_re.match(full_path)
+                # Sort tplpre:
+                if alone_tplpre_check:
+                    log.debug("This is alone tplpre file - will use path 'as is' "
+                              "To run TPLPreproc or Syntax check - p4_path should be configured.")
+                # If not *.tlpre
+                else:
+                    alone_tpl_check = alone_tpl_re.match(full_path)
+                    # But then check I have a proper *.tpl
+                    if alone_tpl_check:
+                        log.debug("This is alone tpl file - will use path 'as is'."
+                                  "Upload to ADDM and scan could be started if arguments was set.")
+                    else:
+                        log.warn("This path did not match any suitable pattern and probably not a tpl file"
+                                 " Or path has superfluous symbols or spaces")
+            else:
+                log.debug("Cannot match file path for alone pattern. I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
+
     else:
         log.warn("No '-full_path' argument was set.")
 
 
+# WIll be disabled in next upload. New version will use full_path_parse() to obtain wd argument if possible.
 def full_current_path_check(full_curr_path, working_dir, tpl_folder):
     """
     Check arg "-full_path", "--FULL_CURRENT_PATH"

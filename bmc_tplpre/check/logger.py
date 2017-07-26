@@ -47,6 +47,7 @@ def i_log(level=None, name=None):
                                             '%(levelname)-9s'
                                             '%(name)-22s'
                                             '%(funcName)-28s'
+                                            'Line:%(lineno)-4s'
                                             '%(message)8s')
 
     file_handler.setFormatter(file_formatter)

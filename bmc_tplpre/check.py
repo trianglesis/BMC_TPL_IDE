@@ -82,10 +82,12 @@ sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
 log.debug("Using script path as: " + sublime_working_dir)
 
 # Checking of working dir set correctly (It's a folder where patter lies):
-working_dir, dir_label = check_working_dir(args.working_dir)
+# working_dir, dir_label = check_working_dir(args.working_dir)
 
 
-full_path_parse(args.full_curr_path)
+full_path_args_dict = full_path_parse(args.full_curr_path)
+working_dir = full_path_args_dict['working_dir']
+dir_label = full_path_args_dict['pattern_folder']
 
 if working_dir:
 
@@ -100,7 +102,10 @@ if working_dir:
     ''' Check if tpl version arguments set. Required for syntax check and upload after tplpreproc '''
     tpl_folder, version_tpl = tpl_version_check(args.version_tpl)
 
-    ''' Check if full path to currently working patten set or will run on the whole folder with bunch of patterns '''
+    '''
+    Check if full path to currently working patten set or will run on the whole folder with bunch of patterns
+    - This will be changed by new func full_path_args_dict() with all needed arguments in result.
+    '''
     result_file_path, pattern_name, pattern_path, pattern_file_path = full_current_path_check(args.full_curr_path,
                                                                                     working_dir=working_dir,
                                                                                     tpl_folder=tpl_folder)
