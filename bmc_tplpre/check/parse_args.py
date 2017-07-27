@@ -161,7 +161,7 @@ def full_path_parse(full_path):
     unix_sep = '/'
 
     dev_path_re = re.compile('(\S+)(\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)')
-    path_parse_re = re.compile('(?P<workspace>\S+)'
+    path_parse_re = re.compile('(?P<workspace>\S+)\\\\'
                                '(?P<addm>addm)\\\\'
                                '(?P<tkn_main>tkn_main)\\\\'
                                '(?P<tku_patterns>tku_patterns)\\\\'

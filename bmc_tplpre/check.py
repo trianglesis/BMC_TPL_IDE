@@ -1,16 +1,14 @@
 
 import argparse
-# import logging
 
-from check.logger import i_log
 from check.parse_args import *
 from check.upload import *
 from check.syntax_checker import syntax_check, parse_syntax_result
-from check.preproc import tpl_preprocessor
+from check.preproc import tpl_preprocessor, find_tplpreprocessor, read_tplpreprocessor
 from check.scan import addm_scan
 
 from check.imports import *
-from check.internal import *
+# from TPLPreprocessor import TPLPreprocessor
 
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("-wd", "--workingDirectory",
@@ -75,19 +73,27 @@ log = i_log(level=log_level, name=__name__)
 
 log.warn("WARN TEST")
 log.critical("CRITICAL TEST")
+log.info("-=== INITIALISING Check script from here:")
 
 # Path to this script and tplint binaries
 sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
 # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
 log.debug("Using script path as: " + sublime_working_dir)
 
+
 # Checking of working dir set correctly (It's a folder where patter lies):
 # working_dir, dir_label = check_working_dir(args.working_dir)
 
 
 full_path_args_dict = full_path_parse(args.full_curr_path)
+
 working_dir = full_path_args_dict['working_dir']
 dir_label = full_path_args_dict['pattern_folder']
+p4_workspace = full_path_args_dict['workspace']
+
+tpl_preproc_dir = find_tplpreprocessor(workspace=p4_workspace)
+
+read_tpl_args = read_tplpreprocessor(tpl_preproc_dir)
 
 if working_dir:
 
@@ -97,14 +103,13 @@ if working_dir:
     No need to use it now.
     '''
 
-    # import_included_modules = import_modules(working_dir)
+    import_included_modules = import_modules(working_dir)
 
     ''' Check if tpl version arguments set. Required for syntax check and upload after tplpreproc '''
     tpl_folder, version_tpl = tpl_version_check(args.version_tpl)
 
     '''
-    Check if full path to currently working patten set or will run on the whole folder with bunch of patterns
-    - This will be changed by new func full_path_args_dict() with all needed arguments in result.
+    DECOMMISSION: will use full_path_args_dict()
     '''
     result_file_path, pattern_name, pattern_path, pattern_file_path = full_current_path_check(args.full_curr_path,
                                                                                     working_dir=working_dir,
@@ -123,7 +128,7 @@ if working_dir:
     '''
     preproc_result = False
     if tpl_folder and result_file_path:
-        preproc_result = tpl_preprocessor(sublime_working_dir=sublime_working_dir,
+        preproc_result = tpl_preprocessor(sublime_working_dir=tpl_preproc_dir,
                                           working_dir=working_dir,
                                           dir_label=dir_label,
                                           full_curr_path=pattern_path,
@@ -202,3 +207,5 @@ if working_dir:
         if host_list and disco_mode:
             start_scan = addm_scan(ssh, disco_mode, host_list, dir_label)
             ssh.close()
+
+log.info("-=== FINISHING Check script.")

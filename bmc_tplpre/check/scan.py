@@ -15,6 +15,11 @@ log = i_log(level='DEBUG', name=__name__)
 
 def addm_scan(ssh, disco_mode, host_list, dir_label):
     """
+    [tideway@localhost ~]$ tw_disco_control -p system -v
+    BMC Discovery Version: 11.1.0.5 Release: 698363
+    Copyright (C) 2003 - 2017, BMC Software
+    Discovery Control Utility
+
 
     :param ssh:
     :param disco_mode:

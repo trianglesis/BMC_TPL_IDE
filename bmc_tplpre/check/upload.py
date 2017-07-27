@@ -42,6 +42,35 @@ def upload_knowledge(ssh, pattern_name, dir_label, file_path):
     4. Run pattern activation process. Check output, if knowledge activated - then upload and activation pass, if no
     output ssh console result with error or warning.
 
+
+    usage: tw_pattern_management [options] <upload/[upload:]module/file>
+
+    where options can be
+
+          --activate-all          Activate all pattern modules
+          --activate-module       Activate pattern module
+          --activate-upload       Activate knowledge upload
+          --deactivate-module     Deactivate pattern module
+          --deactivate-upload     Deactivate knowledge upload
+      -f, --force                 Deactivate patterns before removal
+      -h, --help                  Display help on standard options
+          --install               Install (but not activate) knowledge upload
+          --install-activate      Install and activate knowledge upload
+      -l, --list-uploads          List knowledge uploads
+          --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
+      -p, --password=PASSWD       Password
+          --passwordfile=PWDFILE  Pathname for Password File
+          --remove-all            Remove all pattern modules
+          --remove-module         Remove pattern module
+          --remove-upload         Remove knowledge upload
+          --show-progress         Write progress
+      -u, --username=NAME         Username
+      -v, --version               Display version information
+
+    and where <upload/[upload:]module/file> is a knowledge upload name, pattern module identifier or existing file
+
+
+
     :param ssh:
     :param pattern_name: str
     :param dir_label: str

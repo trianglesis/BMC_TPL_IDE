@@ -7,6 +7,8 @@ import subprocess
 
 from check.logger import i_log
 
+log = i_log(level='DEBUG', name=__name__)
+
 pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
 core_from_wd_r = re.compile("\S+tku_patterns\\\CORE\\\\")
 
@@ -69,7 +71,7 @@ def read_pattern(pattern_path_list):
 
     for pattern in pattern_path_list:
         open_file = open(pattern)
-        read_file = open_file.read(1024) # About 30+ lines from the beggining of pattern
+        read_file = open_file.read(1024) # About 30+ lines from the beginning of pattern
         open_file.close()
         pattern_import = pattern_import_all_r.findall(read_file)
         if pattern_import:
@@ -124,6 +126,7 @@ Old func - will delete after finish this research
 
  '''
 
+
 def pattern_imports(folder_path, import_modules):
     """
     Collect import modules, find them
@@ -158,7 +161,6 @@ def pattern_imports(folder_path, import_modules):
     tku_patterns = ""
     core = ""
 
-
     # Setting TKN_CORE from system variable or parse working directory for it
     if tkn_core:
         supporting_files_path = tkn_core + "SupportingFiles"
@@ -184,10 +186,8 @@ def pattern_imports(folder_path, import_modules):
             if additional_imports not in import_modules_patterns:
                 import_modules_patterns.append(additional_imports)
 
-    # print(import_modules_patterns)
+    log.debug(import_modules_patterns)
     return import_modules_patterns
-
-
 
 
 def import_tkn(patterns_path, working_dir):
@@ -232,14 +232,13 @@ def import_modules(working_dir):
         log.debug("DEBUG: Import modules not found in pattern file")
     import_tkn(import_list, working_dir)
 
-
     return True
 
 
 def _del_old_imports(path):
     if os.path.exists(path):
         shutil.rmtree(path, onerror=_del_rw)
-        # print("Folder exist!")
+        log.debug("Folder exist!")
 
 
 def _del_rw(action, name, exc):
@@ -267,7 +266,6 @@ def _search_in_pattern(import_modules_list, search_path):
     modules_to_import = []
 
     # TODO: Return modules which was not found to run another search in next place.
-
 
     folder_content = os.listdir(search_path)
     for file in folder_content:
@@ -297,9 +295,10 @@ def _search_findstr(import_modules_list, search_path):
     """
     import_modules_patterns_left = []
 
-    # D:\Doc\PerForce\addm\tkn_main\tku_patterns\CORE\SupportingFiles>findstr /M /C:"module SupportingFiles.CDM_Mapping" *.tplpre
-    # D:\Doc\PerForce\addm\tkn_main\tku_patterns\CORE>findstr /S /M /C:"module ApacheFoundation.Tomcat" *.tplpre
-
+    """
+    D:\Doc\PerForce\addm\tkn_main\tku_patterns\CORE\SupportingFiles>findstr /M /C:"module SupportingFiles.CDM_Mapping" *.tplpre
+    D:\Doc\PerForce\addm\tkn_main\tku_patterns\CORE>findstr /S /M /C:"module ApacheFoundation.Tomcat" *.tplpre
+    """
     for module in import_modules_list:
         # find_str = subprocess.Popen('findstr /S /M /D:"D:\\Doc\\PerForce\\addm\\tkn_main\\tku_patterns\\CORE\\" /C:"'+module+'" *.tplpre', cwd=search_path, stdout=subprocess.PIPE)
         # find_str = subprocess.Popen('findstr /S /M /C:"'+module+'" *.tplpre', cwd="D:\\Doc\\PerForce\\addm\\tkn_main\\tku_patterns\\CORE", stdout=subprocess.PIPE)
