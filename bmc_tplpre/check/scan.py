@@ -47,7 +47,6 @@ def addm_scan(ssh, disco_mode, host_list, dir_label):
         log.info("Scan has been added to the Currently Processing Runs: \n"+result)
 
 
-
 def addm_scan_check(ssh, scan_id):
     """
     Check scan status.
@@ -64,6 +63,7 @@ def addm_scan_check(ssh, scan_id):
     :param scan_id:
     :return:
     """
+
 
 def addm_scan_reasoning_on_off(ssh, reasoning_flag):
     """

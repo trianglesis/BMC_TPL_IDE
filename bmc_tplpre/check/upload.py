@@ -24,6 +24,27 @@ Additional scenario:
 Can upload anything opened in Sublime with path to folder or pattern.
 If there is no -tpl arg BUT addm IP.
 
+
+    PRODUCT_VERSIONS = {
+        'CustardCream' : '11.2',
+        'Bobblehat'    : '11.1',
+        'Aardvark'     : '11.0',
+
+        'Zythum'       : '10.2',
+        'Zed'          : '10.1',
+        'Yodel'        : '10.0',
+    }
+
+    TPL_VERSIONS = {
+        'CustardCream' : '1.14',
+        'Bobblehat'    : '1.13',
+        'Aardvark'     : '1.12',
+        'Zythum'       : '1.10',
+        'Zed'          : '1.9',
+        'Yodel'        : '1.8',
+    }
+
+
 '''
 
 

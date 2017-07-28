@@ -4,7 +4,7 @@ import argparse
 from check.parse_args import *
 from check.upload import *
 from check.syntax_checker import syntax_check, parse_syntax_result
-from check.preproc import tpl_preprocessor, find_tplpreprocessor, read_tplpreprocessor
+from check.preproc import tpl_preprocessor, find_tplpreprocessor, read_tplpreprocessor, tpl_preprocessor_old
 from check.scan import addm_scan
 
 from check.imports import *
@@ -93,7 +93,7 @@ p4_workspace = full_path_args_dict['workspace']
 
 tpl_preproc_dir = find_tplpreprocessor(workspace=p4_workspace)
 
-read_tpl_args = read_tplpreprocessor(tpl_preproc_dir)
+tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver = read_tplpreprocessor(tpl_preproc_dir)
 
 if working_dir:
 
@@ -128,11 +128,15 @@ if working_dir:
     '''
     preproc_result = False
     if tpl_folder and result_file_path:
-        preproc_result = tpl_preprocessor(sublime_working_dir=tpl_preproc_dir,
-                                          working_dir=working_dir,
-                                          dir_label=dir_label,
-                                          full_curr_path=pattern_path,
-                                          file_path=result_file_path)
+
+        # preproc_result = tpl_preprocessor(tpl_preproc_py, tpl_preprocessor_class, full_path_args_dict)
+        preproc_result = tpl_preprocessor(tpl_preproc_dir, tpl_preprocessor_main, full_path_args_dict)
+
+        # preproc_result_old = tpl_preprocessor_old(sublime_working_dir=tpl_preproc_dir,
+        #                                   working_dir=working_dir,
+        #                                   dir_label=dir_label,
+        #                                   full_curr_path=pattern_path,
+        #                                   file_path=result_file_path)
 
     syntax_passed = False
     if preproc_result:
