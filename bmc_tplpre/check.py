@@ -96,7 +96,11 @@ tpl_preproc_dir, tpl_preproc_py = find_tplpreprocessor(workspace=p4_workspace)
 
 tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver = read_tplpreprocessor(tpl_preproc_dir)
 
-import_pattern_tests(working_dir)
+pattern_list = import_pattern_tests(working_dir)
+print(pattern_list)
+
+query_list = import_pattern_tests(working_dir)
+print(query_list)
 
 if working_dir:
 
