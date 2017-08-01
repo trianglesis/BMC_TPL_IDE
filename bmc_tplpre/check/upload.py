@@ -4,8 +4,8 @@ import re
 import zipfile
 
 
-from check.logger import i_log
-log = i_log(level='DEBUG', name=__name__)
+# from check.logger import i_log
+# log = i_log(level='DEBUG', name=__name__)
 
 '''
 1. If syntax_passed = True AND tpl_preproc = True AND addm_host ip in args - start this (input)

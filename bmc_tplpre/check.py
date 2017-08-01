@@ -1,10 +1,11 @@
 
 import argparse
 
-from check.parse_args import *
+from check.parse_args import ArgsParse
+from check.preproc import Preproc
+
 from check.upload import *
 from check.syntax_checker import syntax_check, parse_syntax_result
-from check.preproc import tpl_preprocessor_new, find_tplpreprocessor, read_tplpreprocessor, tpl_preprocessor_old
 from check.scan import addm_scan
 from check.test_queries import *
 
@@ -67,42 +68,37 @@ parser.add_argument("-l", "--logLevel",
                     help="Please set log level")  # info, quiet, warn, debug, output, error
 
 known_args, extra_args = parser.parse_known_args()
-args = known_args
 
-log_level = i_log_check(args.log_lvl)
-log = i_log(level=log_level, name=__name__)
+
+def log_constructor():
+    from check.logger import Logger
+    log_init = Logger(known_args.log_lvl)
+    return log_init.log_define()
+log = log_constructor()
 
 log.warn("WARN TEST")
 log.critical("CRITICAL TEST")
 log.info("-=== INITIALISING Check script from here:")
+
+parse_args = ArgsParse(log)
+full_path_args = parse_args.gather_args(known_args, extra_args)
 
 # Path to this script and tplint binaries
 sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
 # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
 log.debug("Using script path as: " + sublime_working_dir)
 
+tpl_preproc = Preproc(log)
+tpl_preproc_dir, tpl_preproc_py = tpl_preproc.find_tplpreprocessor(workspace=full_path_args['workspace'])
+tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver = tpl_preproc.read_tplpreprocessor(tpl_preproc_dir)
 
-# Checking of working dir set correctly (It's a folder where patter lies):
-# working_dir, dir_label = check_working_dir(args.working_dir)
+# pattern_list = import_pattern_tests(working_dir)
+# print(pattern_list)
+#
+# query_list = query_pattern_tests(working_dir)
+# print(query_list)
 
-
-full_path_args_dict = full_path_parse(args.full_curr_path)
-
-working_dir = full_path_args_dict['working_dir']
-dir_label = full_path_args_dict['pattern_folder']
-p4_workspace = full_path_args_dict['workspace']
-
-tpl_preproc_dir, tpl_preproc_py = find_tplpreprocessor(workspace=p4_workspace)
-
-tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver = read_tplpreprocessor(tpl_preproc_dir)
-
-pattern_list = import_pattern_tests(working_dir)
-print(pattern_list)
-
-query_list = import_pattern_tests(working_dir)
-print(query_list)
-
-if working_dir:
+if full_path_args['file_ext'] == "tplpre":
 
     '''
     This will try to read current pattern or each pattern in working directory, find import modules
@@ -112,8 +108,13 @@ if working_dir:
 
     import_included_modules = import_modules(working_dir)
 
-    ''' Check if tpl version arguments set. Required for syntax check and upload after tplpreproc '''
+    '''
+    To be REMOVEd - will use path functions or preproc for tplver get and compare with ADDM tpl ver.
+    Check if tpl version arguments set. Required for syntax check and upload after tplpreproc
+
     tpl_folder, version_tpl = tpl_version_check(args.version_tpl)
+    '''
+
 
     '''
     DECOMMISSION: will use full_path_args_dict()

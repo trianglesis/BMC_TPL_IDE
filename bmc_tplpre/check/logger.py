@@ -1,66 +1,100 @@
-
-
 import logging
 
 
-def i_log(level=None, name=None):
-    """
+class Logger:
 
-    :param level:
-    :param name:
-    :return:
-    """
-    # Logger:
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    # Usual logging to file:
-    file_handler = logging.FileHandler('check.log')
-    file_handler.setLevel(level)
-    # Usual logging to console
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(level)
+    def __init__(self, log_args):
 
-    # Extra detailed logging to file:
-    file_extra_handler = logging.FileHandler('step.log')
-    file_extra_handler.setLevel(logging.DEBUG)
-    # Extra detailed logging to console
-    con_extra_handler = logging.StreamHandler()
-    con_extra_handler.setLevel(logging.DEBUG)
+        self.log_lvl = log_args
 
-    file_formatter = logging.Formatter('%(asctime)-24s'
-                                       '%(levelname)-8s '
-                                       ' - %(message)-8s')
+    def log_define(self):
 
-    console_formatter = logging.Formatter('%(asctime)-24s'
-                                          '%(levelname)-9s'
-                                          '%(message)8s')
+        """
+        Set the proper log level based on arguments.
+        Used for python standard logging module.
+        Check for typos and handle them.
 
-    file_extra_formatter = logging.Formatter('%(asctime)-24s'
-                                             '%(levelname)-8s '
-                                             '%(name)-21s'
-                                             '%(filename)-18s'
-                                             '%(funcName)-28s'
-                                             'Line:%(lineno)-4s'
-                                             ' - %(message)-8s')
+        :param log_lvl: Input from args  # info, quiet, warn, debug, output, error
+        :return: proper level for use in logger
+        """
 
-    con_extra_formatter = logging.Formatter('%(asctime)-24s'
-                                            '%(levelname)-9s'
-                                            '%(name)-22s'
-                                            '%(funcName)-28s'
-                                            'Line:%(lineno)-4s'
-                                            '%(message)8s')
+        if self.log_lvl:
+            if "info" in self.log_lvl:
+                return Logger.i_log(self, level='INFO')
+            elif "warn" in self.log_lvl:
+                return Logger.i_log(self, level='WARN')
+            elif "error" in self.log_lvl:
+                return Logger.i_log(self, level='ERROR')
+            elif "critical" in self.log_lvl:
+                return Logger.i_log(self, level='CRITICAL')
+            elif "debug" in self.log_lvl:
+                return Logger.i_log(self, level='DEBUG')
+            else:
+                return Logger.i_log(self, level='INFO')
+        else:
+            return Logger.i_log(self, level='DEBUG')
 
-    file_handler.setFormatter(file_formatter)
-    console_handler.setFormatter(console_formatter)
+    def i_log(self, level):
+        """
 
-    file_extra_handler.setFormatter(file_extra_formatter)
-    con_extra_handler.setFormatter(con_extra_formatter)
+        :param level: logging level
+        :param name: Name of working in class\function
+        :return:
+        """
 
-    # logger.addHandler(file_handler)
-    # logger.addHandler(console_handler)
+        name = __name__
 
-    logger.addHandler(file_extra_handler)
-    logger.addHandler(con_extra_handler)
+        # Logger:
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+        # Usual logging to file:
+        file_handler = logging.FileHandler('check.log')
+        file_handler.setLevel(level)
+        # Usual logging to console
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(level)
 
-    return logger
+        # Extra detailed logging to file:
+        file_extra_handler = logging.FileHandler('step.log')
+        file_extra_handler.setLevel(logging.DEBUG)
+        # Extra detailed logging to console
+        con_extra_handler = logging.StreamHandler()
+        con_extra_handler.setLevel(logging.DEBUG)
 
+        file_formatter = logging.Formatter('%(asctime)-24s'
+                                                '%(levelname)-8s '
+                                                ' - %(message)-8s')
+
+        console_formatter = logging.Formatter('%(asctime)-24s'
+                                                   '%(levelname)-9s'
+                                                   '%(message)8s')
+
+        file_extra_formatter = logging.Formatter('%(asctime)-24s'
+                                                      '%(levelname)-8s '
+                                                      '%(name)-21s'
+                                                      '%(filename)-18s'
+                                                      '%(funcName)-28s'
+                                                      'Line:%(lineno)-4s'
+                                                      ' - %(message)-8s')
+
+        con_extra_formatter = logging.Formatter('%(asctime)-24s'
+                                                     '%(levelname)-9s'
+                                                     '%(name)-22s'
+                                                     '%(funcName)-28s'
+                                                     'Line:%(lineno)-4s'
+                                                     '%(message)8s')
+
+        file_handler.setFormatter(file_formatter)
+        console_handler.setFormatter(console_formatter)
+
+        file_extra_handler.setFormatter(file_extra_formatter)
+        con_extra_handler.setFormatter(con_extra_formatter)
+
+        if level == 'DEBUG':
+            logger.addHandler(file_extra_handler)
+            logger.addHandler(con_extra_handler)
+        else:
+            logger.addHandler(file_handler)
+            logger.addHandler(console_handler)
+
+        return logger

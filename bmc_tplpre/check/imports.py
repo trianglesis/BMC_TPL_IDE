@@ -5,9 +5,8 @@ import shutil
 import stat
 import subprocess
 
-from check.logger import i_log
-
-log = i_log(level='DEBUG', name=__name__)
+# from check.logger import i_log
+# log = i_log(level='DEBUG', name=__name__)
 
 pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
 core_from_wd_r = re.compile("\S+tku_patterns\\\CORE\\\\")

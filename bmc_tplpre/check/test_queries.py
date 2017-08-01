@@ -1,10 +1,6 @@
-import os, sys
-import subprocess
+import os
 import ast
 
-from check.logger import i_log
-
-log = i_log(level='DEBUG', name=__name__)
 
 
 def _read_pattern_test_file(tests_folder):
@@ -60,7 +56,8 @@ def query_pattern_tests(tests_folder):
     """
     Get test.py tree with args from self.setupPatterns()
     Now only RAW queries not with plus
-
+    https://ruslanspivak.com/lsbasi-part7/
+    https://stackoverflow.com/questions/9425409/python-ast-package-traversing-object-hierarchies
 
     :param tests_folder:
     :return: list of queries to run in test
@@ -71,6 +68,8 @@ def query_pattern_tests(tests_folder):
 
     # Walk in test.py file and get function arguments where import patterns lies:
     # TODO: Make walker to get all left and right values in loop.
+    # https://ruslanspivak.com/lsbasi-part7/
+    # https://stackoverflow.com/questions/9425409/python-ast-package-traversing-object-hierarchies
     for node in ast.walk(test_tree):
         if isinstance(node, ast.ClassDef):
             # Get into the class with name:
@@ -81,27 +80,21 @@ def query_pattern_tests(tests_folder):
                     if isinstance(item, ast.Assign):
                         # Check if this var is just a string:
                         if isinstance(item.value, ast.Str):
-                            print(item.targets[0].id)
-                            print(item.value.s)
-                        # Check if this var is sum of vars and binary:
-                        if isinstance(item.value, ast.BinOp):
-                            plus = " + "
-                            # print(item.targets[0].id)
-                            print(vars(item.value))
-                            operators = [item.value.left, item.value.op, item.value.right]
+                            query_name = item.targets[0].id
+                            query_body = item.value.s
+                            query = {'query_name': query_name, 'query_body': query_body}
+                            query_list.append(query)
+                    '''
+                        When query has two or more binary options:
+                        MEGA_QUERY = NULL_QUERY_2 + GENERAL_QUERY + SMART_QUERY + NULL_QUERY_1
 
-                            # print(item.value.left.left.left.id) # NULL_QUERY_2
-                            # print(item.value.left.left.right.id) # GENERAL_QUERY
-                            # print(item.value.left.right.id) # SMART_QUERY
-                            # print(item.value.right.id) # NULL_QUERY_1
+                        Will try to parse it later, after making some kind of construction to get all vars on right order.
+                        https://ruslanspivak.com/lsbasi-part7/
+                    '''
+                    if isinstance(item.value, ast.BinOp):
+                        operators = [item.value.left, item.value.op, item.value.right]
+                        log.debug("This is Binary Options. I do not parse it now, sorry. " + str(operators))
 
-                            construct = item.targets[0].id + " = " + \
-                                        item.value.left.left.left.id + plus + \
-                                        item.value.left.left.right.id + plus + \
-                                        item.value.left.right.id + plus + \
-                                        item.value.right.id
-                            print(construct)
-                            print(operators)
 
     return query_list
 

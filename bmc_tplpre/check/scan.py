@@ -1,6 +1,6 @@
 
-from check.logger import i_log
-log = i_log(level='DEBUG', name=__name__)
+# from check.logger import i_log
+# log = i_log(level='DEBUG', name=__name__)
 
 
 '''

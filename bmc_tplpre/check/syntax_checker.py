@@ -3,8 +3,8 @@ import re
 import sys
 
 
-from check.logger import i_log
-log = i_log(level='DEBUG', name=__name__)
+# from check.logger import i_log
+# log = i_log(level='DEBUG', name=__name__)
 
 '''
 1. Use working dir and tpl ver and run syntax check (input)
