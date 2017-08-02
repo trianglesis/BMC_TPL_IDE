@@ -83,7 +83,7 @@ class ArgsParse:
         # print(known_args)
         # print(extra_args)
 
-        full_path_args = self.full_path_parse(known_args.full_curr_path)
+        full_path_args = self.full_path_parse(known_args.full_path)
 
         return full_path_args
 
