@@ -7,6 +7,7 @@ from check.preproc import Preproc
 from check.imports import TPLimports
 from check.test_queries import TestRead
 from check.upload import AddmOperations
+from check.global_logic import GlobalLogic
 
 from check.syntax_checker import syntax_check, parse_syntax_result
 
@@ -87,7 +88,7 @@ common.add_argument("-l",
 common.add_argument('--version', action='version', version='%(prog)s 1.0')
 
 known_args, extra_args = parser.parse_known_args()
-print(known_args)
+# print(known_args)
 
 
 def log_constructor():
@@ -100,53 +101,33 @@ log.warn("WARN TEST")
 log.critical("CRITICAL TEST")
 log.info("-=== INITIALISING Check script from here:")
 
-# True\False check TEST
-if known_args.I:
-    log.debug("Argument for I-mport is True")
-if known_args.RI:
-    log.debug("Argument for RI-mport is True")
-if known_args.T:
-    log.debug("Argument for T-ests is True")
 
-parse_args = ArgsParse(log)
-parsable_args_set = parse_args.gather_args(known_args, extra_args)
-full_path_args = parsable_args_set
+funcs_run = GlobalLogic(log)
+functions_set = funcs_run.make_function_set(known_args, extra_args)
+print(functions_set)
+
+# True\False check TEST
+
+
+# parse_args = ArgsParse(log)
+# parsable_args_set = parse_args.gather_args(known_args, extra_args)
+# full_path_args = parsable_args_set
 
 # Path to this script and tplint binaries
-sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
+# sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
 # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
-log.debug("Using script path as: " + sublime_working_dir)
+# log.debug("Using script path as: " + sublime_working_dir)
 
 # Not sure if we need this, or maybe just subproc this and nevermind
-tpl_preproc = Preproc(log)
-tpl_preproc_dir, tpl_preproc_py = tpl_preproc.find_tplpreprocessor(workspace=full_path_args['workspace'])
-tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver = tpl_preproc.read_tplpreprocessor(tpl_preproc_dir)
+# tpl_preproc = Preproc(log)
+# tpl_preproc_dir, tpl_preproc_py = tpl_preproc.find_tplpreprocessor(workspace=full_path_args['workspace'])
+# tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver = tpl_preproc.read_tplpreprocessor(tpl_preproc_dir)
 
-working_dir = full_path_args['working_dir']
-
-test_read = TestRead(log)
-pattern_list = test_read.import_pattern_tests(working_dir)
-# print(pattern_list)
-
-query_list = test_read.query_pattern_tests(working_dir)
-# print(query_list)
-
-tpl_imports = TPLimports(log)
-tpl_imports.import_modules(full_path_args['working_dir'])
+# Preproc in usual way
 
 
 # ADDM ARGS CHECK
-addm_args_set = parse_args.addm_args(known_args)
 
-if addm_args_set['ssh_connection'] and full_path_args['working_dir']:
-
-    ssh = addm_args_set['ssh_connection']
-    disco = addm_args_set['disco_mode']
-    scan_hosts = addm_args_set['scan_hosts']
-    tpl_vers = addm_args_set['tpl_vers']
-
-    log.debug("SHH is still there!")
-    addm = AddmOperations(log, ssh)
 
 
 

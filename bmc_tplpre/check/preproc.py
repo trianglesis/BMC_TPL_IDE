@@ -37,7 +37,7 @@ class Preproc:
 
             # tpl_preproc_location = workspace + "\\addm\\tkn_main\\buildscripts\\TPLPreprocessor.py"
             tpl_preproc_dir = workspace + "\\addm\\tkn_main\\buildscripts\\"
-            tpl_preproc_py = workspace + "\\addm\\tkn_main\\buildscripts\\" + os.sep + "TPLPreprocessor.py"
+            tpl_preproc_py = workspace + "\\addm\\tkn_main\\buildscripts" + os.sep + "TPLPreprocessor.py"
             tpl_preproc_py_check = os.path.exists(tpl_preproc_dir + os.sep + "TPLPreprocessor.py")
 
             if os.path.exists(tpl_preproc_py_check):
@@ -165,7 +165,58 @@ class Preproc:
         # else:
         #     log.warn("TPLPreprocessor is probably was not imported correctly.")
 
-    def tpl_preprocessor_old(self, file_path_args, mode):
+    def tpl_preprocessor(self, workspace, input_path, output_path, mode):
+        """
+        Run TPLPreprocessor in two scenarios:
+        1. If IMPORT or RECURSIVE_IMPORT - then run in folder passed as arg.
+        2. If NOT - run only on current file.
+
+
+        :param input_path:  What to preproc file\folder
+        :param output_path: Where to output pattern folder or imports folder
+        :param mode: imports \ recursise imports
+        :return: True\False
+        """
+
+        _, t_pre = self.find_tplpreprocessor(workspace)
+        # print(t_pre)
+
+        log = self.logging
+        log.debug("Using script path as: " + t_pre)
+
+        tpl_preproc = False
+        python_v = "C:\\Python27\\python.exe"
+        log.debug("Using TPLPreprocessor from: " + str(t_pre))
+
+        if mode == "imports":
+            log.info("python2.7 : TPLPreprocessor run on one file: " + input_path)
+            try:
+                run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
+                                               + t_pre + '" -q -o "' + output_path + '" -f "' + input_path + '"',
+                                               stdout=subprocess.PIPE)
+                run_preproc.wait()  # wait until command finished
+                tpl_preproc = os.path.exists(output_path)  # True
+                if tpl_preproc:
+                    log.debug("TPLPreprocessor success: " + output_path)
+            except:
+                log.error("TPL_Preprocessor won't run!")
+        elif mode == "recursive_imports":
+        # NO IMPORTS - run on folder
+            log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + input_path)
+            try:
+                run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
+                                               + t_pre + '" -q -o "' + output_path + '" -d "' + input_path + '"',
+                                               stdout=subprocess.PIPE)
+                run_preproc.wait()  # wait until command finished
+                tpl_preproc = os.path.exists(output_path)  # True
+                if tpl_preproc:
+                    log.debug("TPLPreprocessor success: " + output_path)
+            except:
+                log.error("TPL_Preprocessor won't run!")
+
+        return tpl_preproc
+
+    def tpl_preprocessor_pack(self, file_path_args, mode):
         """
         Run TPLPreprocessor in two scenarios:
         1. If IMPORT or RECURSIVE_IMPORT - then run in folder passed as arg.
@@ -184,30 +235,19 @@ class Preproc:
         python_v = "C:\\Python27\\python.exe"
         log.debug("Using TPLPreprocessor from: " + str(self.sublime_working_dir))
 
-        if full_curr_path:
-            log.info("python2.7 : TPLPreprocessor run on one file: " + full_curr_path)
-            try:
-                run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
-                                               + self.sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
-                                               + working_dir + '" -f "' + full_curr_path + '"', stdout=subprocess.PIPE)
-                run_preproc.wait()  # wait until command finished
-                tpl_preproc = os.path.exists(file_path)  # True
-                if tpl_preproc:
-                    log.debug("TPLPreprocessor success: " + file_path)
-            except:
-                log.error("TPL_Preprocessor won't run!")
+
         # NO IMPORTS - run on folder
-        else:
-            log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + dir_label)
-            try:
-                run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
-                                               + self.sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
-                                               + working_dir + '" -d "' + working_dir + '"', stdout=subprocess.PIPE)
-                run_preproc.wait()  # wait until command finished
-                tpl_preproc = os.path.exists(file_path)  # True
-                if tpl_preproc:
-                    log.debug("TPLPreprocessor success: " + file_path)
-            except:
-                log.error("TPL_Preprocessor won't run!")
+
+        log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + dir_label)
+        try:
+            run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
+                                           + self.sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
+                                           + working_dir + '" -d "' + working_dir + '"', stdout=subprocess.PIPE)
+            run_preproc.wait()  # wait until command finished
+            tpl_preproc = os.path.exists(file_path)  # True
+            if tpl_preproc:
+                log.debug("TPLPreprocessor success: " + file_path)
+        except:
+            log.error("TPL_Preprocessor won't run!")
 
         return tpl_preproc

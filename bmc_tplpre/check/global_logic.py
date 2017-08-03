@@ -16,8 +16,12 @@ Later I will add here scenarios.
 
 """
 
+from check.parse_args import ArgsParse
 from check.preproc import Preproc
 from check.imports import TPLimports
+from check.test_queries import TestRead
+from check.upload import AddmOperations
+
 
 
 class GlobalLogic:
@@ -56,7 +60,7 @@ class GlobalLogic:
         else:
             log.error("There is no file extension!")
 
-    def check_args_set(self, args_set):
+    def check_args_set(self, known_args, extra_args):
         """
         This will check args set in input.
         Based on set of args - it will compose another set of functions.
@@ -94,7 +98,14 @@ class GlobalLogic:
         """
         log = self.logging
 
-    def make_function_set(self):
+        parse_args = ArgsParse(log)
+
+        parsable_args_set = parse_args.gather_args(known_args, extra_args)
+        addm_args_set = parse_args.addm_args(known_args)
+
+        return parsable_args_set, addm_args_set
+
+    def make_function_set(self, known_args, extra_args):
         """
         Dummy.
         Will be used for functions set.
@@ -102,3 +113,75 @@ class GlobalLogic:
         :return:
         """
         log = self.logging
+
+        full_path_args, addm_args_set = self.check_args_set(known_args, extra_args)
+        print(full_path_args)
+        print(addm_args_set)
+
+        workspace = full_path_args['workspace']
+        full_path = full_path_args['full_path']
+        working_dir = full_path_args['working_dir']
+        workspace = full_path_args['workspace']
+        file_ext = full_path_args['file_ext']
+
+        ssh = addm_args_set['ssh_connection']
+        disco = addm_args_set['disco_mode']
+        scan_hosts = addm_args_set['scan_hosts']
+        tpl_vers = addm_args_set['tpl_vers']
+
+        if file_ext == "tplpre":
+            if known_args.I:
+                log.debug("Argument for I-mport is True")
+                mode = 'imports'
+                preproc = self.make_preprocessor(workspace=workspace,
+                                                 input_path=full_path,
+                                                 output_path=working_dir,
+                                                 mode=mode)
+
+            if known_args.RI:
+                log.debug("Argument for RI-mport is True")
+
+                # Import tplpre's in recursive mode:
+                # tpl_imports = TPLimports(log)
+                # tpl_imports.import_modules(full_path_args['working_dir'])
+
+                # After R imports are finish its work - run TPLPreprocessor on it
+                mode = 'recursive_imports'
+                input = full_path + "\\imports\\"
+                output = working_dir + "\\imports\\"
+                preproc = self.make_preprocessor(workspace=workspace,
+                                                 input_path=input,
+                                                 output_path=output,
+                                                 mode=mode)
+                print(preproc)
+
+                # After TPLPreprocessor finished its work - run Syntax Check on folder imports
+
+
+            if known_args.T:
+                log.debug("Argument for T-ests is True")
+
+                # Read test.py for queries and atc...
+                test_read = TestRead(log)
+                pattern_list = test_read.import_pattern_tests(working_dir)
+                query_list = test_read.query_pattern_tests(working_dir)
+                # print(query_list)
+        else:
+            log.info("This is not a DEV file.")
+
+        # if ssh and working_dir:
+        #
+        #     log.debug("SHH is still there!")
+        #     addm = AddmOperations(log, ssh)
+
+    def make_preprocessor(self, workspace, input_path, output_path, mode):
+        """
+
+        :param args_set:
+        :return:
+        """
+
+        log = self.logging
+        preproc = Preproc(log).tpl_preprocessor(workspace, input_path, output_path, mode)
+
+        return preproc
