@@ -9,7 +9,7 @@ class ArgsParse:
 
         self.logging = logging
 
-        # Checking psth for useful arguments:
+        # Checking path for useful arguments:
         self.dev_path_re = re.compile('(\S+)(\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)')
 
         self.workspace_rs      = '(?P<workspace>\S+)'
@@ -230,7 +230,7 @@ class ArgsParse:
         """
         log = self.logging
 
-        if full_path:
+        if os.path.exists(full_path):
             log.info("-full_path is: " + full_path)
             # Checking for different paths logic
             dev_path_check = self.dev_path_re.match(full_path)
@@ -275,7 +275,9 @@ class ArgsParse:
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
-                                     'working_dir': working_dir}
+                                     'working_dir': working_dir,
+                                     'full_path': full_path
+                                     }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
 
@@ -297,7 +299,9 @@ class ArgsParse:
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
-                                     'working_dir': tpl_folder}
+                                     'working_dir': tpl_folder,
+                                     'full_path': full_path
+                                     }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
 
@@ -312,7 +316,9 @@ class ArgsParse:
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
-                                     'working_dir': ''}
+                                     'working_dir': '',
+                                     'full_path': full_path
+                                     }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
 
@@ -328,7 +334,9 @@ class ArgsParse:
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
-                                     'working_dir': ''}
+                                     'working_dir': '',
+                                     'full_path': full_path
+                                     }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
 
@@ -343,7 +351,9 @@ class ArgsParse:
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
-                                     'working_dir': ''}
+                                     'working_dir': '',
+                                     'full_path': full_path
+                                     }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
 
@@ -380,7 +390,10 @@ class ArgsParse:
                                      'pattern_lib': '',
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
-                                     'file_ext': file_ext}
+                                     'file_ext': file_ext,
+                                     'full_path': full_path
+                                     }
+                        return args_dict
                     # If not *.tlpre
                     else:
                         alone_tpl_check = self.alone_tpl_re.match(full_path)
@@ -398,7 +411,10 @@ class ArgsParse:
                                          'pattern_lib': '',
                                          'pattern_folder': pattern_folder,
                                          'file_name': file_name,
-                                         'file_ext': file_ext}
+                                         'file_ext': file_ext,
+                                         'full_path': full_path
+                                         }
+                            return args_dict
                         else:
                             log.warn("This path did not match any suitable pattern and probably not a tpl file"
                                      " Or path has superfluous symbols or spaces")
@@ -407,7 +423,7 @@ class ArgsParse:
                               "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
 
         else:
-            log.warn("No '-full_path' argument was set.")
+            log.warn("No '-full_path' argument was set. Or this path is not exist!")
 
     def addm_host_check(self, addm_host, user, password):
         """

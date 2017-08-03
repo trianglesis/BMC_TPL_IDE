@@ -112,8 +112,6 @@ parse_args = ArgsParse(log)
 parsable_args_set = parse_args.gather_args(known_args, extra_args)
 full_path_args = parsable_args_set
 
-
-
 # Path to this script and tplint binaries
 sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
 # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
@@ -139,8 +137,8 @@ tpl_imports.import_modules(full_path_args['working_dir'])
 
 # ADDM ARGS CHECK
 addm_args_set = parse_args.addm_args(known_args)
-print(addm_args_set)
-if addm_args_set['ssh_connection']:
+
+if addm_args_set['ssh_connection'] and full_path_args['working_dir']:
 
     ssh = addm_args_set['ssh_connection']
     disco = addm_args_set['disco_mode']

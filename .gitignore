@@ -21,3 +21,6 @@ bmc_tplpre/check/__pycache__/parse_args.cpython-34.pyc
 bmc_tplpre/check/__pycache__/parse_args.cpython-34.pyc
 bmc_tplpre/check/__pycache__/preproc.cpython-34.pyc
 bmc_tplpre/check/__pycache__/upload.cpython-34.pyc
+bmc_tplpre/check/__pycache__/parse_args.cpython-34.pyc
+bmc_tplpre/check/__pycache__/upload.cpython-34.pyc
+*.pyc
