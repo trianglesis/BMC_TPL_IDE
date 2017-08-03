@@ -1,7 +1,8 @@
 import os
+import re
 import sys
 import subprocess
-
+import datetime
 
 # from check.logger import i_log
 # log = i_log(level='DEBUG', name=__name__)
@@ -188,31 +189,66 @@ class Preproc:
         python_v = "C:\\Python27\\python.exe"
         log.debug("Using TPLPreprocessor from: " + str(t_pre))
 
-        if mode == "imports":
+        if mode == "usual_imports":
             log.info("python2.7 : TPLPreprocessor run on one file: " + input_path)
-            try:
-                run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
-                                               + t_pre + '" -q -o "' + output_path + '" -f "' + input_path + '"',
-                                               stdout=subprocess.PIPE)
-                run_preproc.wait()  # wait until command finished
-                tpl_preproc = os.path.exists(output_path)  # True
-                if tpl_preproc:
-                    log.debug("TPLPreprocessor success: " + output_path)
-            except:
-                log.error("TPL_Preprocessor won't run!")
+            log.debug("Running in usual_imports mode!")
+            if os.path.exists(input_path):
+                try:
+                    run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
+                                                   + t_pre + '" -q -o "' + output_path + '" -f "' + input_path + '"',
+                                                   stdout=subprocess.PIPE)
+                    run_preproc.wait()  # wait until command finished
+                    folder_content = os.listdir(output_path)
+                    for folder in folder_content:
+                        if re.match("tpl\d+", folder) is not None:
+                            folder_creation_time = os.path.getctime(output_path+os.sep+folder)
+                            now = datetime.datetime.now()
+                            ago = now - datetime.timedelta(minutes=15)
+                            folder_time = datetime.datetime.fromtimestamp(folder_creation_time)
+                            if folder_time < ago:
+                                log.warn("TPLPreprocessor result folders looks like older that 15 min. Please check: + "
+                                         + str(folder_time))
+                            if folder_time > ago:
+                                log.debug("TPLPreprocessor result folders are recent: " + str(folder_time))
+                                tpl_preproc = os.path.exists(output_path)  # True
+                                break  # Probably no need to check each folder, if one is recent, then Preproc was run.
+                    if tpl_preproc:
+                        log.debug("TPLPreprocessor success: " + output_path)
+                except:
+                    log.error("TPL_Preprocessor won't run!")
+            else:
+                log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
         elif mode == "recursive_imports":
         # NO IMPORTS - run on folder
             log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + input_path)
-            try:
-                run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
-                                               + t_pre + '" -q -o "' + output_path + '" -d "' + input_path + '"',
-                                               stdout=subprocess.PIPE)
-                run_preproc.wait()  # wait until command finished
-                tpl_preproc = os.path.exists(output_path)  # True
-                if tpl_preproc:
-                    log.debug("TPLPreprocessor success: " + output_path)
-            except:
-                log.error("TPL_Preprocessor won't run!")
+            log.debug("Running in recursive_imports mode! Which means - it will process all files found in working folder.")
+            if os.path.exists(input_path):
+                try:
+                    run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -d "' + input_path + '"',
+                                                   stdout=subprocess.PIPE)
+                    run_preproc.wait()  # wait until command finished
+                    result = run_preproc.stdout.read().decode()
+                    # print(result)
+                    folder_content = os.listdir(output_path)
+                    for folder in folder_content:
+                        if re.match("tpl\d+", folder) is not None:
+                            folder_creation_time = os.path.getctime(output_path+os.sep+folder)
+                            now = datetime.datetime.now()
+                            ago = now - datetime.timedelta(minutes=15)
+                            folder_time = datetime.datetime.fromtimestamp(folder_creation_time)
+                            if folder_time < ago:
+                                log.warn("TPLPreprocessor result folders looks like older that 15 min. Please check: + "
+                                         + str(folder_time))
+                            if folder_time > ago:
+                                log.debug("TPLPreprocessor result folders are recent: " + str(folder_time))
+                                tpl_preproc = os.path.exists(output_path)  # True
+                                break  # Probably no need to check each folder, if one is recent, then Preproc was run.
+                    if tpl_preproc:
+                        log.debug("TPLPreprocessor success: " + output_path)
+                except:
+                    log.error("TPL_Preprocessor won't run!")
+            else:
+                log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
 
         return tpl_preproc
 

@@ -167,6 +167,7 @@ class TPLimports:
         tku_patterns = ""
         core = ""
 
+
         # Setting TKN_CORE from system variable or parse working directory for it
         # TODO: Pass arg from -full_path with path to CORE
         if self.tkn_core:
@@ -206,12 +207,19 @@ class TPLimports:
 
         INPUT: [{'pattern_file': 'd:\\Doc\\PerForce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\CDM_Mapping.tplpre', 'module_name': 'module SupportingFiles.CDM_Mapping'},]
 
-        :param patterns_path: list
+        :param patterns_path:
+                ['d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\CDM_Mapping.tplpre',
+                'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\Cluster_Support.tplpre',
+                'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\DiscoveryFunctions.tplpre',
+                'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\SearchFunctions.tplpre',
+                'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\RDBMSFunctions.tplpre']
         :return:
         """
 
         log = self.logging
         imports_folder = working_dir + os.sep + "imports"
+
+        log.debug("Patterns to be copied into 'imports': " + str(patterns_path))
 
         self._del_old_imports(imports_folder)
         if not os.path.exists(imports_folder):
@@ -234,6 +242,10 @@ class TPLimports:
         pattern_path_list = self.list_folder(working_dir)
         module_imports = self.read_pattern(pattern_path_list)
         import_list = self.pattern_imports(import_modules=module_imports, folder_path=working_dir)
+
+        log.debug("Copy current patterns from pattern folder:" + str(pattern_path_list))
+        for pattern in pattern_path_list:
+            import_list.append(pattern)
 
         if import_list:
             log.debug("Importing patterns: " + str(import_list))

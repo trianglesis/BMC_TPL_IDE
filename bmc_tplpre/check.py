@@ -26,13 +26,13 @@ developer.add_argument("-tpl",
                             "ignoring ADDM tpl version check procedure. "
                             "Use when you want upload older or newer tpl on ADDM"
                             "If file is not a .tplpre - this option will be ignored.")
-developer.add_argument("-I",
+developer.add_argument("-imp",
                        action="store_true",
                        help="Set if you want to import patterns only imported in current opened pattern "
                             "from -full_path. "
                             "No recursive imports will run. "
                             "If file is not a .tplpre - this option will be ignored.")
-developer.add_argument("-RI",
+developer.add_argument("-r_imp",
                        action="store_true",
                        help="Set if you want to import all patterns in recursive mode and upload this package on ADDM."
                             "Better use on clear TKN."
@@ -88,7 +88,7 @@ common.add_argument("-l",
 common.add_argument('--version', action='version', version='%(prog)s 1.0')
 
 known_args, extra_args = parser.parse_known_args()
-# print(known_args)
+print(known_args)
 
 
 def log_constructor():
@@ -102,8 +102,8 @@ log.critical("CRITICAL TEST")
 log.info("-=== INITIALISING Check script from here:")
 
 
-funcs_run = GlobalLogic(log)
-functions_set = funcs_run.make_function_set(known_args, extra_args)
+funcs_run = GlobalLogic(log, known_args, extra_args)
+functions_set = funcs_run.make_function_set()
 print(functions_set)
 
 # True\False check TEST

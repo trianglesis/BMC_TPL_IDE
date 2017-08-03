@@ -104,10 +104,13 @@ class ArgsParse:
 
         :return:
         """
-
+        log = self.logging
         local_arguments_set = self.full_path_parse(known_args.full_path)
+        oper_args_set = self.operational_mode_check(known_args)
 
-        return local_arguments_set
+        log.warn("HEY, you forgot some arguments:" + str(extra_args))
+
+        return local_arguments_set, oper_args_set
 
     def addm_args(self, known_args):
         """
@@ -139,6 +142,7 @@ class ArgsParse:
         scan_hosts = ''
 
         ssh = self.addm_host_check(addm_host, user, password)
+
         if ssh:
             disco = self.discovery_mode_check(disco_mode)
             scan_hosts = self.host_list_check(scan_host_list)
@@ -453,6 +457,7 @@ class ArgsParse:
 
         # TODO: Remove test lines!
         # addm_host = '1.1.1.1'
+        addm_host = False
         ssh = ''
         if addm_host:
             check = self.ip_addr_check.match(addm_host)
@@ -535,3 +540,39 @@ class ArgsParse:
         :return:
         """
         log = self.logging
+
+        recursive_imports = False
+        usual_imports = False
+        read_test = False
+        oper_args_set = ''
+
+        if known_args.T:
+            read_test = True
+            oper_args_set = {
+                'recursive_imports': recursive_imports,
+                'usual_imports': usual_imports,
+                'read_test': read_test,
+            }
+
+        if known_args.imp:
+            usual_imports = True
+            oper_args_set = {
+                'recursive_imports': recursive_imports,
+                'usual_imports': usual_imports,
+                'read_test': read_test,
+            }
+
+        if known_args.r_imp:
+            recursive_imports = True
+            oper_args_set = {
+                'recursive_imports': recursive_imports,
+                'usual_imports': usual_imports,
+                'read_test': read_test,
+            }
+
+        if known_args.imp and known_args.r_imp:
+            log.warn("You cannot add two import scenarios in one run. Please choose one only.")
+
+        return oper_args_set
+
+
