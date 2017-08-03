@@ -1,16 +1,14 @@
 
 import argparse
+import os
 
 from check.parse_args import ArgsParse
 from check.preproc import Preproc
 from check.imports import TPLimports
 from check.test_queries import TestRead
+from check.upload import AddmOperations
 
-
-from check.upload import *
 from check.syntax_checker import syntax_check, parse_syntax_result
-from check.scan import addm_scan
-from check.test_queries import *
 
 # from TPLPreprocessor import TPLPreprocessor
 
@@ -28,22 +26,22 @@ developer.add_argument("-tpl",
                             "Use when you want upload older or newer tpl on ADDM"
                             "If file is not a .tplpre - this option will be ignored.")
 developer.add_argument("-I",
-                       type=str,
-                       action='store',
-                       dest="simple_imports",
-                       default="",
+                       action="store_true",
                        help="Set if you want to import patterns only imported in current opened pattern "
                             "from -full_path. "
                             "No recursive imports will run. "
                             "If file is not a .tplpre - this option will be ignored.")
 developer.add_argument("-RI",
-                       type=str,
-                       action='store',
-                       dest="recursive_imports",
-                       default="",
+                       action="store_true",
                        help="Set if you want to import all patterns in recursive mode and upload this package on ADDM."
                             "Better use on clear TKN."
                             "If file is not a .tplpre - this option will be ignored.")
+developer.add_argument("-T",
+                       action="store_true",
+                       help="Run validation process after scan is finished."
+                            "This will use set of queries to grab everything from scan and build SI models."
+                            "si_type will be gathered from pattern blocks and used to compose search query."
+                            "model file will be saved into developers folder: /usr/tideway/TKU/models")
 common.add_argument("-full_path",
                     type=str,
                     action='store',
@@ -102,8 +100,19 @@ log.warn("WARN TEST")
 log.critical("CRITICAL TEST")
 log.info("-=== INITIALISING Check script from here:")
 
+# True\False check TEST
+if known_args.I:
+    log.debug("Argument for I-mport is True")
+if known_args.RI:
+    log.debug("Argument for RI-mport is True")
+if known_args.T:
+    log.debug("Argument for T-ests is True")
+
 parse_args = ArgsParse(log)
-full_path_args = parse_args.gather_args(known_args, extra_args)
+parsable_args_set = parse_args.gather_args(known_args, extra_args)
+full_path_args = parsable_args_set
+
+
 
 # Path to this script and tplint binaries
 sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
@@ -126,6 +135,22 @@ query_list = test_read.query_pattern_tests(working_dir)
 
 tpl_imports = TPLimports(log)
 tpl_imports.import_modules(full_path_args['working_dir'])
+
+
+# ADDM ARGS CHECK
+addm_args_set = parse_args.addm_args(known_args)
+print(addm_args_set)
+if addm_args_set['ssh_connection']:
+
+    ssh = addm_args_set['ssh_connection']
+    disco = addm_args_set['disco_mode']
+    scan_hosts = addm_args_set['scan_hosts']
+    tpl_vers = addm_args_set['tpl_vers']
+
+    log.debug("SHH is still there!")
+    addm = AddmOperations(log, ssh)
+
+
 
 # if full_path_args['file_ext'] == "tplpre":
 #

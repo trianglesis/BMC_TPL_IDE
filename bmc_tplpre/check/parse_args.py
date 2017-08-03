@@ -54,20 +54,44 @@ class ArgsParse:
         self.alone_tpl_re = re.compile(self.pattern_folder_rs + self.win_esc +
                                        self.file_name_rs      + '(?P<file_ext>tpl)')
 
+        # TPL versions check:
         self.tpl_ver_check = re.compile("\d+\.\d+")  # TPl ver 10.2,11.0...
+
         self.tpl_folder_k = {'8.3': 'tpl16',
                              '9.0': 'tpl17',
                              '10.0': 'tpl18',
                              '10.1': 'tpl19',
                              '10.2': 'tpl110',
-                             '11.2': 'tpl112',
-                             '11.3': 'tpl113',
-                             '11.4': 'tpl114'
+                             '11.0': 'tpl112',
+                             '11.1': 'tpl113',
+                             '11.2': 'tpl114',
+                             '11.3': 'tpl115'
+                             }
+
+        self.PRODUCT_VERSIONS = {'11.2': 'CustardCream',
+                                 '11.1': 'Bobblehat',
+                                 '11.0': 'Aardvark',
+                                 '10.2': 'Zythum',
+                                 '10.1': 'Zed',
+                                 '10.0': 'Yodel'
+                                 }
+
+        self.TPL_VERSIONS = {'CustardCream':     '1.14',
+                             'Bobblehat':        '1.13',
+                             'Aardvark':         '1.12',
+                             'Zythum':           '1.10',
+                             'Zed':              '1.9',
+                             'Yodel':            '1.8',
                              }
 
         # Checking args for ADDM:
         self.ip_addr_check = re.compile("\d+\.\d+\.\d+\.\d+")  # ip addr
         self.disco_mode_check = re.compile("standard|playback|record")  # standard|playback|record
+
+        # Parsing ADDM version:
+        # BMC Discovery Version: 11.1.0.5 Release: 698363
+        self.addm_version_full_re = re.compile("BMC\sDiscovery\sVersion:\s+(\d+(?:\.\d+)*)")
+        self.addm_version_re = re.compile("^(\d+(?:\.\d+){0,1})")
 
     def gather_args(self, known_args, extra_args):
         """
@@ -80,21 +104,27 @@ class ArgsParse:
 
         :return:
         """
-        # print(known_args)
-        # print(extra_args)
 
-        full_path_args = self.full_path_parse(known_args.full_path)
+        local_arguments_set = self.full_path_parse(known_args.full_path)
 
-        return full_path_args
+        return local_arguments_set
 
-    def addm_args(self, known_args, extra_args):
+    def addm_args(self, known_args):
         """
-        Proceed incoming args into key-value dict and return for further usage.
-        Working to get info only for ADDM machine usage, like: addm ip, scan ip, disco mode, tpl version
+        Get SSH <paramiko.client.SSHClient object at 0x00000000035DADD8>
+        Run command "tw_pattern_management -v"
+        Parse version and compare with version dict.
+        Return set of options: {'addm_ver': '11.1',
+                                'disco_mode': 'record',
+                                'scan_hosts': '1.1.1.1, 2.2.2.2, 3.3.3.3',
+                                'addm_prod': 'Bobblehat',
+                                'tpl_vers': '1.13',
+                                'ssh_connection': <paramiko.client.SSHClient object at 0x00000000035DADD8>}
 
-        Will try to return ssh console and set of options to run.
-        :return:
+        :type known_args: set of args from argsparse
+        :return: addm_args_set
         """
+        log = self.logging
 
         addm_host = known_args.addm_host
         user = known_args.user
@@ -102,24 +132,47 @@ class ArgsParse:
         disco_mode = known_args.disco_mode
         scan_host_list = known_args.scan_host_list
 
+        tpl_vers = ''
+        addm_ver = ''
+        addm_prod = ''
+        disco = ''
+        scan_hosts = ''
+
         ssh = self.addm_host_check(addm_host, user, password)
-        disco = self.discovery_mode_check(disco_mode)
-        scan_hosts = self.host_list_check(scan_host_list)
+        if ssh:
+            disco = self.discovery_mode_check(disco_mode)
+            scan_hosts = self.host_list_check(scan_host_list)
+            _, stdout, stderr = ssh.exec_command("tw_pattern_management -v")
+            if stdout:
+                output = stdout.readlines()
+                addm_version_full = self.addm_version_full_re.match(output[0])
+                addm_version = self.addm_version_re.match(addm_version_full.group(1))
+                addm_ver = str(addm_version.group(1))
 
-        return ssh, disco, scan_hosts
+                if addm_ver in self.PRODUCT_VERSIONS:
+                    addm_prod = self.PRODUCT_VERSIONS[addm_ver]
+                    tpl_vers = self.TPL_VERSIONS[addm_prod]
+            if stderr:
+                log.warn("ADDM versioning command fails with error: " + str(stderr.readlines()))
+        else:
+            log.warn("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
 
-    # TODO To be disabled:
+        addm_args_set = {'ssh_connection': ssh,
+                         'disco_mode': disco,
+                         'scan_hosts': scan_hosts,
+                         'addm_ver': addm_ver,
+                         'tpl_vers': tpl_vers,
+                         'addm_prod': addm_prod}
+
+        return addm_args_set
+
     def tpl_version_check(self, tpl_ver):
         """
-            if argument "-tpl", "--TPL_Version" is set - will try to check it's format and version. Then will compose
-            path to folder where TPLPreprocessor should output for current version:
-            - at first will run syntax check with this version (tplint)
-            - will try to check if folder for this version was created after Tplpreproc
-
-            If no argument set - will WARN and pass this and return None
+            Used to DEV only.
+            Stores path to tpl folder with patterns with version requested.
 
             (Discovery/TPL versions: 8.3(1.6) 9.0(1.7) 10.0(1.8) 10.1(1.9) 10.2(1.10) 11.0(1.11))
-            :param log:
+
             :param tpl_ver: str
 
             :return: tpl_folder, tpl_version
@@ -382,15 +435,17 @@ class ArgsParse:
         else:
             log.error("Your ADDM password is empty!")
 
-        # addm_host = '' # check ADDM_HOST ip
+        # TODO: Remove test lines!
+        # addm_host = '1.1.1.1'
         ssh = ''
         if addm_host:
             check = self.ip_addr_check.match(addm_host)
             if check:
                 addm_host = addm_host  # ADDM ip is:                192.168.5.6
-                log.info("INFO: ADDM ip is:" + " " * 47 + addm_host)
+                log.info("INFO: ADDM ip is: " + addm_host)
                 # Open SSH session if ADDM IP and USER and PASSWORD are present
                 if user and password:
+                    log.debug("Trying to connect ADDM " + addm_host + " via SSH as user: " + user)
                     ssh = paramiko.SSHClient()  # Start the session with ADDM machine:
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     try:
@@ -398,6 +453,11 @@ class ArgsParse:
                     except paramiko.ssh_exception.AuthenticationException:
                         log.error("Authentication failed with ADDM")
                         ssh = False
+                    except TimeoutError:
+                        log.critical("Connection failed. Probably IP of ADDM is not set or incorrect!")
+                        log.warn("Will continue further check, but nothing will proceed on ADDM!")
+                        ssh = False
+                        # raise
                 else:
                     log.error("There is no ADDM ip in args found or TPL preproc did not run.")
             else:
@@ -451,3 +511,11 @@ class ArgsParse:
                 log.info("Pattern upload only. No host added for Discovery run!")
 
         return host_list
+
+    def operational_mode_check(self, known_args):
+        """
+
+        :param known_args:
+        :return:
+        """
+        log = self.logging

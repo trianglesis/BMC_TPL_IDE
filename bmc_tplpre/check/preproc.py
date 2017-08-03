@@ -19,6 +19,8 @@ class Preproc:
     def __init__(self, logging):
 
         self.logging = logging
+        self.sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
+        # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
 
     def find_tplpreprocessor(self, workspace):
         """
@@ -163,35 +165,30 @@ class Preproc:
         # else:
         #     log.warn("TPLPreprocessor is probably was not imported correctly.")
 
-    def tpl_preprocessor_old(self, sublime_working_dir, working_dir, dir_label, full_curr_path, file_path):
+    def tpl_preprocessor_old(self, file_path_args, mode):
         """
-        1. If preproc has an argument full_curr_path - the path to edited pattern:
-            RUN only on this pattern and include imports from it.
+        Run TPLPreprocessor in two scenarios:
+        1. If IMPORT or RECURSIVE_IMPORT - then run in folder passed as arg.
+        2. If NOT - run only on current file.
 
-        2. If preproc has NO full_curr_path - RUN on the active folder, where edited pattern situated, no imots included.
 
-        # TO DO:
-        Changes: Will run on
-
-        :param sublime_working_dir: Working dir where sublime plugin and this module lies
-        :param working_dir:  WD where pattern lies
-        :param dir_label: Name of WD
-        :param full_curr_path: full path to edited pattern
-        :param file_path: result folder after TPLPreproc run
+        :param file_path_args:  WD where pattern lies
+        :param mode: Name of WD
         :return: True\False
         """
 
         log = self.logging
+        log.debug("Using script path as: " + self.sublime_working_dir)
 
         tpl_preproc = False
         python_v = "C:\\Python27\\python.exe"
-        log.debug("Using TPLPreprocessor from: " + str(sublime_working_dir))
+        log.debug("Using TPLPreprocessor from: " + str(self.sublime_working_dir))
 
         if full_curr_path:
             log.info("python2.7 : TPLPreprocessor run on one file: " + full_curr_path)
             try:
                 run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
-                                               + sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
+                                               + self.sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
                                                + working_dir + '" -f "' + full_curr_path + '"', stdout=subprocess.PIPE)
                 run_preproc.wait()  # wait until command finished
                 tpl_preproc = os.path.exists(file_path)  # True
@@ -204,7 +201,7 @@ class Preproc:
             log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + dir_label)
             try:
                 run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
-                                               + sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
+                                               + self.sublime_working_dir + '\\TPLPreprocessor.py" -q -o "'
                                                + working_dir + '" -d "' + working_dir + '"', stdout=subprocess.PIPE)
                 run_preproc.wait()  # wait until command finished
                 tpl_preproc = os.path.exists(file_path)  # True
