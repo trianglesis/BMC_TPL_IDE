@@ -1,17 +1,8 @@
-
 import argparse
 import os
 
-from check.parse_args import ArgsParse
-from check.preproc import Preproc
-from check.imports import TPLimports
-from check.test_queries import TestRead
-from check.upload import AddmOperations
 from check.global_logic import GlobalLogic
 
-from check.syntax_checker import syntax_check, parse_syntax_result
-
-# from TPLPreprocessor import TPLPreprocessor
 
 parser = argparse.ArgumentParser(add_help=True)
 common = parser.add_argument_group("Common options")

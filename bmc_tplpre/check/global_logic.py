@@ -22,6 +22,10 @@ from check.imports import TPLimports
 from check.test_queries import TestRead
 from check.upload import AddmOperations
 
+from check.syntax_checker import syntax_check, parse_syntax_result
+
+# from TPLPreprocessor import TPLPreprocessor
+
 
 class GlobalLogic:
 
@@ -138,7 +142,11 @@ class GlobalLogic:
 
     def make_function_set(self):
         """
-        Dummy.
+        This function will decide WHAT set of other functions to RUN -
+        - based on arguments which was initialized in Class.
+        So this mean - the execution process will run HERE and args -
+        - will choose what behaviour to use.
+
         Will be used for functions set.
 
         :return:
@@ -152,13 +160,14 @@ class GlobalLogic:
                                                  input_path=self.full_path,
                                                  output_path=self.working_dir,
                                                  mode="usual_imports")
+                print("Funcs:")
+                print(str(preproc))
 
             if self.recursive_imports:
                 log.debug("Argument for r_imp RECURSIVE import is True")
 
                 # Import tplpre's in recursive mode:
-                tpl_imports = TPLimports(log)
-                tpl_imports.import_modules(self.working_dir)
+                imports_f = self.make_imports()
 
                 # After R imports are finish its work - run TPLPreprocessor on it
                 input = self.working_dir + "\\imports"
@@ -167,19 +176,20 @@ class GlobalLogic:
                                                  input_path=input,
                                                  output_path=output,
                                                  mode="recursive_imports")
-                print(preproc)
+                print("Funcs:")
+                print(str(preproc))
+                print(str(imports_f))
 
                 # After TPLPreprocessor finished its work - run Syntax Check on folder imports
 
             if self.read_test:
                 log.debug("Argument for TESTS read test file is True")
-
                 # Read test.py for queries and atc...
-                test_read = TestRead(log)
-                pattern_list = test_read.import_pattern_tests(self.working_dir)
-                query_list = test_read.query_pattern_tests(self.working_dir)
-                print(query_list)
-                print(pattern_list)
+                imports_t, query_t = self.make_test_read_patterns(), self.make_test_read_query()
+                print("Funcs:")
+                print(str(imports_t), str(query_t))
+                # print(query_list)
+                # print(pattern_list)
             else:
                 log.debug("There is no DEV arg.")
         else:
@@ -200,10 +210,9 @@ class GlobalLogic:
         :param args_set:
         :return:
         """
-
         log = self.logging
-        preproc = Preproc(log).tpl_preprocessor(workspace, input_path, output_path, mode)
-
+        preproc = Preproc(log)
+        preproc.tpl_preprocessor(workspace, input_path, output_path, mode)
         return preproc
 
     def make_imports(self):
@@ -213,3 +222,24 @@ class GlobalLogic:
 
         :return:
         """
+        log = self.logging
+        tpl_imports = TPLimports(log)
+        tpl_imports.import_modules(self.working_dir)
+        return tpl_imports
+
+    def make_test_read_patterns(self):
+        """
+        Read test.py for queries and atc...
+        :return: funcs for each search
+        """
+        log = self.logging
+        test_read = TestRead(log)
+        return test_read.import_pattern_tests(self.working_dir)
+
+    def make_test_read_query(self):
+        log = self.logging
+        test_read = TestRead(log)
+        return test_read.query_pattern_tests(self.working_dir)
+
+    def addm_test(self):
+        log = self.logging

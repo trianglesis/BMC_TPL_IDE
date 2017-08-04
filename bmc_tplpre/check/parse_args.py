@@ -157,7 +157,8 @@ class ArgsParse:
                     addm_prod = self.PRODUCT_VERSIONS[addm_ver]
                     tpl_vers = self.TPL_VERSIONS[addm_prod]
             if stderr:
-                log.warn("ADDM versioning command fails with error: " + str(stderr.readlines()))
+                err = stderr.readlines()
+                log.warn("ADDM versioning command fails with error: " + str(err))
         else:
             log.warn("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
 
@@ -457,7 +458,7 @@ class ArgsParse:
 
         # TODO: Remove test lines!
         # addm_host = '1.1.1.1'
-        addm_host = False
+        # addm_host = False
         ssh = ''
         if addm_host:
             check = self.ip_addr_check.match(addm_host)

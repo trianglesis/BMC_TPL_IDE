@@ -227,6 +227,7 @@ class TPLimports:
             for pattern in patterns_path:
                 shutil.copy2(pattern, imports_folder)
             log.debug("Creating folder 'imports' and add imported patterns.")
+
         return
 
     def import_modules(self, working_dir):
@@ -259,8 +260,13 @@ class TPLimports:
     def _del_old_imports(self, path):
         log = self.logging
         if os.path.exists(path):
-            shutil.rmtree(path, onerror=self._del_rw)
-            log.debug("Folder exist!")
+            try:
+                shutil.rmtree(path, onerror=self._del_rw)
+                log.debug("Folder exist!")
+            except:
+                log.warn("This folder is exist but programm have no permission to remove it. "
+                         "Please check path and permissions.")
+                raise
 
     @staticmethod
     def _del_rw(name):
