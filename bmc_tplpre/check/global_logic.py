@@ -23,12 +23,44 @@ from check.test_queries import TestRead
 from check.upload import AddmOperations
 
 
-
 class GlobalLogic:
 
-    def __init__(self, logging):
+    def __init__(self, logging, known_args, extra_args):
 
         self.logging = logging
+
+        self.full_path_args, self.addm_args_set, self.operational_args = self.check_args_set(known_args, extra_args)
+
+        log = self.logging
+        if self.full_path_args:
+            print(self.full_path_args)
+            self.workspace = self.full_path_args['workspace']
+            self.full_path = self.full_path_args['full_path']
+            self.working_dir = self.full_path_args['working_dir']
+            self.workspace = self.full_path_args['workspace']
+            self.file_ext = self.full_path_args['file_ext']
+            log.debug("Arguments from -full_path are obtained and program will make decisions.")
+        else:
+            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
+
+        if self.addm_args_set:
+            print(self.addm_args_set)
+            self.ssh = self.addm_args_set['ssh_connection']
+            self.disco = self.addm_args_set['disco_mode']
+            self.scan_hosts = self.addm_args_set['scan_hosts']
+            self.tpl_vers = self.addm_args_set['tpl_vers']
+            log.debug("Arguments from -addm are obtained and program will make decisions.")
+        else:
+            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
+
+        if self.operational_args:
+            print(self.operational_args)
+            self.recursive_imports = self.operational_args['recursive_imports']
+            self.usual_imports = self.operational_args['usual_imports']
+            self.read_test = self.operational_args['read_test']
+            log.debug("Arguments from -T, amd imports are obtained and program will make decisions.")
+        else:
+            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
     def check_file_extension(self, file_ext):
         """
@@ -46,8 +78,7 @@ class GlobalLogic:
         # TODO: needed args for each scenario and return in to main module to execute.
         if file_ext == "tplpre":
             tpl_preproc = Preproc(log)
-            tpl_imports = TPLimports(log)
-            import_included_modules = tpl_imports.import_modules(working_dir)
+
             log.debug("")
         elif file_ext == "tpl":
             log.debug("")
@@ -100,12 +131,12 @@ class GlobalLogic:
 
         parse_args = ArgsParse(log)
 
-        parsable_args_set = parse_args.gather_args(known_args, extra_args)
+        parsable_args_set, operational_args = parse_args.gather_args(known_args, extra_args)
         addm_args_set = parse_args.addm_args(known_args)
 
-        return parsable_args_set, addm_args_set
+        return parsable_args_set, addm_args_set, operational_args
 
-    def make_function_set(self, known_args, extra_args):
+    def make_function_set(self):
         """
         Dummy.
         Will be used for functions set.
@@ -114,58 +145,43 @@ class GlobalLogic:
         """
         log = self.logging
 
-        full_path_args, addm_args_set = self.check_args_set(known_args, extra_args)
-        print(full_path_args)
-        print(addm_args_set)
+        if self.file_ext == "tplpre":
+            if self.usual_imports:
+                log.debug("Argument for imp IMPORT is True")
+                preproc = self.make_preprocessor(workspace=self.workspace,
+                                                 input_path=self.full_path,
+                                                 output_path=self.working_dir,
+                                                 mode="usual_imports")
 
-        workspace = full_path_args['workspace']
-        full_path = full_path_args['full_path']
-        working_dir = full_path_args['working_dir']
-        workspace = full_path_args['workspace']
-        file_ext = full_path_args['file_ext']
-
-        ssh = addm_args_set['ssh_connection']
-        disco = addm_args_set['disco_mode']
-        scan_hosts = addm_args_set['scan_hosts']
-        tpl_vers = addm_args_set['tpl_vers']
-
-        if file_ext == "tplpre":
-            if known_args.I:
-                log.debug("Argument for I-mport is True")
-                mode = 'imports'
-                preproc = self.make_preprocessor(workspace=workspace,
-                                                 input_path=full_path,
-                                                 output_path=working_dir,
-                                                 mode=mode)
-
-            if known_args.RI:
-                log.debug("Argument for RI-mport is True")
+            if self.recursive_imports:
+                log.debug("Argument for r_imp RECURSIVE import is True")
 
                 # Import tplpre's in recursive mode:
-                # tpl_imports = TPLimports(log)
-                # tpl_imports.import_modules(full_path_args['working_dir'])
+                tpl_imports = TPLimports(log)
+                tpl_imports.import_modules(self.working_dir)
 
                 # After R imports are finish its work - run TPLPreprocessor on it
-                mode = 'recursive_imports'
-                input = full_path + "\\imports\\"
-                output = working_dir + "\\imports\\"
-                preproc = self.make_preprocessor(workspace=workspace,
+                input = self.working_dir + "\\imports"
+                output = self.working_dir + "\\imports"
+                preproc = self.make_preprocessor(workspace=self.workspace,
                                                  input_path=input,
                                                  output_path=output,
-                                                 mode=mode)
+                                                 mode="recursive_imports")
                 print(preproc)
 
                 # After TPLPreprocessor finished its work - run Syntax Check on folder imports
 
-
-            if known_args.T:
-                log.debug("Argument for T-ests is True")
+            if self.read_test:
+                log.debug("Argument for TESTS read test file is True")
 
                 # Read test.py for queries and atc...
                 test_read = TestRead(log)
-                pattern_list = test_read.import_pattern_tests(working_dir)
-                query_list = test_read.query_pattern_tests(working_dir)
-                # print(query_list)
+                pattern_list = test_read.import_pattern_tests(self.working_dir)
+                query_list = test_read.query_pattern_tests(self.working_dir)
+                print(query_list)
+                print(pattern_list)
+            else:
+                log.debug("There is no DEV arg.")
         else:
             log.info("This is not a DEV file.")
 
@@ -177,6 +193,10 @@ class GlobalLogic:
     def make_preprocessor(self, workspace, input_path, output_path, mode):
         """
 
+        :param mode:
+        :param output_path:
+        :param input_path:
+        :param workspace:
         :param args_set:
         :return:
         """
@@ -185,3 +205,11 @@ class GlobalLogic:
         preproc = Preproc(log).tpl_preprocessor(workspace, input_path, output_path, mode)
 
         return preproc
+
+    def make_imports(self):
+        """
+        Based or arguments - decide which import will run.
+        Or nothing to run at all.
+
+        :return:
+        """
