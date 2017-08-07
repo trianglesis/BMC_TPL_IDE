@@ -23,6 +23,9 @@ with correspond tpl ver from Tplpreproc folders
 class AddmOperations:
 
     def __init__(self, logging, ssh):
+        # TODO: Get args for TPL version to upload and zip this
+        # TODO: Check if ADDM is running on DEV VM with HGFS shares (ls /mnt/hgfs/)
+        # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
 
         self.logging = logging
         self.ssh_cons = ssh

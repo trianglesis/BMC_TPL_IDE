@@ -7,6 +7,8 @@ class ArgsParse:
 
     def __init__(self, logging):
 
+        # TODO: Check tpl version to upload after ADDM version output and update args dict
+        # TODO: Think if can to not to connect SSH on this stage and make it later in Global Logic.
         self.logging = logging
 
         # Checking path for useful arguments:

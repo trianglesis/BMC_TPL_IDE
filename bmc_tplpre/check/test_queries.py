@@ -6,6 +6,7 @@ import re
 class TestRead:
 
     def __init__(self, logging):
+        # TODO: Allow to parse dev_tests and dml/ip data to use in TH mode
 
         self.logging = logging
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
@@ -42,6 +43,7 @@ class TestRead:
     def import_pattern_tests(self, tests_folder):
         """
         Get test.py tree with args from self.setupPatterns()
+        Send list of patterns to import logic of imports.py
 
 
         :param tests_folder:

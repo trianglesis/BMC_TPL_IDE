@@ -18,6 +18,7 @@ import datetime
 class Preproc:
 
     def __init__(self, logging):
+        # TODO: Clear out fake code, make simpler, logic is almost done.
 
         self.logging = logging
         self.sublime_working_dir = os.path.dirname(os.path.abspath(__file__))

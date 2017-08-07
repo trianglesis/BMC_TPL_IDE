@@ -88,14 +88,18 @@ def log_constructor():
     return log_init.log_define()
 log = log_constructor()
 
+log.info("-=== INITIALISING Check script from here:")
 log.warn("WARN TEST")
 log.critical("CRITICAL TEST")
-log.info("-=== INITIALISING Check script from here:")
 
 
 funcs_run = GlobalLogic(log, known_args, extra_args)
 functions_set = funcs_run.make_function_set()
 print(functions_set)
+
+import_patterns = functions_set['import_patterns']
+import_patterns()
+
 
 # True\False check TEST
 

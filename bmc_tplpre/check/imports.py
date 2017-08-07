@@ -1,6 +1,7 @@
 # TODO Import modules from pattern and copy to working dir
 
-import re, os
+import re
+import os
 import shutil
 import stat
 import subprocess
@@ -9,6 +10,9 @@ import subprocess
 class TPLimports:
 
     def __init__(self, logging):
+        # TODO: Enhance imports logic to add places where to find different patterns.
+        # TODO: Add list to import from test.py if args.
+        # TODO: Check OS path and some settings to find TKN_CORE
 
         self.logging = logging
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
