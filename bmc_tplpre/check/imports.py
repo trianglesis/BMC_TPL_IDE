@@ -13,6 +13,8 @@ class TPLimports:
         # TODO: Enhance imports logic to add places where to find different patterns.
         # TODO: Add list to import from test.py if args.
         # TODO: Check OS path and some settings to find TKN_CORE
+        # First search in Supporting Files!
+
 
         self.logging = logging
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
@@ -20,19 +22,19 @@ class TPLimports:
 
         self.tkn_core = os.environ.get("TKN_CORE")
 
-    def walk_folder(self, folder_path):
-        """
-        Get all patterns situated in active folder
-
-        :param folder_path: str
-        :return:
-        """
-        log = self.logging
-        folder_content = os.walk(folder_path)
-        subdirs = next(folder_content)
-        current_subdirs = subdirs[1]
-        log.debug("Subdirectories for current paths is: " + str(subdirs[1]))
-        return current_subdirs
+    # def walk_folder(self, folder_path):
+    #     """
+    #     Get all patterns situated in active folder
+    #
+    #     :param folder_path: str
+    #     :return:
+    #     """
+    #     log = self.logging
+    #     folder_content = os.walk(folder_path)
+    #     subdirs = next(folder_content)
+    #     current_subdirs = subdirs[1]
+    #     log.debug("Subdirectories for current paths is: " + str(subdirs[1]))
+    #     return current_subdirs
 
     def list_folder(self, folder_path):
         """
@@ -234,7 +236,7 @@ class TPLimports:
 
         return
 
-    def import_modules(self, working_dir):
+    def import_modules(self, full_path_args):
         """
         Summarize all imports
 
@@ -244,7 +246,11 @@ class TPLimports:
 
         log = self.logging
 
+        working_dir = full_path_args['working_dir']
+
         pattern_path_list = self.list_folder(working_dir)
+
+        print("Patterns I found in current folder: " + str(pattern_path_list))
         module_imports = self.read_pattern(pattern_path_list)
         import_list = self.pattern_imports(import_modules=module_imports, folder_path=working_dir)
 
@@ -313,7 +319,7 @@ class TPLimports:
                         pattern_file = search_path + os.sep + file
                         if pattern_file not in import_modules_patterns:
                             import_modules_patterns.append(pattern_file)
-                            # Remove module which was found from list, then return list with left modules.
+                            # Remove module which was found from list, then return list with modules left .
                             import_modules_list.remove(module)
 
         log.debug("Import module patterns: " + str(import_modules_patterns))

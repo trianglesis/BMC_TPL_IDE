@@ -21,6 +21,7 @@ from check.preproc import Preproc
 from check.imports import TPLimports
 from check.test_queries import TestRead
 from check.upload import AddmOperations
+from check.local_logic import LocalLogic
 
 from check.syntax_checker import syntax_check, parse_syntax_result
 
@@ -39,7 +40,7 @@ class GlobalLogic:
 
         log = self.logging
         if self.full_path_args:
-            print(self.full_path_args)
+            print("PATH ARGS: "+str(self.full_path_args))
             self.workspace = self.full_path_args['workspace']
             self.full_path = self.full_path_args['full_path']
             self.working_dir = self.full_path_args['working_dir']
@@ -50,7 +51,7 @@ class GlobalLogic:
             log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
         if self.addm_args_set:
-            print(self.addm_args_set)
+            print("ADDM VM ARGS: "+str(self.addm_args_set))
             self.ssh = self.addm_args_set['ssh_connection']
             self.disco = self.addm_args_set['disco_mode']
             self.scan_hosts = self.addm_args_set['scan_hosts']
@@ -60,7 +61,7 @@ class GlobalLogic:
             log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
         if self.operational_args:
-            print(self.operational_args)
+            print("OPERATIONS ARGS: "+str(self.operational_args))
             self.recursive_imports = self.operational_args['recursive_imports']
             self.usual_imports = self.operational_args['usual_imports']
             self.read_test = self.operational_args['read_test']
@@ -139,6 +140,7 @@ class GlobalLogic:
 
         parsable_args_set, operational_args = parse_args.gather_args(known_args, extra_args)
         addm_args_set = parse_args.addm_args(known_args)
+        # print(parsable_args_set)
 
         return parsable_args_set, addm_args_set, operational_args
 
@@ -166,8 +168,6 @@ class GlobalLogic:
         addm_gather_data_f = ''
         addm_verify_data_f = ''
         addm_save_model_f = ''
-
-
 
         if self.file_ext == "tplpre":
             if self.usual_imports:
@@ -245,7 +245,7 @@ class GlobalLogic:
 
         def importer():
             tpl_imports = TPLimports(log)
-            tpl_imports.import_modules(self.working_dir)
+            tpl_imports.import_modules(self.full_path_args)
         return importer
 
     def make_test_read_patterns(self):

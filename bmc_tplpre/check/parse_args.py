@@ -1,6 +1,7 @@
 import re
 import os
 import paramiko
+from check.local_logic import LocalLogic
 
 
 class ArgsParse:
@@ -108,6 +109,7 @@ class ArgsParse:
         """
         log = self.logging
         local_arguments_set = self.full_path_parse(known_args.full_path)
+        # print(local_arguments_set)
         oper_args_set = self.operational_mode_check(known_args)
 
         log.warn("HEY, you forgot some arguments:" + str(extra_args))
@@ -223,6 +225,14 @@ class ArgsParse:
 
 
         Output: dictionary with configured arguments for further usage.
+        Adding paths to each dev directories with patterns in TKN tree.
+            //addm/tkn_main/tku_patterns/CORE
+            //addm/tkn_main/tku_patterns/DBDETAILS/Database_Structure_Patterns/
+            //addm/tkn_main/tku_patterns/MIDDLEWAREDETAILS/
+            //addm/tkn_main/tku_patterns/CORE/SupportingFiles
+            //addm/tkn_main/buildscripts/
+            etc
+
         Arguments from file path: {'file_name': 'BMCRemedyARSystem',
                                    'pattern_folder': 'BMCRemedyARSystem',
                                    'tku_patterns': 'tku_patterns',
@@ -261,6 +271,21 @@ class ArgsParse:
                     file_name      = path_parse.group('file_name')
                     file_ext       = path_parse.group('file_ext')
 
+                    # Composing some usual places here - to make it easy to manage and not to add thi each time further.
+                    # TODO: Maybe need to check if exist here:
+                    tkn_main_t = workspace    + os.sep + \
+                                 addm         + os.sep + \
+                                 tkn_main     + os.sep
+
+                    tku_patterns_t      = tkn_main_t + os.sep + tku_patterns + os.sep
+                    buildscripts_t      = tkn_main_t + os.sep + 'buildscripts'
+                    CORE_t              = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE'
+                    DBDETAILS_t         = tkn_main_t + os.sep + tku_patterns + os.sep + 'DBDETAILS' + os.sep + \
+                                          'Database_Structure_Patterns'
+                    MIDDLEWAREDETAILS_t = tkn_main_t + os.sep + tku_patterns + os.sep + 'MIDDLEWAREDETAILS'
+                    SupportingFiles_t   = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE' + os.sep + 'SupportingFiles'
+                    tkn_sandbox_t       = workspace  + os.sep + addm + os.sep + 'tkn_sandbox'
+
                     # Check if this is a tplpre file from: PatternFolder\PatternName.tplpre
                     if re.match('tplpre', file_ext):
 
@@ -275,15 +300,23 @@ class ArgsParse:
                                       pattern_folder
 
                         args_dict = {'workspace': workspace,
-                                     'addm': addm,
-                                     'tkn_main': tkn_main,
-                                     'tku_patterns': tku_patterns,
-                                     'pattern_lib': pattern_lib,
+                                     # 'addm': addm,
+                                     # 'tkn_main': tkn_main,
+                                     # 'tku_patterns': tku_patterns,
+                                     # 'pattern_lib': pattern_lib,
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
                                      'working_dir': working_dir,
-                                     'full_path': full_path
+                                     'full_path': full_path,
+                                     'tkn_main_t': tkn_main_t,
+                                     'tku_patterns_t': tku_patterns_t,
+                                     'buildscripts_t': buildscripts_t,
+                                     'CORE_t': CORE_t,
+                                     'DBDETAILS_t': DBDETAILS_t,
+                                     'MIDDLEWAREDETAILS_t': MIDDLEWAREDETAILS_t,
+                                     'SupportingFiles_t': SupportingFiles_t,
+                                     'tkn_sandbox_t': tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
@@ -299,15 +332,23 @@ class ArgsParse:
                         tpl_folder     = path_parse.group('tpl_folder')
 
                         args_dict = {'workspace': workspace,
-                                     'addm': addm,
-                                     'tkn_main': tkn_main,
-                                     'tku_patterns': tku_patterns,
-                                     'pattern_lib': pattern_lib,
+                                     # 'addm': addm,
+                                     # 'tkn_main': tkn_main,
+                                     # 'tku_patterns': tku_patterns,
+                                     # 'pattern_lib': pattern_lib,
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
                                      'working_dir': tpl_folder,
-                                     'full_path': full_path
+                                     'full_path': full_path,
+                                     'tkn_main_t': tkn_main_t,
+                                     'tku_patterns_t': tku_patterns_t,
+                                     'buildscripts_t': buildscripts_t,
+                                     'CORE_t': CORE_t,
+                                     'DBDETAILS_t': DBDETAILS_t,
+                                     'MIDDLEWAREDETAILS_t': MIDDLEWAREDETAILS_t,
+                                     'SupportingFiles_t': SupportingFiles_t,
+                                     'tkn_sandbox_t': tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
@@ -316,15 +357,23 @@ class ArgsParse:
                     elif re.match('dml', file_ext):
                         log.debug("This is DML file.")
                         args_dict = {'workspace': workspace,
-                                     'addm': addm,
-                                     'tkn_main': tkn_main,
-                                     'tku_patterns': tku_patterns,
-                                     'pattern_lib': pattern_lib,
+                                     # 'addm': addm,
+                                     # 'tkn_main': tkn_main,
+                                     # 'tku_patterns': tku_patterns,
+                                     # 'pattern_lib': pattern_lib,
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
                                      'working_dir': '',
-                                     'full_path': full_path
+                                     'full_path': full_path,
+                                     'tkn_main_t': tkn_main_t,
+                                     'tku_patterns_t': tku_patterns_t,
+                                     'buildscripts_t': buildscripts_t,
+                                     'CORE_t': CORE_t,
+                                     'DBDETAILS_t': DBDETAILS_t,
+                                     'MIDDLEWAREDETAILS_t': MIDDLEWAREDETAILS_t,
+                                     'SupportingFiles_t': SupportingFiles_t,
+                                     'tkn_sandbox_t': tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
@@ -334,15 +383,23 @@ class ArgsParse:
                     elif re.match('model', file_ext):
                         log.debug("This is model file.")
                         args_dict = {'workspace': workspace,
-                                     'addm': addm,
-                                     'tkn_main': tkn_main,
-                                     'tku_patterns': tku_patterns,
-                                     'pattern_lib': pattern_lib,
+                                     # 'addm': addm,
+                                     # 'tkn_main': tkn_main,
+                                     # 'tku_patterns': tku_patterns,
+                                     # 'pattern_lib': pattern_lib,
                                      'pattern_folder': pattern_folder,
                                      'file_name': file_name,
                                      'file_ext': file_ext,
                                      'working_dir': '',
-                                     'full_path': full_path
+                                     'full_path': full_path,
+                                     'tkn_main_t': tkn_main_t,
+                                     'tku_patterns_t': tku_patterns_t,
+                                     'buildscripts_t': buildscripts_t,
+                                     'CORE_t': CORE_t,
+                                     'DBDETAILS_t': DBDETAILS_t,
+                                     'MIDDLEWAREDETAILS_t': MIDDLEWAREDETAILS_t,
+                                     'SupportingFiles_t': SupportingFiles_t,
+                                     'tkn_sandbox_t': tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
@@ -359,7 +416,15 @@ class ArgsParse:
                                      'file_name': file_name,
                                      'file_ext': file_ext,
                                      'working_dir': '',
-                                     'full_path': full_path
+                                     'full_path': full_path,
+                                     'tkn_main_t': tkn_main_t,
+                                     'tku_patterns_t': tku_patterns_t,
+                                     'buildscripts_t': buildscripts_t,
+                                     'CORE_t': CORE_t,
+                                     'DBDETAILS_t': DBDETAILS_t,
+                                     'MIDDLEWAREDETAILS_t': MIDDLEWAREDETAILS_t,
+                                     'SupportingFiles_t': SupportingFiles_t,
+                                     'tkn_sandbox_t': tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
                         return args_dict
