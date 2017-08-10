@@ -1,5 +1,13 @@
 """
-Here I will compose some settings and paths based on args and aettings I can obtain or found.
+Alexander Danylchenko 2017
+TPL - (tideway pattern language) syntax highlighting and checking tool.
+Syntax checking is based on BMC code and not included in this public version due to license restrictions.
+Allows you to automate usual routine in pattern development.
+"""
+
+
+"""
+Here I will compose some settings and paths based on args and settings I can obtain or found.
 
 """
 # from check.parse_args import ArgsParse

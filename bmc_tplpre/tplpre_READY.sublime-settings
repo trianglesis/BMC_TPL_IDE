@@ -1,0 +1,100 @@
+{
+	"align_indent": true,
+	"alignment_chars":
+	[
+		":=",
+		"->"
+	],
+	"alignment_prefix_chars":
+	[
+		"+",
+		"-",
+		"&",
+		"|",
+		"<",
+		">",
+		"!",
+		"~",
+		"%",
+		"/",
+		"*",
+		".",
+		":"
+	],
+	"alignment_space_chars":
+	[
+		":"
+	],
+	"always_show_minimap_viewport": true,
+	"bold_folder_labels": true,
+	"caret_extra_bottom": 1,
+	"caret_extra_top": 1,
+	"caret_extra_width": 3,
+	"caret_style": "phase",
+	"color_scheme": "Packages/Color Scheme - Default/Monokai.tmTheme",
+	"copy_with_empty_selection": true,
+	"draw_indent_guides": true,
+	"draw_white_space": "selection",
+	"extensions":
+	[
+		"tpl"
+	],
+	"fade_fold_buttons": false,
+	"fold_buttons": true,
+	"font_face": "Consolas",
+	"font_options":
+	[
+	],
+	"font_size": 9,
+	"gutter": true,
+	"highlight_line": true,
+	"hightlight_modified_tabs": true,
+	"indent_guide_options":
+	[
+		"draw_active"
+	],
+	"line_numbers": true,
+	"line_padding_bottom": 0,
+	"line_padding_top": 0,
+	"margin": 4,
+	"match_brackets": true,
+	"match_brackets_angle": true,
+	"match_brackets_braces": true,
+	"match_brackets_content": true,
+	"match_brackets_square": true,
+	"match_tags": true,
+	"mid_line_tabs": false,
+	"scroll_past_end": true,
+	"shift_tab_unindent": true,
+	"show_definitions": true,
+	"show_encoding": true,
+	"smart_indent": true,
+	"tab_size": 4,
+	"theme_autocomplete_item_selected_colored": true,
+	"theme_bar": true,
+	"theme_find_panel_atomized": true,
+	"theme_find_panel_font_xs": true,
+	"theme_icon_button_highlighted": true,
+	"theme_icons_materialized": true,
+	"theme_popup_border_visible": true,
+	"theme_scrollbar_rounded": true,
+	"theme_sidebar_disclosure": true,
+	"theme_sidebar_folder_mono": true,
+	"theme_sidebar_highlight_selected_text_only": true,
+	"theme_sidebar_highlight_text_only": true,
+	"theme_sidebar_indent_md": true,
+	"theme_sidebar_size_xxs": true,
+	"theme_size_sm": true,
+	"theme_statusbar_font_lg": true,
+	"theme_tab_close_always_visible": true,
+	"theme_tab_font_sm": true,
+	"theme_tab_line_size_sm": true,
+	"theme_tab_selected_underlined": true,
+	"theme_tab_separator": true,
+	"theme_tab_width_auto": true,
+	"theme_tooltips_font_md": true,
+	"theme_unified": true,
+	"translate_tabs_to_spaces": true,
+	"trim_automatic_white_space": true,
+	"trim_trailing_white_space_on_save": true
+}

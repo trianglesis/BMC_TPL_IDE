@@ -20,13 +20,13 @@
                 <key>name</key>
                 <string>TM_PERFORCE_ROOT</string>
                 <key>value</key>
-                <string><![CDATA[d:\Doc\PerForce]]></string>
+                <string><![CDATA[d:\perforce]]></string>
             </dict>
             <dict>
                 <key>name</key>
                 <string>TM_CORE</string>
                 <key>value</key>
-                <string><![CDATA[d:\Doc\PerForce\addm\tkn_main\tku_patterns\CORE]]></string>
+                <string><![CDATA[d:\perforce\addm\tkn_main\tku_patterns\CORE]]></string>
             </dict>
             <dict>
               <key>name</key>
