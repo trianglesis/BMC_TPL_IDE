@@ -86,7 +86,6 @@ class Logger:
 
         con_extra_formatter = logging.Formatter('%(asctime)-24s'
                                                      '%(levelname)-9s'
-                                                     '%(name)-22s'
                                                      '%(funcName)-28s'
                                                      'Line:%(lineno)-4s'
                                                      '%(message)8s')

@@ -104,6 +104,7 @@ funcs_run = GlobalLogic(log, known_args, extra_args)
 functions_set = funcs_run.make_function_set()
 # print("FUNCTIONS OBJ SET: "+str(functions_set))
 
+# Manual functions execution
 import_patterns = functions_set['import_patterns']
 import_patterns()
 

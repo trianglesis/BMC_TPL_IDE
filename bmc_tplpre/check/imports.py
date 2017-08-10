@@ -149,36 +149,44 @@ class TPLimports:
             # Recursive search for imports and imports for found patterns for 3 times.
             # If something was not found on 3rd iteration - print warn message with theese items.
             iteration_count = iteration_count + 1
-            log.debug("Round: "+str(iteration_count)+" - of recursive searching patterns.")
-            log.debug("Step 2. Searching modules from each found pattern from Step 1 : "+str(find_importing_modules))
+            if find_importing_modules:
+                log.debug("Round: "+str(iteration_count)+" - of recursive searching patterns.")
+                log.debug("Step 2. Searching modules from each found pattern from Step 1 : "+str(find_importing_modules))
 
-            for item in extra_folders:
+                for item in extra_folders:
 
-                # List folders of each folder in extra folders:
-                extra_folder = self.tku_patterns_t + os.sep + item
-                extra_folder_folders = os.listdir(extra_folder)
-                log.debug("Round: "+str(iteration_count)+" - Search patterns in sub folders in directory: "+str(extra_folder))
+                    # List folders of each folder in extra folders:
+                    extra_folder = self.tku_patterns_t + os.sep + item
+                    if os.path.exists(extra_folder):
+                        extra_folder_folders = os.listdir(extra_folder)
+                        log.debug("Round: "+str(iteration_count)+" - Search patterns in sub folders in directory: "+str(extra_folder))
 
-                # In each sub folder from extra folders find:
-                for folder in extra_folder_folders:
-                    directory = extra_folder + os.sep + folder
+                        # In each sub folder from extra folders find:
+                        for folder in extra_folder_folders:
+                            directory = extra_folder + os.sep + folder
 
-                    if os.path.isdir(directory):
-                        # Step 4. - Find modules which left in list - in other folders including CORE:
-                        find_importing_modules_2, current_modules_name_2 = self.search_in_path(search_path=directory,
-                                                                                               find_importing_modules=find_importing_modules,
-                                                                                               current_modules_name=current_modules_name)
-                        find_importing_modules = find_importing_modules_2
-                        current_modules_name = current_modules_name_2
+                            if os.path.isdir(directory):
+                                # Step 4. - Find modules which left in list - in other folders including CORE:
+                                find_importing_modules_2, current_modules_name_2 = self.search_in_path(search_path=directory,
+                                                                                                       find_importing_modules=find_importing_modules,
+                                                                                                       current_modules_name=current_modules_name)
+                                find_importing_modules = find_importing_modules_2
+                                current_modules_name = current_modules_name_2
 
-                        if find_importing_modules:
-                            # Clear list from already found modules which was added twice
-                            for found in current_modules_name:
-                                if found['module'] in find_importing_modules:
-                                    find_importing_modules.remove(found['module'])
+                                if find_importing_modules:
+                                    # Clear list from already found modules which was added twice
+                                    for found in current_modules_name:
+                                        if found['module'] in find_importing_modules:
+                                            find_importing_modules.remove(found['module'])
+                    else:
+                        log.warn("Round: "+str(iteration_count)+" - Cannot proceed because path is not exist: "+str(extra_folder))
+            else:
+                log.debug("Round: "+str(iteration_count)+" - Found everything already, no reason to continue loop.")
 
-        log.warn("Step 3. These modules cannot be found anywhere in 'tku_patterns' please check manually: "+str(find_importing_modules))
-        log.debug("Step 3.1 Found modules list: "+str(current_modules_name))
+        if find_importing_modules:
+            log.warn("Step 3. These modules cannot be found anywhere in 'tku_patterns' please check manually: "+str(find_importing_modules))
+        if current_modules_name:
+            log.debug("Step 3.1 Found modules list: "+str(current_modules_name))
 
         self.import_tkn(current_modules_name, self.working_dir)
 
