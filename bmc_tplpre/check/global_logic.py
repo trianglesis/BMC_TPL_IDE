@@ -27,11 +27,10 @@ from check.preproc import Preproc
 from check.imports import TPLimports
 from check.test_queries import TestRead
 from check.upload import AddmOperations
+from check.syntax_checker import SyntaxCheck
+
 from check.local_logic import LocalLogic
 
-from check.syntax_checker import syntax_check, parse_syntax_result
-
-# from TPLPreprocessor import TPLPreprocessor
 
 
 class GlobalLogic:
@@ -49,6 +48,8 @@ class GlobalLogic:
 
             # print("PATH ARGS: "+str(self.full_path_args))
 
+            self.tku_patterns_t   = self.full_path_args['tku_patterns_t']
+            self.CORE_t   = self.full_path_args['CORE_t']
             self.workspace   = self.full_path_args['workspace']
             self.full_path   = self.full_path_args['full_path']
             self.working_dir = self.full_path_args['working_dir']
@@ -171,7 +172,7 @@ class GlobalLogic:
         :return:
         """
         log = self.logging
-        preproc            = ''
+        preproc_f          = ''
         imports_f          = ''
         imports_t          = ''
         query_t            = ''
@@ -185,38 +186,87 @@ class GlobalLogic:
         addm_save_model_f  = ''
 
         if self.file_ext == "tplpre":
+            """
+            Run developments procedures only if this is tplpre file.
+            Import modules from active pattern + extra from tests.
+            Run TPLPreprocessor on result folder or file.
+            Ask ADDM for version.
+            Check syntax for correspond tpl version.
+            Upload to ADDM zip of patterns.
+            Start scan.
+            Generate data, dml, models etc.
+            """
             if self.usual_imports:
+                """
+                When you don't want to import whole set of modules but only ones are used in current pattern.
+                """
+
                 log.debug("Argument for imp IMPORT is True")
 
-                preproc = self.make_preprocessor(workspace=self.workspace,
-                                                 input_path=self.full_path,
-                                                 output_path=self.working_dir,
-                                                 mode="usual_imports")
+                preproc_f = self.make_preprocessor(workspace=self.workspace,
+                                                   input_path=self.full_path,
+                                                   output_path=self.working_dir,
+                                                   mode="usual_imports")
             if self.recursive_imports:
+                """
+                When you want to import modules for each pattern in working dir and each it recursive.
+                """
+
                 log.debug("Argument for r_imp RECURSIVE import is True")
 
                 # Import tplpre's in recursive mode:
-                imports_f = self.make_imports()
+                imports_f = self.make_imports(extra_patterns=None)
 
                 # After R imports are finish its work - run TPLPreprocessor on it
                 input = self.working_dir + "\\imports"
                 output = self.working_dir + "\\imports"
-                preproc = self.make_preprocessor(workspace=self.workspace,
-                                                 input_path=input,
-                                                 output_path=output,
-                                                 mode="recursive_imports")
+                preproc_f = self.make_preprocessor(workspace=self.workspace,
+                                                   input_path=input,
+                                                   output_path=output,
+                                                   mode="recursive_imports")
                 # After TPLPreprocessor finished its work - run Syntax Check on folder imports
+                # TODO: Syntat check.
 
-            if self.read_test:
+            if self.read_test and self.recursive_imports:
+                """
+                As recursive imports but also includes patterns from self.setupPatterns from test.py
+                """
                 log.debug("Argument for TESTS read test file is True")
 
-                # Read test.py for queries and atc...
-                imports_t, query_t = self.make_test_read_patterns(), self.make_test_read_query()
-            else:
-                log.debug("There is no DEV arg.")
+                # Read test.py and extract query for future validation after addm scan and save model:
+                query_t = self.make_test_read_query()
 
-            functions_dict = {'import_patterns':       imports_f,
-                              'prepcoc_patterns':      preproc,
+                # Read test.py and extract list of patterns from self.setupPatterns
+                imports_t = TestRead(log).import_pattern_tests(self.working_dir, self.tku_patterns_t)
+
+                # Import tplpre's in recursive mode with extras from test.py:
+                imports_f = self.make_imports(imports_t)
+
+                # After R imports are finish its work - run TPLPreprocessor on it
+                input = self.working_dir + "\\imports"
+                output = self.working_dir + "\\imports"
+                preproc_f = self.make_preprocessor(workspace=self.workspace,
+                                                   input_path=input,
+                                                   output_path=output,
+                                                   mode="recursive_imports")
+
+                # After TPLPreprocessor finished its work - run Syntax Check on folder imports
+                # TODO: Syntat check.
+
+            else:
+                """
+                If file is tplre - but no dev args found.
+                This can be an alone tplpre from folder Download for example.
+                In this case I will try to ask windows PATH for TKN_CORE or 
+                run p4 command to obtain workspace path and compose dev paths to all I need to run and use.  
+                """
+                log.debug("There is no DEV arg. Using as standalone tplpre and trying to search TKN_CORE!")
+
+            functions_dict = {
+                              'parse_tests_patterns':  imports_t,
+                              'parse_tests_queries':   query_t,
+                              'import_patterns':       imports_f,
+                              'prepcoc_patterns':      preproc_f,
                               'syntax_check':          syntax_check_f,
                               'addm_check_ssh':        addm_check_f,
                               'addm_upload_pattern':   addm_upload_f,
@@ -227,6 +277,11 @@ class GlobalLogic:
                               'addm_save_model':       addm_save_model_f
                              }
         else:
+            """
+            Here: if you just editing usual tpl file - you don't need to tpreproc it.
+            Probably imports and recursive imports can be implemented but it will work 
+            only in case - if user has tkn tree in working env.
+            """
             log.info("This is not a DEV file.")
 
         # if ssh and working_dir:
@@ -253,7 +308,7 @@ class GlobalLogic:
             preproc.tpl_preprocessor(workspace, input_path, output_path, mode)
         return pre_processing
 
-    def make_imports(self):
+    def make_imports(self, extra_patterns):
         """
         Based or arguments - decide which import will run.
         Or nothing to run at all.
@@ -265,7 +320,7 @@ class GlobalLogic:
         def importer():
             tpl_imports = TPLimports(log, self.full_path_args)
             # Now I don't need args because class was initialized with args above:
-            tpl_imports.import_modules()
+            tpl_imports.import_modules(extra_patterns)
         return importer
 
     def make_test_read_patterns(self):
@@ -277,7 +332,8 @@ class GlobalLogic:
 
         def test_patterns():
             test_read = TestRead(log)
-            test_read.import_pattern_tests(self.working_dir)
+            patterns = test_read.import_pattern_tests(self.working_dir, self.tku_patterns_t)
+            return patterns
         # return test_read.import_pattern_tests(self.working_dir)
         return test_patterns
 
@@ -291,4 +347,8 @@ class GlobalLogic:
         return test_queries
 
     def addm_test(self):
+        """
+        Compose ADDM ssh functions: upload, scan, verify and etc.
+        :return:
+        """
         log = self.logging

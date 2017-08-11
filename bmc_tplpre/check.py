@@ -102,11 +102,17 @@ log.critical("CRITICAL TEST")
 
 funcs_run = GlobalLogic(log, known_args, extra_args)
 functions_set = funcs_run.make_function_set()
-# print("FUNCTIONS OBJ SET: "+str(functions_set))
+print("FUNCTIONS OBJ SET: "+str(functions_set))
 
-# Manual functions execution
+# Manual functions execution:
+
 import_patterns = functions_set['import_patterns']
 import_patterns()
+
+test_patterns = functions_set['parse_tests_patterns']
+# print(test_patterns)
+make_preproc = functions_set['prepcoc_patterns']
+make_preproc()
 
 
 # True\False check TEST

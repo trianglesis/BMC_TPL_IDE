@@ -106,7 +106,7 @@ class TPLimports:
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import\s+\S+\s+\d+')
         self.pattern_module_name_r = re.compile('tpl\s+\$\$TPLVERSION\$\$\s+module\s+(\S+);')
 
-    def import_modules(self):
+    def import_modules(self, extra_patterns=None):
         """
             Run to import:
         :return: will be returned as function obj in global_logic
@@ -128,15 +128,20 @@ class TPLimports:
         log.debug("Step 0. Starting import functions.")
 
         # Set options:
-        pattern_path_list = []  # List of patterns found
+        # pattern_path_list = []  # List of patterns found
         current_modules_name = []  # Modules from KNOWN and FOUND and CURRENT.
         find_importing_modules = []  # Modules which I should found.
-        found_import_modules = []  # Modules which I should found.
+        # found_import_modules = []  # Modules which I should found.
 
         # Step 1 - Find pattern files in current pattern folder:
         pattern_path_list = self.list_folder(self.working_dir)
-        log.debug("Step 1.1. Finding modules for: "+str(pattern_path_list))
+        # Add some extra pattens from test.py if 'read_tests' arguments was set and sorted in GlobalLogic:
+        if extra_patterns:
+            for p in extra_patterns:
+                if p not in pattern_path_list:
+                    pattern_path_list.append(p)
 
+        log.debug("Step 1.1. Finding modules for: "+str(pattern_path_list))
         # Step 2 - Read patterns from current folder and get [find_importing_modules] AND [current_modules_name]
         find_importing_modules, current_modules_name = self.read_pattern(pattern_path_list,
                                                                          find_importing_modules,
@@ -281,10 +286,15 @@ class TPLimports:
                         # Make dict as  current_modules_name
                         current_pattern_dict = {'module': pattern_module, 'path': pattern_file_path}
                         if current_pattern_dict not in current_modules_name:
+
                             # Clear Readonly flag before copying:
+                            # This also will be duplicated in import_tkn() for other places in tkn tree
+                            # print("Clear read only: "+str(pattern_file_path))
                             os.chmod(pattern_file_path, stat.S_IWRITE)
+
                             # Now copy released file:
                             current_modules_name.append(current_pattern_dict)
+
                             # Remove module which was found from list, then return list with modules left .
                             find_importing_modules.remove(pattern_module)
 
@@ -324,11 +334,13 @@ class TPLimports:
 
             log.debug("Step 5. Creating folder 'imports' and add imported patterns.")
             for pattern in patterns_path:
-                shutil.copy2(pattern['path'], imports_folder)
 
-                log.debug("Step 5.1 Copy pattern to imports folder: " + str(pattern['path']))
+                pattern_path = pattern['path']
 
+                os.chmod(pattern_path, stat.S_IWRITE)
+                shutil.copy2(pattern_path, imports_folder)
 
+                log.debug("Step 5.1 Copy to imports folder and clear read-only flag for pattern: " + str(pattern['path']))
         return
 
     # Service functions:

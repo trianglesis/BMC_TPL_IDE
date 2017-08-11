@@ -85,6 +85,7 @@ class AddmOperations:
         :param file_path: str
         """
 
+        # TODO: Check if password for system changed or need to update or can be used of tideway or else.
         log = self.logging
 
         output = ''
@@ -173,6 +174,7 @@ class AddmOperations:
 
         :param path: path to check
         """
+        # TODO: Check if tideway user can run this.
 
         log = self.logging
 
