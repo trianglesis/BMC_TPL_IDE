@@ -105,14 +105,15 @@ functions_set = funcs_run.make_function_set()
 print("FUNCTIONS OBJ SET: "+str(functions_set))
 
 # Manual functions execution:
+# TODO: This will be removed and execute only by set of composed functions.
 
 import_patterns = functions_set['import_patterns']
-import_patterns()
+# import_patterns()
 
 test_patterns = functions_set['parse_tests_patterns']
 # print(test_patterns)
 make_preproc = functions_set['prepcoc_patterns']
-make_preproc()
+# make_preproc()
 
 
 # True\False check TEST

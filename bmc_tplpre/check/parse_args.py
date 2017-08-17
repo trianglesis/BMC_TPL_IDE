@@ -67,18 +67,33 @@ class ArgsParse:
         # TPL versions check:
         self.tpl_ver_check = re.compile("\d+\.\d+")  # TPl ver 10.2,11.0...
 
-        self.tpl_folder_k = {'8.3': 'tpl16',
-                             '9.0': 'tpl17',
-                             '10.0': 'tpl18',
-                             '10.1': 'tpl19',
-                             '10.2': 'tpl110',
-                             '11.0': 'tpl112',
-                             '11.1': 'tpl113',
-                             '11.2': 'tpl114',
-                             '11.3': 'tpl115'
+        """
+        Below in dicts should be updated manually each new ADDM release (not TKU release!)
+
+        '11.3': 'tpl115',
+        '11.2': 'tpl114',
+        '11.1': 'tpl113',
+        '11.0': 'tpl112',
+        '10.2': 'tpl110',
+        '10.1': 'tpl19',
+        '10.0': 'tpl18',
+        '9.0': 'tpl17',
+        '8.3': 'tpl16',
+        """
+        self.tpl_folder_k = {
+                             '1.15': 'tpl115',
+                             '1.14': 'tpl114',
+                             '1.13': 'tpl113',
+                             '1.12': 'tpl112',
+                             '1.10': 'tpl110',
+                             '1.9': 'tpl19',
+                             '1.8': 'tpl18',
+                             '1.7': 'tpl17',
+                             '1.6': 'tpl16'
                              }
 
-        self.PRODUCT_VERSIONS = {'11.2': 'CustardCream',
+        self.PRODUCT_VERSIONS = {
+                                 '11.2': 'CustardCream',
                                  '11.1': 'Bobblehat',
                                  '11.0': 'Aardvark',
                                  '10.2': 'Zythum',
@@ -86,12 +101,13 @@ class ArgsParse:
                                  '10.0': 'Yodel'
                                  }
 
-        self.TPL_VERSIONS = {'CustardCream':     '1.14',
+        self.TPL_VERSIONS = {
+                             'CustardCream':     '1.14',
                              'Bobblehat':        '1.13',
                              'Aardvark':         '1.12',
                              'Zythum':           '1.10',
                              'Zed':              '1.9',
-                             'Yodel':            '1.8',
+                             'Yodel':            '1.8'
                              }
 
         # Checking args for ADDM:
@@ -102,6 +118,9 @@ class ArgsParse:
         # BMC Discovery Version: 11.1.0.5 Release: 698363
         self.addm_version_full_re = re.compile("BMC\sDiscovery\sVersion:\s+(\d+(?:\.\d+)*)")
         self.addm_version_re = re.compile("^(\d+(?:\.\d+){0,1})")
+
+        # HGFS ADDM folder shares check
+        self.hgfs_path_re = re.compile("(\S+)\/addm\/tkn_main\/tku_patterns\/(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
 
     def gather_args(self, known_args, extra_args):
         """
@@ -126,8 +145,7 @@ class ArgsParse:
     def addm_args(self, known_args):
         """
         Get SSH <paramiko.client.SSHClient object at 0x00000000035DADD8>
-        Run command "tw_pattern_management -v"
-        Parse version and compare with version dict.
+
         Return set of options: {'addm_ver': '11.1',
                                 'disco_mode': 'record',
                                 'scan_hosts': '1.1.1.1, 2.2.2.2, 3.3.3.3',
@@ -148,28 +166,24 @@ class ArgsParse:
 
         tpl_vers = ''
         addm_ver = ''
+        tpl_folder = ''
         addm_prod = ''
         disco = ''
         scan_hosts = ''
 
+        disco = self.discovery_mode_check(disco_mode)
+        scan_hosts = self.host_list_check(scan_host_list)
+
         ssh = self.addm_host_check(addm_host, user, password)
-
         if ssh:
-            disco = self.discovery_mode_check(disco_mode)
-            scan_hosts = self.host_list_check(scan_host_list)
-            _, stdout, stderr = ssh.exec_command("tw_pattern_management -v")
-            if stdout:
-                output = stdout.readlines()
-                addm_version_full = self.addm_version_full_re.match(output[0])
-                addm_version = self.addm_version_re.match(addm_version_full.group(1))
-                addm_ver = str(addm_version.group(1))
+            # Check ADDM VM version and tpl version supported:
+            tpl_vers, addm_prod, addm_ver, tpl_folder = self.check_addm_tpl_ver(ssh)
 
-                if addm_ver in self.PRODUCT_VERSIONS:
-                    addm_prod = self.PRODUCT_VERSIONS[addm_ver]
-                    tpl_vers = self.TPL_VERSIONS[addm_prod]
-            if stderr:
-                err = stderr.readlines()
-                log.warn("ADDM versioning command fails with error: " + str(err))
+            # TODO: Here I check HGFS:
+            dev_vm_check = self.check_hgfs(ssh)
+
+            print(dev_vm_check)
+
         else:
             log.warn("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
 
@@ -178,48 +192,10 @@ class ArgsParse:
                          'scan_hosts': scan_hosts,
                          'addm_ver': addm_ver,
                          'tpl_vers': tpl_vers,
+                         'tpl_folder': tpl_folder,
                          'addm_prod': addm_prod}
 
         return addm_args_set
-
-    def tpl_version_check(self, tpl_ver):
-        """
-            Used to DEV only.
-            Stores path to tpl folder with patterns with version requested.
-
-            (Discovery/TPL versions: 8.3(1.6) 9.0(1.7) 10.0(1.8) 10.1(1.9) 10.2(1.10) 11.0(1.11))
-
-            :param tpl_ver: str
-
-            :return: tpl_folder, tpl_version
-            """
-
-        tpl_version = ''
-        tpl_folder = ''
-        log = self.logging
-
-        if tpl_ver:
-            check = self.tpl_ver_check.match(tpl_ver)
-            if check:
-                tpl_version = tpl_ver
-                if tpl_ver in self.tpl_folder_k:
-                    tpl_folder = self.tpl_folder_k[tpl_ver]
-                else:
-                    log.error("TPL version is incorrect: " + tpl_ver +
-                              "! Please specify correct tpl version! \nDiscovery/TPL versions: "
-                              "8.3(1.6) 9.0(1.7) 10.0(1.8) 10.1(1.9) 10.2(1.10) 11.0(1.11)")
-                log.info("TPL version: " + tpl_ver)
-                log.info("TPL tpl_folder: " + tpl_folder)
-            else:
-                log.warn("If no TPL Version (--tpl arg) then upload will be started "
-                         "with current file! \n"
-                         "No Tplpreproc and no syntax check will started!")
-        else:
-            log.warn("If no TPL Version (--tpl arg) then upload will be started "
-                     "with current file! \n"
-                     "No Tplpreproc and no syntax check will started!")
-
-        return tpl_folder, tpl_version
 
     def full_path_parse(self, full_path):
         """
@@ -262,7 +238,8 @@ class ArgsParse:
                     file_name      = path_parse.group('file_name')
                     file_ext       = path_parse.group('file_ext')
 
-                    # Composing some usual places here - to make it easy to manage and not to add thi each time further.
+                    # Composing some usual places here - to make it easy to manage
+                    # and not to add this each time further.
                     # TODO: Maybe need to check if exist here:
                     tkn_main_t = workspace + os.sep + addm + os.sep + tkn_main
                     buildscripts_t      = tkn_main_t + os.sep + 'buildscripts'
@@ -654,4 +631,103 @@ class ArgsParse:
 
         return oper_args_set
 
+    def check_addm_tpl_ver(self, ssh):
+        """
+        Run command "tw_pattern_management -v"
+        Parse version and compare with version dict.
+        :param ssh:
+        :return:
+        """
+        log = self.logging
+        tpl_vers = ''
+        addm_prod = ''
+        addm_ver = ''
+        tpl_folder = ''
 
+        _, stdout, stderr = ssh.exec_command("tw_pattern_management -v")
+        if stdout:
+
+            output = stdout.readlines()
+            addm_version_full = self.addm_version_full_re.match(output[0])
+            addm_version = self.addm_version_re.match(addm_version_full.group(1))
+            addm_ver = str(addm_version.group(1))
+
+            # print(output)
+            if addm_ver in self.PRODUCT_VERSIONS:
+                addm_prod = self.PRODUCT_VERSIONS[addm_ver]
+                tpl_vers = self.TPL_VERSIONS[addm_prod]
+                if tpl_vers in self.tpl_folder_k:
+                    tpl_folder = self.tpl_folder_k[tpl_vers]
+
+                # print(tpl_vers)
+        if stderr:
+            err = stderr.readlines()
+            if err:
+                log.warn("ADDM versioning command fails with error: " + str(err))
+
+        return tpl_vers, addm_prod, addm_ver, tpl_folder
+
+    def check_hgfs(self, ssh):
+        """
+        Check if ADDM VM is using mount FS
+        If not - will return False (this should trigger usual SFTP upload.)
+        If yes -will return args with path mask to remote WORKSPACE (like p4 workspace in local)
+        This mask will be used to compose paths for each side:
+
+        local                                             - to -  remote:
+
+        workspace                                         - to -  vm_workspace
+        d:\perforce\                                      - to -  /usr/tideway/
+
+        CORE_t                                            - to -  vm_CORE_t
+        d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE  - to -  /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
+
+
+        With command - "df -h"
+
+        Example:
+        .host:/utils/                               88G   48G   41G  54% /usr/tideway/utils
+        .host:/testutils/                           88G   48G   41G  54% /usr/tideway/python/testutils
+        .host:/test_python/                         88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/python
+        .host:/buildscripts/                        88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/buildscripts
+        .host:/tku_patterns/CORE/                   88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
+        .host:/tku_patterns/DBDETAILS/              88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/DBDETAILS
+        .host:/tku_patterns/MANAGEMENT_CONTROLLERS/ 88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/MANAGEMENT_CONTROLLERS
+        .host:/tku_patterns/MIDDLEWAREDETAILS/      88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/MIDDLEWAREDETAILS
+        .host:/tku_patterns/SYSTEM/                 88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/SYSTEM
+        .host:/DML/                                 88G   48G   41G  54% /usr/tideway/TKU/DML
+
+
+        https://confluence.bmc.com/display/~odanylch/ADDM+VM+Image+settings
+
+        :return:
+        """
+        log = self.logging
+
+        # TODO: ../TKU/.. folder should somehow documented as really MUSTHAVE parameter in ane ENV.
+        dev_vm_args = ''
+
+        _, stdout, stderr = ssh.exec_command("df -h")
+
+        if stdout:
+            # output = stdout.readlines()
+            output = stdout.readlines()
+            # print(output)
+            for line in output:
+                line_raw = line.replace("\n", "")
+                # print("line: '"+line_raw+"'")
+                vm_dev_path = self.hgfs_path_re.match(line_raw)
+                if vm_dev_path:
+                    print(vm_dev_path)
+                    print(vm_dev_path.group(0))
+            #         print(vm_dev_path.group(1))
+            #         print(vm_dev_path.group(2))
+            #         # print(vm_dev_path.group(3))
+                    print(line)
+                    # break
+        if stderr:
+            err = stderr.readlines()
+            if err:
+                print(err)
+
+        return dev_vm_args

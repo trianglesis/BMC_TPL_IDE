@@ -45,15 +45,15 @@ class GlobalLogic:
         log = self.logging
         if self.full_path_args:
 
-            # print("PATH ARGS: "+str(self.full_path_args))
+            print("PATH ARGS: "+str(self.full_path_args))
 
-            self.tku_patterns_t   = self.full_path_args['tku_patterns_t']
-            self.CORE_t   = self.full_path_args['CORE_t']
-            self.workspace   = self.full_path_args['workspace']
-            self.full_path   = self.full_path_args['full_path']
-            self.working_dir = self.full_path_args['working_dir']
-            self.workspace   = self.full_path_args['workspace']
-            self.file_ext    = self.full_path_args['file_ext']
+            self.tku_patterns_t = self.full_path_args['tku_patterns_t']
+            self.CORE_t         = self.full_path_args['CORE_t']
+            self.workspace      = self.full_path_args['workspace']
+            self.full_path      = self.full_path_args['full_path']
+            self.working_dir    = self.full_path_args['working_dir']
+            self.workspace      = self.full_path_args['workspace']
+            self.file_ext       = self.full_path_args['file_ext']
 
             log.debug("Arguments from -full_path are obtained and program will make decisions.")
         else:
@@ -61,7 +61,7 @@ class GlobalLogic:
 
         if self.addm_args_set:
 
-            # print("ADDM VM ARGS: "+str(self.addm_args_set))
+            print("ADDM VM ARGS: "+str(self.addm_args_set))
 
             self.ssh        = self.addm_args_set['ssh_connection']
             self.disco      = self.addm_args_set['disco_mode']
@@ -283,10 +283,15 @@ class GlobalLogic:
             """
             log.info("This is not a DEV file.")
 
-        # if ssh and working_dir:
-        #
-        #     log.debug("SHH is still there!")
-        #     addm = AddmOperations(log, ssh)
+        if self.ssh and self.working_dir:
+
+            log.debug("SHH is still there!")
+            addm_dev_path = "/usr/tideway/TKU/"
+
+            addm = AddmOperations(log, self.ssh)
+            folders = addm.check_folders(addm_dev_path)
+
+            print(folders)
 
         return functions_dict
 
@@ -351,3 +356,11 @@ class GlobalLogic:
         :return:
         """
         log = self.logging
+
+        def addm_ssh_tpl_version():
+            print(self.ssh)
+            print(self.disco)
+            print(self.scan_hosts)
+            print(self.tpl_vers)
+
+        return addm_ssh_tpl_version
