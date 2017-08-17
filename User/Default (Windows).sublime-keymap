@@ -1,7 +1,0 @@
-[
-    {"keys": ["ctrl+shift+."], "command": "tku_date" },
-    {"keys": ["ctrl+shift+,"], "command": "tku_time" },
-    {"keys": ["ctrl+alt+d"], "command": "insert_snippet", "args": {"name": "Packages/bmc_tplpre/log_debug.sublime-snippet"} },
-    {"keys": ["ctrl+alt+s"], "command": "insert_snippet", "args": {"name": "Packages/bmc_tplpre/log_info_SI.sublime-snippet"} },
-    { "keys": ["ctrl+shift+t"], "command": "delete_trailing_spaces" }
-]
