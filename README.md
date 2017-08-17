@@ -1,31 +1,66 @@
 # BMC_TPL_IDE
 
-This is not a Syntax hightlight.
-Syntax for [Sublime text](https://github.com/triaglesis/bmc_tpl)
-Syntax for [Atom](https://github.com/triaglesis/language-tplpre)
+# DEV version currently
 
-This is IDE and automation programm for BMC Discovery (ADDM) language - TPL (tideway pattern language) http://www.bmc.com/it-solutions/discovery-dependency-mapping.html And: https://discovery.bmc.com/
+    This programm is now in DEV and not working as expected. 
+    I plan to release normal working version for Customers and Developers 
+    and the end of summer.
+
+This is IDE and automation programm for [BMC Discovery (ADDM)](https://discovery.bmc.com/) language - TPL [tideway pattern language](http://www.bmc.com/it-solutions/discovery-dependency-mapping.html)
+
+##### For tpl syntax highlighting follow:
+
+- Syntax for [Sublime text](https://github.com/triaglesis/bmc_tpl)
+- Syntax for [Atom](https://github.com/triaglesis/language-tplpre)
+
 
 ### Designed for Python 3
 
-##### Can run in usual shell or like build system
+##### Can run in usual shell or like 'build system'
+
+Just run it from CMD:
+
+    -full_path "d:\ROOT\addm\tkn_main\tku_patterns\CORE\PatternFolderName\PatternName.tplpre" -l "debug" --help
+
 
 ## Current features:
-- syntax tests (require 3rd party [module tplint](https://communities.bmc.com/docs/DOC-42313) by Ladkau, Matthias)
-- automation
-- pattern uploading
-- auto scan start
+Some of them is still in progress:
+- [X] syntax tests (require 3rd party [module tplint](https://communities.bmc.com/docs/DOC-42313) by Ladkau, Matthias)
+- [X] importing linked patterns (working only if dev environment found):
+    - [X] from current pattern;  
+    - [X] from current pattern and each imported;  
+    - [X] from current pattern and each imported and from test.py;
+- [X] Run TPLPreprocessor:
+    - [X] on current pattern file;
+    - [X] on imported pattern files;
+- [X] SSH to ADDM for options:
+    - [X] check tpl version; 
+    - [ ] check DEV paths; 
+    - [ ] pattern uploading;
+    - [ ] auto scan start;
+- [ ] Start scan
+- [ ] Validate results:
+    - [ ] si query;  
+    - [ ] si models;  
+    - [ ] gather record data;  
+    - [ ] generate DML data;
+    - [ ] generate test data;
+      
 
 
 ## Can be added soon:
-- REST API usage for BMC Discovery
-- Pattern upload without checks
-- root or not-root user
-- folder autocreation
-- automatic record and dml data gathering (can be usefull for support)
-- automatic verifying discovered data
-- better console output
-- tests
+
+Now in progress:
+
+- [ ] Pattern upload without checks;
+- [ ] root or not-root user;
+- [ ] folder autocreation;
+- [ ] automatic record and dml data gathering (can be usefull for support);
+- [ ] automatic verifying discovered data;
+- [ ] better console output;
+- [ ] tests;
+- [ ] REST API usage for BMC Discovery;
+- [ ] Credentials update;
 
 ### Install:
 
@@ -36,6 +71,7 @@ This is IDE and automation programm for BMC Discovery (ADDM) language - TPL (tid
 - use arguments;
 
 ## Usage:
+
 This is dev example. Args can change soon. Please subscribe for recent changes.
 
 usage: check.py
@@ -70,21 +106,30 @@ usage: check.py
       - Set if you want to import patterns only imported in current opened pattern from -full_path. No recursive imports will run. If file is not a .tplpre - this option will be ignored.
     - *-r_imp*
       - Set if you want to import all patterns in recursive mode and upload this package on ADDM.Better use on clear TKN.If file is not a .tplpre - this option will be ignored.
-    - *-T*
+    - *-T* 
       - Run validation process after scan is finished.This will use set of queries to grab everything from scan and build SI models.si_type will be gathered from pattern blocks and used to compose search query.model file will be saved into developers folder: /usr/tideway/TKU/models
+
+
 
 ### Set your settings or use preconfigured ones.
 
 - How to use Pattern upload:
 
-This is not recommended now - I working on new logic which should'n use root for any operation.
+        This is not recommended now - I working on new 
+        logic which should'n use root for any operation.
 
 - How to allow ADDM root so SSH?
 
-Go to vi /etc/ssh/sshd_config and change the option to yes PermitRootLogin yes
-uncomment port 22
-comment line ‘AllowUsers’
-restart ‘service sshd restart’
+Go to vi /etc/ssh/sshd_config and change the options: 
+
+    PermitRootLogin yes
+    uncomment port 22
+    comment line ‘AllowUsers’
+    restart ‘service sshd restart’
+
+
+## Issues and requests:
+Please add issues and requests here: [issues](https://github.com/triaglesis/BMC_TPL_IDE/issues)
 
 
 # NOTE:

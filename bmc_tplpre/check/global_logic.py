@@ -32,7 +32,6 @@ from check.syntax_checker import SyntaxCheck
 from check.local_logic import LocalLogic
 
 
-
 class GlobalLogic:
 
     def __init__(self, logging, known_args, extra_args):
