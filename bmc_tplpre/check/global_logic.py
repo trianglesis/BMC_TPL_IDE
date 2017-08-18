@@ -21,14 +21,13 @@ Later I will add here scenarios.
         - generate used query file (args based)
 
 """
-
+import os
 from check.parse_args import ArgsParse
 from check.preproc import Preproc
 from check.imports import TPLimports
 from check.test_queries import TestRead
 from check.upload import AddmOperations
 from check.syntax_checker import SyntaxCheck
-
 from check.local_logic import LocalLogic
 
 
@@ -37,6 +36,7 @@ class GlobalLogic:
     def __init__(self, logging, known_args, extra_args):
         # TODO: Make func sets and then execute each one by one in right order) or not (closure)
         # TODO: (ex above) - use to execute each function in right order right here
+        # TODO: LATER: Switch to **kwargs because I mostly use sets of options!
 
         self.logging = logging
 
@@ -97,10 +97,11 @@ class GlobalLogic:
             self.tpl_folder     = self.addm_args_set['tpl_folder']
             self.scan_hosts     = self.addm_args_set['scan_hosts']
             self.dev_vm_check   = self.addm_args_set['dev_vm_check']
+            self.dev_vm_path    = self.addm_args_set['dev_vm_path']
 
             log.debug("Arguments from -addm are obtained and program will make decisions.")
         else:
-            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
+            log.warn("Arguments from -addm_args_set are'n obtained and program cannot make decisions.")
 
         if self.operational_args:
             '''
@@ -122,9 +123,10 @@ class GlobalLogic:
             if self.read_test:
                 log.debug("Argument test read is true - will find imports from test.py "
                           "(recursive always) in TKN_CORE if exist!")
-
         else:
-            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
+            self.recursive_imports = False
+            self.usual_imports     = False
+            self.read_test         = False
 
     def check_file_extension(self, file_ext):
         """
@@ -299,19 +301,17 @@ class GlobalLogic:
                 log.info("There are no dev arguments found for Test read, or imports, or recursive imports. "
                          "Using as standalone tplpre and trying to search TKN_CORE!")
 
-            functions_dict = {
+                preproc_f = self.make_preprocessor(workspace=self.workspace,
+                                                   input_path=self.full_path,
+                                                   output_path=self.working_dir,
+                                                   mode="solo_mode")
+
+            local_functions_dict = {
                               'parse_tests_patterns':  imports_t,
                               'parse_tests_queries':   query_t,
                               'import_patterns':       imports_f,
                               'prepcoc_patterns':      preproc_f,
-                              'syntax_check':          syntax_check_f,
-                              'addm_check_ssh':        addm_check_f,
-                              'addm_upload_pattern':   addm_upload_f,
-                              'addm_activate_pattern': addm_activate_f,
-                              'addm_start_scan':       addm_start_scan_f,
-                              'addm_gather_data':      addm_gather_data_f,
-                              'addm_verify_data':      addm_verify_data_f,
-                              'addm_save_model':       addm_save_model_f
+                              'syntax_check':          syntax_check_f
                              }
         elif self.file_ext == "tpl":
             """
@@ -330,8 +330,11 @@ class GlobalLogic:
             log.info("This is not a DEV file.")
 
         # TODO: Simultaneously check ADDM options and compose dict of possible options and scenarios.
+        # TODO: Do not forget about syntax checks!
         if self.ssh and self.workspace:
             '''
+            All pattern actions should be finished before I came here: Imports, Preproc, Syntax.
+            
             If SSH connetsion is present - then ADDM was checked and I have a set of arguments to further use:
 
                 if dev_vm with HGFS shares - compose remote path based on local (they are the same!) and
@@ -356,6 +359,69 @@ class GlobalLogic:
                 log.info("ADDM: Is working in dev mode with HGFS confirmed. "
                          "I will compose path based on tkn_main logic.")
 
+                local_logic = LocalLogic(log)
+                addm_working_dir = local_logic.addm_compose_paths(dev_vm_path=self.dev_vm_path,
+                                                                  pattern_folder=self.full_path_args['pattern_folder'])
+
+                '''
+                Preproc result folder is consist of working path and tplver 
+                from addm and may have IMPORTS subdir or not based on args.
+                '''
+                if self.usual_imports or self.recursive_imports:
+                    '''
+                    Path to result is the path of imported, preprocessed and tested patterns forder in local system
+                    and this path like it mirrored in remote system with HGFS.
+                    '''
+                    log.debug("DEV IMPORTS to addm: Making zip from imported patterns, activating them.")
+
+                    # Possible path to local results folder and remote mirror:
+                    path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
+                    path_to_result_remote = addm_working_dir+"/imports/"+self.tpl_folder
+                    zip_mirror = path_to_result_remote+"/"+self.full_path_args['pattern_folder'] + '.zip'
+
+                    # Making function obj for ZIP
+                    addm_upload_f = self.make_zip(path_to_result)
+
+                    # Use zip path to start activation process with path composed for mirror addm FS:
+                    addm_activate_f = self.activate_local_zip(zip_mirror)
+
+                    if self.scan_hosts and self.disco:
+                        '''
+                            Check when we use arguments with 
+                                'scan_hosts': '172.25.144.95, 172.25.144.39', and 
+                                'disco_mode': 'record'
+                            Use them for execute commands after upload activated and further use for DML and RecData gathering.
+                        '''
+                        log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
+
+                    addm_operations_dict = {
+                                            'addm_check_ssh':        addm_check_f,
+                                            'addm_upload_pattern':   addm_upload_f,
+                                            'addm_activate_pattern': addm_activate_f,
+                                            'addm_start_scan':       addm_start_scan_f,
+                                            'addm_gather_data':      addm_gather_data_f,
+                                            'addm_verify_data':      addm_verify_data_f,
+                                            'addm_save_model':       addm_save_model_f
+                                            }
+
+                elif not self.usual_imports and not self.recursive_imports:
+                    '''
+                    Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
+                    '''
+                    log.debug("DEV SOLO Pattern: activating local pattern in remote system.")
+                    rem_patt = addm_working_dir+"/"+self.tpl_folder+"/" + self.full_path_args['file_name']+".tpl"
+                    addm_activate_f = self.activate_local_zip(rem_patt)
+
+                    addm_operations_dict = {
+                                            'addm_check_ssh':        addm_check_f,
+                                            'addm_upload_pattern':   addm_upload_f,
+                                            'addm_activate_pattern': addm_activate_f,
+                                            'addm_start_scan':       addm_start_scan_f,
+                                            'addm_gather_data':      addm_gather_data_f,
+                                            'addm_verify_data':      addm_verify_data_f,
+                                            'addm_save_model':       addm_save_model_f
+                                            }
+
                 if self.scan_hosts and self.disco:
                     '''
                         Check when we use arguments with 
@@ -370,9 +436,13 @@ class GlobalLogic:
                 When ADDM VM shares was not confirmed - I will upload all 
                 active files into dev dir: /usr/tideway/TKU/Tpl_DEV/
                 This dir will be created if not exist on args check stage.
+                
+                Use logic from if self.dev_vm_check: but with remote hardcoded path.
                 '''
                 log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
                          "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
+
+                # TODO: COpy logic from if self.usual_imports or self.recursive_imports
 
                 if self.scan_hosts and self.disco:
                     '''
@@ -382,9 +452,6 @@ class GlobalLogic:
                         Use them for execute commands after upload activated and further use for DML and RecData gathering.
                     '''
                     log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
-
-            # Make ADDM operations based on arguments I got:
-            # addm = AddmOperations(log, self.ssh)
 
         elif self.ssh and not self.workspace:
             '''
@@ -404,8 +471,14 @@ class GlobalLogic:
                 '''
                 log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
 
+        return local_functions_dict, addm_operations_dict
 
-        return functions_dict
+    def remote_func_set(self):
+        """
+        Maybe better to verify first if local functions ready?
+
+        :return:
+        """
 
     def make_preprocessor(self, workspace, input_path, output_path, mode):
         """
@@ -479,3 +552,66 @@ class GlobalLogic:
             print(self.tpl_vers)
 
         return addm_ssh_tpl_version
+
+    def make_zip(self, path_to_result):
+        """
+        Closure for zipper.
+        Make zip for local folder!
+        :return: zipper func
+        """
+        log = self.logging
+
+        def zipper():
+            local_logic = LocalLogic(log)
+            # Zip local processed files and return path to zip on local and name if zip for addm mirror FS:
+            local_logic.make_zip(path_to_result, self.full_path_args['pattern_folder'])
+
+        return zipper
+
+    def activate_local_zip(self, zip_mirror):
+        """
+        Closure for pattern activation.
+        Activate only on mirror FS on ADDM!
+        :return: activate patterns func
+        """
+        log = self.logging
+
+        def activate():
+            addm = AddmOperations(log, self.ssh)
+            # Activate local zip package using remote mirror path to it:
+            addm.activate_knowledge(zip_mirror, self.full_path_args['pattern_folder'])
+
+        return activate
+
+    def upload_remote(self, local_file):
+        """
+        Closure for pattern upload on remote addm via SFTP.
+        IN PROGRESS!
+        :return: activate patterns func
+        """
+        log = self.logging
+
+        def activate():
+            addm = AddmOperations(log, self.ssh)
+            # Activate local zip package using remote mirror path to it:
+            addm.upload_knowledge(local_file, self.full_path_args['pattern_folder'])
+
+        return activate
+
+    def activate_remote(self, remote_path):
+        """
+        Activate remote uploaded zip of patterns.
+        Give me remote path to zip file which was (should be) uploaded before
+
+        IN PROGRESS!
+        :zip_remote: remote path to uploaded ZIP!
+        :return: activate patterns func
+        """
+        log = self.logging
+
+        def activate():
+            addm = AddmOperations(log, self.ssh)
+            # Activate local zip package using remote mirror path to it:
+            addm.activate_knowledge(remote_path, self.full_path_args['pattern_folder'])
+
+        return activate

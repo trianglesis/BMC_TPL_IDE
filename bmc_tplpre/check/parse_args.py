@@ -273,6 +273,7 @@ class ArgsParse:
                     # Composing some usual places here - to make it easy to manage
                     # and not to add this each time further.
                     # TODO: Maybe need to check if exist here:
+                    # TODO: Later move it to local logic from each occurence!
                     tkn_main_t = workspace + os.sep + addm + os.sep + tkn_main
                     buildscripts_t      = tkn_main_t + os.sep + 'buildscripts'
                     tku_patterns_t      = tkn_main_t + os.sep + tku_patterns
@@ -326,6 +327,7 @@ class ArgsParse:
                     elif re.match('tpl', file_ext):
                         log.debug("File extension matched tpl pattern.")
 
+                        # TODO: Later move it to local logic from each occurence!
                         path_parse = self.tpl_path_parse_re.match(full_path)
                         pattern_folder = path_parse.group('pattern_folder')
                         file_name      = path_parse.group('file_name')
@@ -358,7 +360,9 @@ class ArgsParse:
 
                     # Check if this is a dml file from: ..\tests\dml\DML_DATA.dml
                     elif re.match('dml', file_ext):
+
                         # TODO: Add pattern folder based on regex path to dml
+                        # TODO: Later move it to local logic from each occurence!
                         log.debug("This is DML file.")
                         args_dict = {'workspace':           workspace,
                                      # 'addm':              addm,
@@ -388,6 +392,7 @@ class ArgsParse:
                     elif re.match('model', file_ext):
                         # TODO: Fix 'file_name': 'tests\\expected\\test10_Unix_ARSystem90'
                         # TODO: Add pattern folder based on regex path to model
+                        # TODO: Later move it to local logic from each occurence!
                         log.debug("This is model file.")
                         args_dict = {'workspace':           workspace,
                                      # 'addm':              addm,
@@ -416,6 +421,7 @@ class ArgsParse:
                     # Check if this is a py file from: ..\tests\test.py
                     elif re.match('py', file_ext):
                         # TODO: Add pattern folder based on regex path to model
+                        # TODO: Later move it to local logic from each occurence!
                         log.debug("This is py file. Will check if this is a 'test.py'")
                         args_dict = {'workspace':           workspace,
                                      # 'addm':              addm,

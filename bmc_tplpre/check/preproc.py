@@ -208,6 +208,7 @@ class Preproc:
                     folder_content = os.listdir(output_path)
                     for folder in folder_content:
                         if re.match("tpl\d+", folder) is not None:
+                            # TODO: Better to check .tpl file creation time, because folder did not re-write by preproc
                             folder_creation_time = os.path.getctime(output_path+os.sep+folder)
                             now = datetime.datetime.now()
                             ago = now - datetime.timedelta(minutes=15)
@@ -225,6 +226,7 @@ class Preproc:
                     log.error("TPL_Preprocessor won't run!")
             else:
                 log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
+
         elif mode == "recursive_imports":
         # NO IMPORTS - run on folder
             log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + input_path)
@@ -239,6 +241,7 @@ class Preproc:
                     folder_content = os.listdir(output_path)
                     for folder in folder_content:
                         if re.match("tpl\d+", folder) is not None:
+                            # TODO: Better to check .tpl file creation time, because folder did not re-write by preproc
                             folder_creation_time = os.path.getctime(output_path+os.sep+folder)
                             now = datetime.datetime.now()
                             ago = now - datetime.timedelta(minutes=15)
@@ -256,6 +259,40 @@ class Preproc:
                     log.error("TPL_Preprocessor won't run!")
             else:
                 log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
+
+        elif mode == "solo_mode":
+            # SOLO MODE - nothing will be processed - only active pattern.
+            log.debug("python2.7 : TPLPreprocessor run all on one file " + input_path)
+            log.debug("Solo mode - only active file will be processed!")
+            if os.path.exists(input_path):
+                try:
+                    run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -f "' + input_path + '"',
+                                                   stdout=subprocess.PIPE)
+                    run_preproc.wait()  # wait until command finished
+                    result = run_preproc.stdout.read().decode()
+                    # print(result)
+                    folder_content = os.listdir(output_path)
+                    for folder in folder_content:
+                        if re.match("tpl\d+", folder) is not None:
+                            # TODO: Better to check .tpl file creation time, because folder did not re-write by preproc
+                            folder_creation_time = os.path.getctime(output_path+os.sep+folder)
+                            now = datetime.datetime.now()
+                            ago = now - datetime.timedelta(minutes=15)
+                            folder_time = datetime.datetime.fromtimestamp(folder_creation_time)
+                            if folder_time < ago:
+                                log.warn("TPLPreprocessor result folders looks like older that 15 min. Please check: + "
+                                         + str(folder_time))
+                            if folder_time > ago:
+                                log.debug("TPLPreprocessor result folders are recent: " + str(folder_time))
+                                tpl_preproc = os.path.exists(output_path)  # True
+                                break  # Probably no need to check each folder, if one is recent, then Preproc was run.
+                    if tpl_preproc:
+                        log.debug("TPLPreprocessor success: " + output_path)
+                except:
+                    log.error("TPL_Preprocessor won't run!")
+            else:
+                log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
+
 
         return tpl_preproc
 

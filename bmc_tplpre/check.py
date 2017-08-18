@@ -101,21 +101,31 @@ log.critical("CRITICAL TEST")
 
 
 funcs_run = GlobalLogic(log, known_args, extra_args)
-functions_set = funcs_run.make_function_set()
-print("FUNCTIONS OBJ SET: "+str(functions_set))
+local_functions_dict, addm_operations_dict = funcs_run.make_function_set()
+print("FUNCTIONS OBJ SET: "+str(addm_operations_dict))
+print("FUNCTIONS OBJ SET: "+str(local_functions_dict))
 
 # Manual functions execution:
 # TODO: This will be removed and execute only by set of composed functions.
+#
+import_patterns = local_functions_dict['import_patterns']
+if import_patterns:
+    import_patterns()
 
-import_patterns = functions_set['import_patterns']
-# import_patterns()
+test_patterns = local_functions_dict['parse_tests_patterns']
+if test_patterns:
+    print(test_patterns)
 
-test_patterns = functions_set['parse_tests_patterns']
-# print(test_patterns)
-make_preproc = functions_set['prepcoc_patterns']
-# make_preproc()
+make_preproc = local_functions_dict['prepcoc_patterns']
+make_preproc()
 
 
+addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
+if addm_upload_pattern:
+    addm_upload_pattern()
+
+addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+addm_activate_pattern()
 # True\False check TEST
 
 

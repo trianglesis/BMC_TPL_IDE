@@ -47,157 +47,97 @@ class AddmOperations:
         self.logging = logging
         self.ssh_cons = ssh
 
-        self.upload_activated_check = re.compile('\d+\sknowledge\supload\sactivated')
+        self.upload_activated_check = re.compile('(\d+\sknowledge\supload\sactivated)')
+        self.upload_num_item = re.compile('Uploaded\s+\S+\s+as\s\"([^"]+)\"')
 
-    def compose_paths(self):
+    def upload_knowledge(self, local_file, file_path):
         """
-        Local path will be used to compose same path in remote vm if HGFS shares confirmed.
-        :return:
-        """
+        Use local path to zip file and remote path where to download.
+        Check md5sum of both files after upload.
+        Use hardcoded path.
+            This path should be checked and created in parse_args.check_folders()
 
-    def upload_knowledge(self, pattern_name, dir_label, file_path):
-        """
-        In file_path: will be path to pattern file or folder (zip_path) on local filesystem to upload to ADDM
-
-
-        1. Delete old content from Tpl_DEV folder.
-        2. Upload file from local path to remote via sftp:
-            - If pattern_name - then upload pattern file.
-            - If no pattern_name - then, probably folder content should be uploaded. Make zip from folder content.
-        3. If file path not null or false - check md5 sum of local file VS remote uploaded file.
-            If sum equal - upload was finished successfully.
-
-        4. Run pattern activation process. Check output, if knowledge activated - then upload and activation pass, if no
-        output ssh console result with error or warning.
-
-
-        usage: tw_pattern_management [options] <upload/[upload:]module/file>
-
-            where options can be
-
-                  --activate-all          Activate all pattern modules
-                  --activate-module       Activate pattern module
-                  --activate-upload       Activate knowledge upload
-                  --deactivate-module     Deactivate pattern module
-                  --deactivate-upload     Deactivate knowledge upload
-              -f, --force                 Deactivate patterns before removal
-              -h, --help                  Display help on standard options
-                  --install               Install (but not activate) knowledge upload
-                  --install-activate      Install and activate knowledge upload
-              -l, --list-uploads          List knowledge uploads
-                  --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
-              -p, --password=PASSWD       Password
-                  --passwordfile=PWDFILE  Pathname for Password File
-                  --remove-all            Remove all pattern modules
-                  --remove-module         Remove pattern module
-                  --remove-upload         Remove knowledge upload
-                  --show-progress         Write progress
-              -u, --username=NAME         Username
-              -v, --version               Display version information
-
-        and where <upload/[upload:]module/file> is a knowledge upload name, pattern module identifier or existing file
-
-
-        :param pattern_name: str - will be used to TKU
-        :param dir_label: str - will be used to name ZIP
-        :param file_path: str - path where ZIP or upload
+        :param local_file: str - path to zip in local system
+        :param file_path: str - path where put this zip
         """
 
         log = self.logging
 
-        output = ''
-        zip_path = ''
+        log.info("local_file:" + local_file)
+        remote_path = '/usr/tideway/TKU/Tpl_DEV/' + local_file
 
+        ftp = self.ssh_cons.open_sftp()
+        try:
+            ftp.put(local_file, remote_path)
+            ftp.close()
+            log.info("Patterns zip to ADDM upload:" + "PASSED!")
+        except:
+            log.error("Something goes wrong with ftp connection or zip file! Check if file path or folder exists")
 
-        # Wipe previous tpl dev uploads
-        _, stdout, stderr = self.ssh_cons.exec_command("rm -rf /usr/tideway/TKU/Tpl_DEV/*")
-        # Start FTP session with ADDM machine:
-        if pattern_name:
-            module_name = pattern_name
-            log.info("Upload pattern to ADDM folder:" + "/usr/tideway/TKU/Tpl_DEV/")
-            localpath = '/usr/tideway/TKU/Tpl_DEV/' + module_name + '.tpl'
-            ftp = self.ssh_cons.open_sftp()
-            try:
-                ftp.put(file_path, localpath)
-                ftp.close()
-            except:
-                log.error("Something goes wrong with ftp connection or zip file! Check if file path or folder exists")
+        if local_file:
+            file_check = self.check_file_pattern(local_file=local_file, remote_file=remote_path)
         else:
-            log.info("Making zip of all .tpl in folder:"  + file_path)
-            log.info("Upload zip to ADDM folder:" + "/usr/tideway/TKU/Tpl_DEV/")
+            file_check = self.check_file_pattern(local_file=file_path, remote_file=remote_path)
 
-            module_name = dir_label
-            zip_filename = module_name + '.zip'
-            zip_path = file_path + zip_filename
-            patterns_zip = zipfile.ZipFile(zip_path, 'w')
-            log.debug("zip_filename:" + zip_filename)
+        return file_check
 
-            for foldername, subfolders, filenames in os.walk(file_path):
-                for filename in filenames:
-                    if filename != zip_filename:
-                        patterns_zip.write(os.path.join(file_path, filename), arcname=filename)
-                        log.debug("Adding pattern:" + filename)
-            patterns_zip.close()
-
-            log.info("zip_path:" + zip_path)
-            localpath = '/usr/tideway/TKU/Tpl_DEV/' + zip_filename
-            ftp = self.ssh_cons.open_sftp()
-            try:
-                ftp.put(zip_path, localpath)
-                ftp.close()
-                log.info("Patterns zip to ADDM upload:" + "PASSED!")
-            except:
-                log.error("Something goes wrong with ftp connection or zip file! Check if file path or folder exists")
-
-        if zip_path:
-            file_check = self.check_file_pattern(local_file=zip_path, remote_file=localpath)
-        else:
-            file_check = self.check_file_pattern(local_file=file_path, remote_file=localpath)
-
-        uploaded_activated = False  # 1 knowledge upload activated
-        self.ssh_cons.exec_command("chmod 777 -R /usr/tideway/TKU/")
-        log.info("Installing and activating pattern modules. Result:\n")
-        if file_check:
-            _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management -p system "
-                                                           "--install-activate /usr/tideway/TKU/Tpl_DEV/*")
-        else:
-            log.error("Checksum of remote \\ local files is not equal! Upload process was probably corrupted!")
-
-        if stdout:
-            output = stdout.readlines()
-            for elem in output:
-                if self.upload_activated_check.match(elem):
-                    uploaded_activated = True
-                    log.info("Upload activating:" + "PASSED!")
-                    log.info("Pattern uploaded successfully. Module:" + str(module_name))
-                else:
-                    log.error("Pattern activation failed! Scan will not start.")
-                # ssh.close()
-
-        return output, uploaded_activated
-
-    def activate_knowledge_local(self, pattern_name, dir_label, file_path):
+    def activate_knowledge(self, zip_path, module_name):
         """
-        When DEV vm confirmed:
+        Give it path where zip folder can be:
+            - for dev_vm - mirror FS
+            - for usual - SFTP path
+
         Nothing to delete REMOTELY.
         Wipe only old zip LOCALLY!
 
-        - compose remote path same as local.
-        - zip patterns into a package in local system
-        - execute remote SSH command with this path from local but for remote version
-        - see results
+        ['Uploaded /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/imports/tpl113/BMCRemedyARSystem.zip as "BMCRemedyARSystem upload 10"\n',
+         'Failed to activate 1 knowledge upload\n',
+         'Pattern module BMC.RemedyARSystem\n',
+         '\tErrors:\n',
+         "\t\tSyntax error at or near 'check' at line 15\n",
+         'Pattern module BMC.RemedyARSystem\n',
+         '\tWarnings:\n',
+         '\t\tDeactivating BMC.RemedyARSystem to use newly activated module\n',
+         '\n']
 
 
-
-        :param pattern_name: str - will be used to TKU
-        :param dir_label: str - will be used to name ZIP
-        :param file_path: str - path where ZIP or upload
+        :param zip_path: Path to zip with patterns uploaded or mirrored
+        :param module_name: Name of pattern folder
         """
 
         log = self.logging
 
-        output = ''
-        zip_path = ''
+        uploaded_activated = False  # 1 knowledge upload activated
+        log.debug("Activate local zip: ensure we have rights of 777 on this file.")
+
+        self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
+        log.info("Installing and activating pattern modules.")
+
+        _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management -p system "
+                                                       "--install-activate "+str(zip_path))
+
+        # TODO: Is there a way to draw a progress bar until it activating?
+        if stdout:
+            output = stdout.readlines()
+            raw_out = "".join(output)
+            item = self.upload_num_item.findall(raw_out)
+            if self.upload_activated_check.findall(raw_out):
+                uploaded_activated = True
+                log.info("Upload activating: " + "PASSED!")
+                log.info("Pattern uploaded successfully. Module: " + str(module_name)+" as "+str(item[0]))
+            else:
+                log.critical("Pattern activation failed! Scan will not start.")
+                log.critical("Detailed description from ADDM: \n"+raw_out)
+
+        return uploaded_activated
+
+    def deactivate_tku(self):
+        """
+        IDEA - run deactivate and removals if requested - before activate new.
+
+        :return:
+        """
+        log = self.logging
 
     def check_file_pattern(self, local_file, remote_file):
         """
