@@ -49,6 +49,12 @@ class AddmOperations:
 
         self.upload_activated_check = re.compile('\d+\sknowledge\supload\sactivated')
 
+    def compose_paths(self):
+        """
+        Local path will be used to compose same path in remote vm if HGFS shares confirmed.
+        :return:
+        """
+
     def upload_knowledge(self, pattern_name, dir_label, file_path):
         """
         In file_path: will be path to pattern file or folder (zip_path) on local filesystem to upload to ADDM

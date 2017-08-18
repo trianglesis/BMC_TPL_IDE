@@ -313,19 +313,96 @@ class GlobalLogic:
                               'addm_verify_data':      addm_verify_data_f,
                               'addm_save_model':       addm_save_model_f
                              }
-        else:
+        elif self.file_ext == "tpl":
             """
             Here: if you just editing usual tpl file - you don't need to tpreproc it.
-            Probably imports and recursive imports can be implemented but it will work 
-            only in case - if user has tkn tree in working env.
+            Probably imports and recursive imports SHOULD NOT be implemented for usual tpl.
+            
+            NOTE: There is a logical problem:
+            - if tpl file is editing - does it mean - I need to find imports for it?
+                - if yes - so there should be path to each import file which I can follow, but there is no prognoses-able
+                    way to obtain this path. This means - that if we are editing single TPL file - we just want to 
+                    check syntax and upload it to ADDM "as is"!
+                    Single TPL file will be uploaded. Or folder with them?
+                    Single TPL file cannot be syntax checked because it require imports!
+                 
             """
             log.info("This is not a DEV file.")
 
         # TODO: Simultaneously check ADDM options and compose dict of possible options and scenarios.
-        if self.ssh and self.working_dir:
+        if self.ssh and self.workspace:
+            '''
+            If SSH connetsion is present - then ADDM was checked and I have a set of arguments to further use:
 
-            log.debug("SHH is still there!")
-            addm = AddmOperations(log, self.ssh)
+                if dev_vm with HGFS shares - compose remote path based on local (they are the same!) and
+                    NOT UPLOAD files - but activate patterns with path which were composed here.
+                if workspace then local dev path is confirmed
+                
+                if not dev_vm with HGFS - just use (created) hardcoded dev path as: /usr/tideway/TKU/Tpl_DEV/ and
+                    upload files via SFTP
+                if workspace then local dev path is confirmed
+                
+                if not workspace then local dev path is not found an upload path should be /usr/tideway/TKU/Tpl_DEV/
+                    and ignore HGFS even if it was found
+             
+            '''
+
+            if self.dev_vm_check:
+                '''
+                If ADDM has in its FS paths to local tku like: .host:/tku_patterns/CORE/
+                       88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
+                So I can use SSH commands and not upload anything from dev paths.
+                '''
+                log.info("ADDM: Is working in dev mode with HGFS confirmed. "
+                         "I will compose path based on tkn_main logic.")
+
+                if self.scan_hosts and self.disco:
+                    '''
+                        Check when we use arguments with 
+                            'scan_hosts': '172.25.144.95, 172.25.144.39', and 
+                            'disco_mode': 'record'
+                        Use them for execute commands after upload activated and further use for DML and RecData gathering.
+                    '''
+                    log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
+
+            elif not self.dev_vm_check:
+                '''
+                When ADDM VM shares was not confirmed - I will upload all 
+                active files into dev dir: /usr/tideway/TKU/Tpl_DEV/
+                This dir will be created if not exist on args check stage.
+                '''
+                log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
+                         "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
+
+                if self.scan_hosts and self.disco:
+                    '''
+                        Check when we use arguments with 
+                            'scan_hosts': '172.25.144.95, 172.25.144.39', and 
+                            'disco_mode': 'record'
+                        Use them for execute commands after upload activated and further use for DML and RecData gathering.
+                    '''
+                    log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
+
+            # Make ADDM operations based on arguments I got:
+            # addm = AddmOperations(log, self.ssh)
+
+        elif self.ssh and not self.workspace:
+            '''
+            When local workspace was not confirmed and paths to %workspace%\\addm\\tkn_main\\tku_patterns\\..
+            cannot be composed - I can only upload current files via SFTP to usual dev path: /usr/tideway/TKU/Tpl_DEV/
+            This dir will be created if not exist - on args check stage.
+            '''
+            log.info("ADDM: Workspace path was not found and cannot be composed, so I will upload any active files"
+                     "into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
+
+            if self.scan_hosts and self.disco:
+                '''
+                    Check when we use arguments with 
+                        'scan_hosts': '172.25.144.95, 172.25.144.39', and 
+                        'disco_mode': 'record'
+                    Use them for execute commands after upload activated and further use for DML and RecData gathering.
+                '''
+                log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
 
 
         return functions_dict
@@ -388,6 +465,9 @@ class GlobalLogic:
     def addm_test(self):
         """
         Compose ADDM ssh functions: upload, scan, verify and etc.
+        There SHOULD NOT be any checks which was made in parse_args as initial!
+        Put here only file/upload checks or etc.
+
         :return:
         """
         log = self.logging
