@@ -159,47 +159,7 @@ class AddmOperations:
 
         return output, uploaded_activated
 
-    def check_folders(self, path):
-        """
-        Check if folders created, create if needed
-        Folders to check:
-        /usr/tideway/TKU/
-        /usr/tideway/TKU/Tpl_DEV/
-        /usr/tideway/TKU/DML
-        /usr/tideway/TKU/TKU_upd
-        /usr/tideway/TKU/REC_data
 
-        If no folder:
-        Error: ['ls: cannot access /usr/tideway/XYZ: No such file or directory\n']
-
-        :param path: path to check
-        """
-        # TODO: Check if tideway user can run this.
-
-        log = self.logging
-
-        folders = []
-        ftp = self.ssh_cons.open_sftp()
-        _, stdout, stderr = self.ssh_cons.exec_command("ls " + path)
-        output_ok = stdout.readlines()
-        output_err = stderr.readlines()
-        if output_err:
-            if "No such file or directory" in output_err[0]:
-                log.debug("Creating folder: " + path)
-                ftp.mkdir(path)
-                self.ssh_cons.exec_command("chmod 777 -R " + path)
-                log.debug("Folder created!")
-            else:
-                log.warn("ls command cannot be run on this folder or output is incorrect!")
-                folders = False
-
-        if output_ok:
-            for folder in output_ok:
-                folders.append(folder.strip('\n'))
-
-            log.debug("Folder exist! Content: " + " " * 34 + ', '.join(folders))
-
-        return folders
 
     def check_file_pattern(self, local_file, remote_file):
         """

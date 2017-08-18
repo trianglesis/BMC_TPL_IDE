@@ -286,12 +286,10 @@ class GlobalLogic:
         if self.ssh and self.working_dir:
 
             log.debug("SHH is still there!")
-            addm_dev_path = "/usr/tideway/TKU/"
+
 
             addm = AddmOperations(log, self.ssh)
-            folders = addm.check_folders(addm_dev_path)
 
-            print(folders)
 
         return functions_dict
 

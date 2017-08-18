@@ -120,7 +120,8 @@ class ArgsParse:
         self.addm_version_re = re.compile("^(\d+(?:\.\d+){0,1})")
 
         # HGFS ADDM folder shares check
-        self.hgfs_path_re = re.compile("(\S+)\/addm\/tkn_main\/tku_patterns\/(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
+        self.hgfs_path_re = re.compile("(?P<tku_path>\S+)/addm/tkn_main/tku_patterns/(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
+        self.vm_tku_path_re = re.compile("(?P<tku_path>\S+)/addm/tkn_main/tku_patterns/")
 
     def gather_args(self, known_args, extra_args):
         """
@@ -146,6 +147,9 @@ class ArgsParse:
         """
         Get SSH <paramiko.client.SSHClient object at 0x00000000035DADD8>
 
+        Check usual arguments to compose then dict with everything I need to continue work.
+        Most of checks should be finished here, so further I'll have just a set of args to use in globallogic.
+
         Return set of options: {'addm_ver': '11.1',
                                 'disco_mode': 'record',
                                 'scan_hosts': '1.1.1.1, 2.2.2.2, 3.3.3.3',
@@ -170,19 +174,35 @@ class ArgsParse:
         addm_prod = ''
         disco = ''
         scan_hosts = ''
+        dev_vm_check = False
 
         disco = self.discovery_mode_check(disco_mode)
         scan_hosts = self.host_list_check(scan_host_list)
 
         ssh = self.addm_host_check(addm_host, user, password)
         if ssh:
-            # Check ADDM VM version and tpl version supported:
+            '''
+            Here I check ADDM VM version and tpl version supported.
+            If ADDM connection is established - run versioning command and compare its result with 
+            version table to obtain latest supported tpl code version to upload.
+            More in check_addm_tpl_ver() doc.
+            '''
             tpl_vers, addm_prod, addm_ver, tpl_folder = self.check_addm_tpl_ver(ssh)
 
-            # TODO: Here I check HGFS:
+            '''
+            If result of dev_vm_check is True - there will be a string with path to 'dev_vm_check': '/usr/tideway/TKU'
+            And then I can compose any needed paths to files from local to remote. More in check_hgfs() - doc.
+            If not - it will bool False and before starting upload I will check this and if it False - 
+                SFTP upload will be started, or REST - for the future upgrades of this code.
+            '''
             dev_vm_check = self.check_hgfs(ssh)
 
-            print(dev_vm_check)
+            # TODO: Switch to debug. Delete when finish.
+            dev_vm_check = False
+            if not dev_vm_check:
+                addm_dev_path = "/usr/tideway/TKU/"
+                folders = self.check_folders(ssh, addm_dev_path)
+                print(folders)
 
         else:
             log.warn("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
@@ -193,6 +213,7 @@ class ArgsParse:
                          'addm_ver': addm_ver,
                          'tpl_vers': tpl_vers,
                          'tpl_folder': tpl_folder,
+                         'dev_vm_check': dev_vm_check,
                          'addm_prod': addm_prod}
 
         return addm_args_set
@@ -672,6 +693,8 @@ class ArgsParse:
         Check if ADDM VM is using mount FS
         If not - will return False (this should trigger usual SFTP upload.)
         If yes -will return args with path mask to remote WORKSPACE (like p4 workspace in local)
+        Strange, but I need to regex twice to command result line to allow it to be parsed in the right way!
+
         This mask will be used to compose paths for each side:
 
         local                                             - to -  remote:
@@ -706,28 +729,70 @@ class ArgsParse:
 
         # TODO: ../TKU/.. folder should somehow documented as really MUSTHAVE parameter in ane ENV.
         dev_vm_args = ''
-
+        vm_dev_path = False
         _, stdout, stderr = ssh.exec_command("df -h")
-
         if stdout:
-            # output = stdout.readlines()
             output = stdout.readlines()
-            # print(output)
             for line in output:
-                line_raw = line.replace("\n", "")
-                # print("line: '"+line_raw+"'")
-                vm_dev_path = self.hgfs_path_re.match(line_raw)
-                if vm_dev_path:
-                    print(vm_dev_path)
-                    print(vm_dev_path.group(0))
-            #         print(vm_dev_path.group(1))
-            #         print(vm_dev_path.group(2))
-            #         # print(vm_dev_path.group(3))
-                    print(line)
-                    # break
+                command_output_parse = self.hgfs_path_re.search(line)
+                if command_output_parse:
+                    path_search = self.vm_tku_path_re.match(command_output_parse.group(0))
+                    if path_search:
+                        vm_dev_path = path_search.group('tku_path')
+                        # Stop after any first match is found.
+                        break
         if stderr:
             err = stderr.readlines()
             if err:
                 print(err)
 
-        return dev_vm_args
+        if vm_dev_path:
+            log.debug("This is probably a dev VM and HGFS share for /addm/tkn_main/tku_patterns/ "
+                      "is on place: "+str(vm_dev_path))
+
+        return vm_dev_path
+
+    def check_folders(self, ssh, path):
+        """
+        Check if folders created, create if needed
+
+        NOTE: I should check this folders in parse_args logic and only if HGFS check = False, so this mean
+        that ADDM hasn't shared folders and I should upload data via SFTP
+
+        Folders to check:
+        /usr/tideway/TKU/
+        /usr/tideway/TKU/Tpl_DEV/
+        /usr/tideway/TKU/DML
+        /usr/tideway/TKU/TKU_upd
+        /usr/tideway/TKU/REC_data
+
+        If no folder:
+        Error: ['ls: cannot access /usr/tideway/XYZ: No such file or directory\n']
+
+        :param path: path to check
+        """
+        # TODO: Check if tideway user can run this.
+
+        log = self.logging
+
+        folders = []
+        ftp = ssh.open_sftp()
+        _, stdout, stderr = ssh.exec_command("ls " + path)
+        output_ok = stdout.readlines()
+        output_err = stderr.readlines()
+        if output_err:
+            if "No such file or directory" in output_err[0]:
+                log.debug("Creating folder: " + path)
+                ftp.mkdir(path)
+                ssh.exec_command("chmod 777 -R " + path)
+                log.debug("Folder created!")
+            else:
+                log.warn("ls command cannot be run on this folder or output is incorrect!")
+                folders = False
+
+        if output_ok:
+            for folder in output_ok:
+                folders.append(folder.strip('\n'))
+            log.debug("Folder exist! Content: " + " " * 34 + ', '.join(folders))
+
+        return folders
