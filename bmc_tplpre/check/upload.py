@@ -14,13 +14,24 @@ import zipfile
 '''
 1. If syntax_passed = True AND tpl_preproc = True AND addm_host ip in args - start this (input)
 2. If there is no pattern file situated BUT working dir - make zip of dir content *.tpl
-with correspond tpl ver from Tplpreproc folders
+    with correspond tpl ver from Tplpreproc folders
 3. Open SSH session \ Save opened
-3.1 Check upload folder \ Create if no folder found \ Wipe if any old file found
-3.2 Check pattern or zip in filesystem AND start upload to ADDM
-3.1 Check upload completed (pattern or zip) and run --install-activate
 
-3.1.1 Try to deactivate unused modules - IDEA
+IF not 'dev_vm_check': True:
+    Programm will try to upload package via SFTP
+
+    3.1 Check upload folder \ Create if no folder found \ Wipe if any old file found
+    3.2 Check pattern or zip in filesystem AND start upload to ADDM
+    3.1 Check upload completed (pattern or zip) and run --install-activate
+
+IF 'dev_vm_check': True:
+    Nothing will be uploaded via SFTP because there is a local share found.
+
+    3.1 Compose path from local pattern to same remote in dev.
+    3.1 Execute ssh command with path as remote share to pattern package and activate 
+    
+Idea:
+    3.1.1 Try to deactivate unused modules - IDEA
 
 4 When activate finished - return result (pass \ fail) - (output)
 
@@ -31,11 +42,12 @@ class AddmOperations:
 
     def __init__(self, logging, ssh):
         # TODO: Get args for TPL version to upload and zip this
-        # TODO: Check if ADDM is running on DEV VM with HGFS shares (ls /mnt/hgfs/)
         # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
 
         self.logging = logging
         self.ssh_cons = ssh
+
+        self.upload_activated_check = re.compile('\d+\sknowledge\supload\sactivated')
 
     def upload_knowledge(self, pattern_name, dir_label, file_path):
         """
@@ -55,42 +67,41 @@ class AddmOperations:
 
         usage: tw_pattern_management [options] <upload/[upload:]module/file>
 
-        where options can be
+            where options can be
 
-              --activate-all          Activate all pattern modules
-              --activate-module       Activate pattern module
-              --activate-upload       Activate knowledge upload
-              --deactivate-module     Deactivate pattern module
-              --deactivate-upload     Deactivate knowledge upload
-          -f, --force                 Deactivate patterns before removal
-          -h, --help                  Display help on standard options
-              --install               Install (but not activate) knowledge upload
-              --install-activate      Install and activate knowledge upload
-          -l, --list-uploads          List knowledge uploads
-              --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
-          -p, --password=PASSWD       Password
-              --passwordfile=PWDFILE  Pathname for Password File
-              --remove-all            Remove all pattern modules
-              --remove-module         Remove pattern module
-              --remove-upload         Remove knowledge upload
-              --show-progress         Write progress
-          -u, --username=NAME         Username
-          -v, --version               Display version information
+                  --activate-all          Activate all pattern modules
+                  --activate-module       Activate pattern module
+                  --activate-upload       Activate knowledge upload
+                  --deactivate-module     Deactivate pattern module
+                  --deactivate-upload     Deactivate knowledge upload
+              -f, --force                 Deactivate patterns before removal
+              -h, --help                  Display help on standard options
+                  --install               Install (but not activate) knowledge upload
+                  --install-activate      Install and activate knowledge upload
+              -l, --list-uploads          List knowledge uploads
+                  --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
+              -p, --password=PASSWD       Password
+                  --passwordfile=PWDFILE  Pathname for Password File
+                  --remove-all            Remove all pattern modules
+                  --remove-module         Remove pattern module
+                  --remove-upload         Remove knowledge upload
+                  --show-progress         Write progress
+              -u, --username=NAME         Username
+              -v, --version               Display version information
 
         and where <upload/[upload:]module/file> is a knowledge upload name, pattern module identifier or existing file
 
 
-        :param pattern_name: str
-        :param dir_label: str
-        :param file_path: str
+        :param pattern_name: str - will be used to TKU
+        :param dir_label: str - will be used to name ZIP
+        :param file_path: str - path where ZIP or upload
         """
 
-        # TODO: Check if password for system changed or need to update or can be used of tideway or else.
         log = self.logging
 
         output = ''
         zip_path = ''
-        upload_activated_check = re.compile('\d+\sknowledge\supload\sactivated')
+
 
         # Wipe previous tpl dev uploads
         _, stdout, stderr = self.ssh_cons.exec_command("rm -rf /usr/tideway/TKU/Tpl_DEV/*")
@@ -149,7 +160,7 @@ class AddmOperations:
         if stdout:
             output = stdout.readlines()
             for elem in output:
-                if upload_activated_check.match(elem):
+                if self.upload_activated_check.match(elem):
                     uploaded_activated = True
                     log.info("Upload activating:" + "PASSED!")
                     log.info("Pattern uploaded successfully. Module:" + str(module_name))
@@ -159,7 +170,28 @@ class AddmOperations:
 
         return output, uploaded_activated
 
+    def activate_knowledge_local(self, pattern_name, dir_label, file_path):
+        """
+        When DEV vm confirmed:
+        Nothing to delete REMOTELY.
+        Wipe only old zip LOCALLY!
 
+        - compose remote path same as local.
+        - zip patterns into a package in local system
+        - execute remote SSH command with this path from local but for remote version
+        - see results
+
+
+
+        :param pattern_name: str - will be used to TKU
+        :param dir_label: str - will be used to name ZIP
+        :param file_path: str - path where ZIP or upload
+        """
+
+        log = self.logging
+
+        output = ''
+        zip_path = ''
 
     def check_file_pattern(self, local_file, remote_file):
         """

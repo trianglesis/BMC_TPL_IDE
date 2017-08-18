@@ -117,7 +117,7 @@ class ArgsParse:
         # Parsing ADDM version:
         # BMC Discovery Version: 11.1.0.5 Release: 698363
         self.addm_version_full_re = re.compile("BMC\sDiscovery\sVersion:\s+(\d+(?:\.\d+)*)")
-        self.addm_version_re = re.compile("^(\d+(?:\.\d+){0,1})")
+        self.addm_version_re = re.compile("^(\d+(?:\.\d+)?)")
 
         # HGFS ADDM folder shares check
         self.hgfs_path_re = re.compile("(?P<tku_path>\S+)/addm/tkn_main/tku_patterns/(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
@@ -137,11 +137,13 @@ class ArgsParse:
         log = self.logging
         local_arguments_set = self.full_path_parse(known_args.full_path)
         # print(local_arguments_set)
-        oper_args_set = self.operational_mode_check(known_args)
 
-        log.warn("HEY, you forgot some arguments:" + str(extra_args))
+        operational_args_set = self.operational_mode_check(known_args)
 
-        return local_arguments_set, oper_args_set
+        if extra_args:
+            log.warn("HEY, you forgot some arguments:" + str(extra_args))
+
+        return local_arguments_set, operational_args_set
 
     def addm_args(self, known_args):
         """
@@ -172,8 +174,8 @@ class ArgsParse:
         addm_ver = ''
         tpl_folder = ''
         addm_prod = ''
-        disco = ''
-        scan_hosts = ''
+
+        dev_vm_path = False
         dev_vm_check = False
 
         disco = self.discovery_mode_check(disco_mode)
@@ -195,14 +197,24 @@ class ArgsParse:
             If not - it will bool False and before starting upload I will check this and if it False - 
                 SFTP upload will be started, or REST - for the future upgrades of this code.
             '''
-            dev_vm_check = self.check_hgfs(ssh)
+            dev_vm_check, dev_vm_path = self.check_hgfs(ssh)
 
             # TODO: Switch to debug. Delete when finish.
-            dev_vm_check = False
+            # dev_vm_check = False
+            # tku_dev_path = '/usr/tideway/TKU2/'
+
+            tku_dev_path = '/usr/tideway/TKU/'
             if not dev_vm_check:
-                addm_dev_path = "/usr/tideway/TKU/"
-                folders = self.check_folders(ssh, addm_dev_path)
-                print(folders)
+                '''
+                   This path should be the same for all DEV VMs to be sure the logic will find it on expected place.
+                   If this path is changing - it should be changed everywhere for all users who use this programm.
+                '''
+                folders = self.check_folders(ssh, tku_dev_path)
+                for folder in folders:
+                    if "addm" in folder:
+                        dev_vm_path = tku_dev_path
+                        log.debug("Development path is found on this ADDM and "
+                                  "will be used for upload patterns and tests.")
 
         else:
             log.warn("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
@@ -214,6 +226,7 @@ class ArgsParse:
                          'tpl_vers': tpl_vers,
                          'tpl_folder': tpl_folder,
                          'dev_vm_check': dev_vm_check,
+                         'dev_vm_path': dev_vm_path,
                          'addm_prod': addm_prod}
 
         return addm_args_set
@@ -265,6 +278,8 @@ class ArgsParse:
                     tkn_main_t = workspace + os.sep + addm + os.sep + tkn_main
                     buildscripts_t      = tkn_main_t + os.sep + 'buildscripts'
                     tku_patterns_t      = tkn_main_t + os.sep + tku_patterns
+
+                    # pep8: disable=
                     CORE_t              = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE'
                     MIDDLEWAREDETAILS_t = tkn_main_t + os.sep + tku_patterns + os.sep + 'MIDDLEWAREDETAILS'
                     DBDETAILS_t         = tkn_main_t + os.sep + tku_patterns + os.sep + 'DBDETAILS' + \
@@ -276,7 +291,6 @@ class ArgsParse:
                     # Check if this is a tplpre file from: PatternFolder\PatternName.tplpre
                     if re.match('tplpre', file_ext):
 
-                        # TODO: Experimental - probably better to use -wd in other way
                         # Composing working dir to allow syntax check for all content in folder.
                         # More obvious to use values from regex rather then just strings.
                         working_dir = workspace     + os.sep + \
@@ -305,7 +319,9 @@ class ArgsParse:
                                      'SupportingFiles_t':   SupportingFiles_t,
                                      'tkn_sandbox_t':       tkn_sandbox_t
                                      }
-                        log.info("Arguments from file path: " + str(args_dict))
+                        # log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("TPLPRE: File extension mach .tplpre and dev_path_check is found, "
+                                  "options will be set based on it's path.")
                         return args_dict
 
                     # Check if this is a tpl file from: PatternFolder\tpl110\PatternName.tpl
@@ -338,6 +354,8 @@ class ArgsParse:
                                      'tkn_sandbox_t':       tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("TPL: File extension mach .tpl and dev_path_check is found, "
+                                  "options will be set based on it's path.")
                         return args_dict
 
                     # Check if this is a dml file from: ..\tests\dml\DML_DATA.dml
@@ -364,6 +382,8 @@ class ArgsParse:
                                      'tkn_sandbox_t':       tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("DML: File extension mach .dml and dev_path_check is found, "
+                                  "options will be set based on it's path.")
                         return args_dict
 
                     # Check if this is a model file from: \tests\actuals\SI_MODEL.model
@@ -391,6 +411,8 @@ class ArgsParse:
                                      'tkn_sandbox_t':       tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("MODEL: File extension mach .model and dev_path_check is found, "
+                                  "options will be set based on it's path.")
                         return args_dict
 
                     # Check if this is a py file from: ..\tests\test.py
@@ -417,11 +439,13 @@ class ArgsParse:
                                      'tkn_sandbox_t':       tkn_sandbox_t
                                      }
                         log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("PY: File extension mach .py and dev_path_check is found, "
+                                  "options will be set based on it's path.")
                         return args_dict
 
                     # If this file has an extension I do not support:
                     else:
-                        log.warn("Did not match any file extension "
+                        log.warn("FILE: Did not match any file extension "
                                  "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
                     log.debug("Path matched and parsed.")
                 else:
@@ -430,7 +454,8 @@ class ArgsParse:
 
             # When path to file has no tku_tree in. This is probably standalone file from anywhere.
             else:
-                log.debug('There is no dev path in -full_path - I expect "..\\addm\\tkn_main\\tku_patterns\\.."\n '
+                log.debug('FILE: There is no dev path in -full_path - '
+                          'I expect "..\\addm\\tkn_main\\tku_patterns\\.."\n '
                           'Trying to locate place for alone pattern file.')
 
                 # To be sure I have here - is a pattern file with tpl or tplre ext.
@@ -462,7 +487,7 @@ class ArgsParse:
                         pattern_folder = alone_tplpre_check.group('pattern_folder')
                         file_name      = alone_tplpre_check.group('file_name')
                         file_ext       = alone_tplpre_check.group('file_ext')
-                        log.debug("This is alone tplpre file - will use path 'as is' "
+                        log.debug("TPLPRE: This is alone tplpre file - will use path 'as is' "
                                   "To run TPLPreproc or Syntax check - p4_path should be configured.")
                         args_dict = {'workspace': '',
                                      'addm': '',
@@ -483,7 +508,7 @@ class ArgsParse:
                             pattern_folder = alone_tpl_check.group('pattern_folder')
                             file_name      = alone_tpl_check.group('file_name')
                             file_ext       = alone_tpl_check.group('file_ext')
-                            log.debug("This is alone tpl file - will use path 'as is'."
+                            log.debug("TPL: This is alone tpl file - will use path 'as is'."
                                       "Upload to ADDM and scan could be started if arguments was set.")
                             args_dict = {'workspace': '',
                                          'addm': '',
@@ -500,7 +525,7 @@ class ArgsParse:
                             log.warn("This path did not match any suitable pattern and probably not a tpl file"
                                      " Or path has superfluous symbols or spaces")
                 else:
-                    log.debug("Cannot match file path for alone pattern. "
+                    log.debug("FILE: Cannot match file path for alone pattern. "
                               "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
 
         else:
@@ -513,7 +538,6 @@ class ArgsParse:
         Check ADDM host IP where to upload and scan
         Should checked at first - before upload, scan, disco
 
-        :param log:
         :param password: str
         :param user: str
         :param addm_host: str
@@ -584,22 +608,21 @@ class ArgsParse:
 
         return disco_mode
 
-    def host_list_check(self, host_list):
+    def host_list_check(self, host_list_arg):
         """
         Check host list before start scan
         Will add hostname support maybe
         Should run only if SSH session established!
-        :param log:
         :param host_list:
         """
         log = self.logging
         # HOSTs ip check:NoneNone
         # host_list = ''
 
-        if host_list:
-            check = self.ip_addr_check.match(host_list)
+        if host_list_arg:
+            check = self.ip_addr_check.match(host_list_arg)
             if check:
-                host_list = host_list  # Host(s) to scan are:       10.49.32.114
+                host_list = host_list_arg  # Host(s) to scan are:       10.49.32.114
                 log.debug("Will add host(s) for discovery with IP: " + str(host_list))
         else:
             host_list = False
@@ -709,16 +732,13 @@ class ArgsParse:
         With command - "df -h"
 
         Example:
-        .host:/utils/                               88G   48G   41G  54% /usr/tideway/utils
-        .host:/testutils/                           88G   48G   41G  54% /usr/tideway/python/testutils
-        .host:/test_python/                         88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/python
-        .host:/buildscripts/                        88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/buildscripts
-        .host:/tku_patterns/CORE/                   88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
-        .host:/tku_patterns/DBDETAILS/              88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/DBDETAILS
-        .host:/tku_patterns/MANAGEMENT_CONTROLLERS/ 88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/MANAGEMENT_CONTROLLERS
-        .host:/tku_patterns/MIDDLEWAREDETAILS/      88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/MIDDLEWAREDETAILS
-        .host:/tku_patterns/SYSTEM/                 88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/SYSTEM
-        .host:/DML/                                 88G   48G   41G  54% /usr/tideway/TKU/DML
+        .host:/utils/                               88G 48G 41G 54% /usr/tideway/utils
+        .host:/testutils/                           88G 48G 41G 54% /usr/tideway/python/testutils
+        .host:/test_python/                         88G 48G 41G 54% /usr/tideway/TKU/addm/tkn_main/python
+        .host:/buildscripts/                        88G 48G 41G 54% /usr/tideway/TKU/addm/tkn_main/buildscripts
+        .host:/tku_patterns/CORE/                   88G 48G 41G 54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
+        .host:/tku_patterns/SYSTEM/                 88G 48G 41G 54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/SYSTEM
+        .host:/DML/                                 88G 48G 41G 54% /usr/tideway/TKU/DML
 
 
         https://confluence.bmc.com/display/~odanylch/ADDM+VM+Image+settings
@@ -728,8 +748,8 @@ class ArgsParse:
         log = self.logging
 
         # TODO: ../TKU/.. folder should somehow documented as really MUSTHAVE parameter in ane ENV.
-        dev_vm_args = ''
-        vm_dev_path = False
+        dev_vm_check = False
+        vm_dev_path = ''
         _, stdout, stderr = ssh.exec_command("df -h")
         if stdout:
             output = stdout.readlines()
@@ -747,10 +767,11 @@ class ArgsParse:
                 print(err)
 
         if vm_dev_path:
+            dev_vm_check = True
             log.debug("This is probably a dev VM and HGFS share for /addm/tkn_main/tku_patterns/ "
                       "is on place: "+str(vm_dev_path))
 
-        return vm_dev_path
+        return dev_vm_check, vm_dev_path
 
     def check_folders(self, ssh, path):
         """
@@ -759,16 +780,13 @@ class ArgsParse:
         NOTE: I should check this folders in parse_args logic and only if HGFS check = False, so this mean
         that ADDM hasn't shared folders and I should upload data via SFTP
 
-        Folders to check:
+        Folder to check:
         /usr/tideway/TKU/
-        /usr/tideway/TKU/Tpl_DEV/
-        /usr/tideway/TKU/DML
-        /usr/tideway/TKU/TKU_upd
-        /usr/tideway/TKU/REC_data
 
         If no folder:
         Error: ['ls: cannot access /usr/tideway/XYZ: No such file or directory\n']
 
+        :param ssh:
         :param path: path to check
         """
         # TODO: Check if tideway user can run this.
@@ -784,15 +802,16 @@ class ArgsParse:
             if "No such file or directory" in output_err[0]:
                 log.debug("Creating folder: " + path)
                 ftp.mkdir(path)
+                ftp.mkdir(path+'Tpl_DEV')
                 ssh.exec_command("chmod 777 -R " + path)
                 log.debug("Folder created!")
             else:
                 log.warn("ls command cannot be run on this folder or output is incorrect!")
-                folders = False
+                folders = []
 
         if output_ok:
             for folder in output_ok:
                 folders.append(folder.strip('\n'))
-            log.debug("Folder exist! Content: " + " " * 34 + ', '.join(folders))
+            log.debug("Folder exist! Content: " + ', '.join(folders)+" ls on: "+str(path))
 
         return folders

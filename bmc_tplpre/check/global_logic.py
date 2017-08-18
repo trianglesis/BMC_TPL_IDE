@@ -44,6 +44,23 @@ class GlobalLogic:
 
         log = self.logging
         if self.full_path_args:
+            '''
+            PATH ARGS: {'file_name': 'BMCRemedyARSystem', 
+                        'file_ext': 'tplpre', 
+                        'workspace': 'd:\\perforce', 
+                        'SupportingFiles_t': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles', 
+                        'tkn_sandbox_t': 'd:\\perforce\\addm\\tkn_sandbox', 
+                        'MIDDLEWAREDETAILS_t': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\MIDDLEWAREDETAILS', 
+                        'tku_patterns_t': 'd:\\perforce\\addm\\tkn_main\\tku_patterns', 
+                        'CORE_t': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE', 
+                        'pattern_folder': 'BMCRemedyARSystem', 
+                        'working_dir': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem', 
+                        'buildscripts_t': 'd:\\perforce\\addm\\tkn_main\\buildscripts', 
+                        'DBDETAILS_t': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\DBDETAILS\\Database_Structure_Patterns', 
+                        'full_path': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\BMCRemedyARSystem.tplpre', 
+                        'tkn_main_t': 'd:\\perforce\\addm\\tkn_main'}
+
+            '''
 
             print("PATH ARGS: "+str(self.full_path_args))
 
@@ -60,27 +77,52 @@ class GlobalLogic:
             log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
         if self.addm_args_set:
+            '''
+            ADDM VM ARGS: {'tpl_folder': 'tpl113', 
+                           'dev_vm_check': False, 
+                           'scan_hosts': '172.25.144.95, 172.25.144.39', 
+                           'disco_mode': 'record', 
+                           'tpl_vers': '1.13', 
+                           'addm_prod': 'Bobblehat', 
+                           'ssh_connection': <paramiko.client.SSHClient object at 0x0000000003674E10>, 
+                           'addm_ver': '11.1'}
+            '''
 
             print("ADDM VM ARGS: "+str(self.addm_args_set))
 
-            self.ssh        = self.addm_args_set['ssh_connection']
-            self.disco      = self.addm_args_set['disco_mode']
-            self.scan_hosts = self.addm_args_set['scan_hosts']
-            self.tpl_vers   = self.addm_args_set['tpl_vers']
+            self.ssh            = self.addm_args_set['ssh_connection']
+            self.disco          = self.addm_args_set['disco_mode']
+            self.scan_hosts     = self.addm_args_set['scan_hosts']
+            self.tpl_vers       = self.addm_args_set['tpl_vers']
+            self.tpl_folder     = self.addm_args_set['tpl_folder']
+            self.scan_hosts     = self.addm_args_set['scan_hosts']
+            self.dev_vm_check   = self.addm_args_set['dev_vm_check']
 
             log.debug("Arguments from -addm are obtained and program will make decisions.")
         else:
             log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
         if self.operational_args:
+            '''
+            OPERATIONS ARGS: {'usual_imports': False, 
+                              'recursive_imports': True, 
+                              'read_test': False}
+            '''
 
-            # print("OPERATIONS ARGS: "+str(self.operational_args))
+            print("OPERATIONS ARGS: "+str(self.operational_args))
 
             self.recursive_imports = self.operational_args['recursive_imports']
             self.usual_imports     = self.operational_args['usual_imports']
             self.read_test         = self.operational_args['read_test']
 
-            log.debug("Arguments from -T, amd imports are obtained and program will make decisions.")
+            if self.recursive_imports:
+                log.debug("Argument recursive imports is true - will find imports in TKN_CORE if exist!")
+            if self.usual_imports:
+                log.debug("Argument usual imports is true - will find imports in TKN_CORE if exist!")
+            if self.read_test:
+                log.debug("Argument test read is true - will find imports from test.py "
+                          "(recursive always) in TKN_CORE if exist!")
+
         else:
             log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
@@ -184,7 +226,9 @@ class GlobalLogic:
         addm_verify_data_f = ''
         addm_save_model_f  = ''
 
+        # TODO Wisely add conditions to decide what logic to use when file is different ext or from diff places.
         if self.file_ext == "tplpre":
+
             """
             Run developments procedures only if this is tplpre file.
             Import modules from active pattern + extra from tests.
@@ -200,19 +244,14 @@ class GlobalLogic:
                 When you don't want to import whole set of modules but only ones are used in current pattern.
                 """
 
-                log.debug("Argument for imp IMPORT is True")
-
                 preproc_f = self.make_preprocessor(workspace=self.workspace,
                                                    input_path=self.full_path,
                                                    output_path=self.working_dir,
                                                    mode="usual_imports")
-            if self.recursive_imports:
+            elif self.recursive_imports:
                 """
                 When you want to import modules for each pattern in working dir and each it recursive.
                 """
-
-                log.debug("Argument for r_imp RECURSIVE import is True")
-
                 # Import tplpre's in recursive mode:
                 imports_f = self.make_imports(extra_patterns=None)
 
@@ -226,12 +265,10 @@ class GlobalLogic:
                 # After TPLPreprocessor finished its work - run Syntax Check on folder imports
                 # TODO: Syntat check.
 
-            if self.read_test and self.recursive_imports:
+            elif self.read_test and self.recursive_imports:
                 """
                 As recursive imports but also includes patterns from self.setupPatterns from test.py
                 """
-                log.debug("Argument for TESTS read test file is True")
-
                 # Read test.py and extract query for future validation after addm scan and save model:
                 query_t = self.make_test_read_query()
 
@@ -259,7 +296,8 @@ class GlobalLogic:
                 In this case I will try to ask windows PATH for TKN_CORE or 
                 run p4 command to obtain workspace path and compose dev paths to all I need to run and use.  
                 """
-                log.debug("There is no DEV arg. Using as standalone tplpre and trying to search TKN_CORE!")
+                log.info("There are no dev arguments found for Test read, or imports, or recursive imports. "
+                         "Using as standalone tplpre and trying to search TKN_CORE!")
 
             functions_dict = {
                               'parse_tests_patterns':  imports_t,
@@ -283,11 +321,10 @@ class GlobalLogic:
             """
             log.info("This is not a DEV file.")
 
+        # TODO: Simultaneously check ADDM options and compose dict of possible options and scenarios.
         if self.ssh and self.working_dir:
 
             log.debug("SHH is still there!")
-
-
             addm = AddmOperations(log, self.ssh)
 
 
