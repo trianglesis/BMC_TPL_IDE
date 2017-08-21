@@ -341,7 +341,6 @@ class TPLimports:
                 shutil.copy2(pattern_path, imports_folder)
 
                 log.debug("Step 5.1 Copy to imports folder and clear read-only flag for pattern: " + str(pattern['path']))
-        return
 
     # Service functions:
     def list_folder(self, folder_path):

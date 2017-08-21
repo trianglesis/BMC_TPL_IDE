@@ -15,7 +15,7 @@ import os
 2. Save syntax check result
 2.1 If pass - update var with syntax_passed = True
 2.2 If fail syntax_passed = Fail
-3. Return syntax check results and details (output)
+3. Return syntax check results
 '''
 # TODO: Make another syntax checking procedure maybe on python AST.
 
@@ -38,7 +38,18 @@ class SyntaxCheck:
 
         self.logging = logging
 
-    def syntax_check(self, working_dir):
+        # NOTE: tplint was updated in 2016 last time, so we can use only versions not greater then 11.0
+        # Maybe I can spend some time to update it to recent versions in future.
+        self.SYNTAX_SUPPORTED = {
+                                 # '11.2': 'CustardCream',
+                                 # '11.1': 'Bobblehat',
+                                 '11.0': 'Aardvark',
+                                 '10.2': 'Zythum',
+                                 '10.1': 'Zed',
+                                 '10.0': 'Yodel'
+                                 }
+
+    def syntax_check(self, working_dir, disco_ver):
         """
         Check the syntax in working dir for all found files.
         Tpl version for check will be used from ADDM.
@@ -51,50 +62,47 @@ class SyntaxCheck:
         :return:
         """
         log = self.logging
+        tpl_mod_dir = os.getcwd()
+        syntax_passed = False
 
         errors_re = re.compile("\s+Errors:\s+(.+)")
         mod_re = re.compile("Module:\s+(.+)")
-        match_result = re.compile("(?P<error>\w+\s\w+) at or near '(?P<near>\S+)', line (?P<line>\d+), in (?P<module>\S+)")
 
-        result = ''
-        syntax_passed = False
+        match_result = re.compile("(?P<error>\w+\s\w+) at or near '(?P<near>\S+)', "
+                                  "line (?P<line>\d+), in (?P<module>\S+)")
+
         log.debug("Syntax: Will check all files in path: " + str(working_dir))
 
-        tpl_mod_dir = os.getcwd()
-        print(tpl_mod_dir)
+        if disco_ver not in self.SYNTAX_SUPPORTED:
+            log.warn("NOTE: tplint was updated in 2016 last time, "
+                     "so we can use only version which is not greater then 11.0")
+            disco_ver = 11.0
 
-
-        # NOTE: When checking syntax - is better to use all versions of tpl, because it can produce old-version errors.
-        # It's longer but work for all versions.
         try:
-            log.debug("Syntax: Checking syntax. Options: -a --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
+            log.debug("Syntax: Checking syntax. Options: --discovery-versions="+str(disco_ver) +
+                      " --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
 
-            open_path = subprocess.Popen('"' + tpl_mod_dir + '\\tplint\\tplint.exe" '
-                                                             '-a --loglevel=WARN -t "'
-                                         + tpl_mod_dir + '\\taxonomy\\00taxonomy.xml"',
+            open_path = subprocess.Popen('"' + tpl_mod_dir + '\\tplint\\tplint.exe"'
+                                                             ' --discovery-versions='+str(disco_ver)+
+                                                             ' --loglevel=WARN'
+                                                             ' -t "'+tpl_mod_dir+'\\taxonomy\\00taxonomy.xml"',
                                          cwd=working_dir, stdout=subprocess.PIPE)
-
             result = open_path.stdout.read().decode()
-
             if "No issues found!" in result:
                 syntax_passed = True
                 log.info("Syntax: PASSED!")
-
             elif match_result.findall(result):
-                error_modules = mod_re.findall(result)
-                errors = errors_re.findall(result)
-                log.error("Syntax: ERROR: Some issues found!""\n" + "Module " + str(error_modules) + "\nErrors: " + str(errors))
-
+                # error_modules = mod_re.findall(result)
+                # errors = errors_re.findall(result)
+                log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
             else:
-                log.error("Syntax: Something is not OK. RAW Result:")
-                log.error(result)
                 log.debug("Syntax: Something is not OK \n" + str(result))
 
         except:
             log.error("Syntax: Tplint cannot run, check if working dir is present!")
             log.error("Syntax: Tplint use path: " +tpl_mod_dir)
 
-        return syntax_passed, result
+        return syntax_passed
 
     def parse_syntax_result(self, result):
         """

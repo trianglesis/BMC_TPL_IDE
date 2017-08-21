@@ -219,7 +219,7 @@ class Preproc:
                                     log.warn("TPLPreprocessor result files looks like older that 15 min. Please check: + "
                                              + str(file_time_stamp))
                                 if file_time_stamp > ago:
-                                    log.debug("TPLPreprocessor result folders are recent: " + str(file_time_stamp))
+                                    log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True
                                     break  # Probably no need to check each folder, if one is recent, then Preproc was run.
                     if tpl_preproc:
@@ -254,7 +254,7 @@ class Preproc:
                                     log.warn("TPLPreprocessor result files looks like older that 15 min. Please check: + "
                                              + str(file_time_stamp))
                                 if file_time_stamp > ago:
-                                    log.debug("TPLPreprocessor result folders are recent: " + str(file_time_stamp))
+                                    log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True
                                     break  # Probably no need to check each folder, if one is recent, then Preproc was run.
                     if tpl_preproc:
@@ -288,7 +288,7 @@ class Preproc:
                                     log.warn("TPLPreprocessor result files looks like older that 15 min. Please check: + "
                                              + str(file_time_stamp))
                                 if file_time_stamp > ago:
-                                    log.debug("TPLPreprocessor result folders are recent: " + str(file_time_stamp))
+                                    log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True
                                     break  # Probably no need to check each folder, if one is recent, then Preproc was run.
                     if tpl_preproc:

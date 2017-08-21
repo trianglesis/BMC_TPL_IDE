@@ -110,29 +110,27 @@ print("LOCAL local_functions_dict: "+str(local_functions_dict))
 #
 import_patterns = local_functions_dict['import_patterns']
 if import_patterns:
+    print("Import patterns")
     import_patterns()
 
-test_patterns = local_functions_dict['parse_tests_patterns']
-if test_patterns:
-    print(test_patterns)
 
 syntax_check = local_functions_dict['syntax_check']
 if syntax_check:
     syntax_run = syntax_check()
+
     if syntax_run:
-        print(syntax_run)
 
         make_preproc = local_functions_dict['prepcoc_patterns']
         make_preproc()
 
-if addm_operations_dict['addm_upload_pattern']:
-    addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-    if addm_upload_pattern:
-        addm_upload_pattern()
-
-if addm_operations_dict['addm_activate_pattern']:
-    addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-    addm_activate_pattern()
+        # if addm_operations_dict['addm_upload_pattern']:
+        #     addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
+        #     if addm_upload_pattern:
+        #         addm_upload_pattern()
+        #
+        # if addm_operations_dict['addm_activate_pattern']:
+        #     addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+        #     addm_activate_pattern()
 # True\False check TEST
 
 
