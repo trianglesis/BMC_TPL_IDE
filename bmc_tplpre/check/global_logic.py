@@ -29,6 +29,7 @@ from check.test_queries import TestRead
 from check.upload import AddmOperations
 from check.syntax_checker import SyntaxCheck
 from check.local_logic import LocalLogic
+from check.scan import AddmScan
 
 
 class GlobalLogic:
@@ -226,6 +227,8 @@ class GlobalLogic:
 
         # TODO Wisely add conditions to decide what logic to use when file is different ext or from diff places.
         # TODO Syntax check for tplpre, tpl, and optionally switch of if debug run.
+
+        # Make imports, check syntax, run TPLPreprocessor:
         if self.file_ext == "tplpre":
 
             """
@@ -255,7 +258,7 @@ class GlobalLogic:
                 local_functions_dict = {
                                   'parse_tests_queries':   False,
                                   'import_patterns':       False,
-                                  'prepcoc_patterns':      preproc_f,
+                                  'preproc_patterns':      preproc_f,
                                   'syntax_check':          syntax_check_f
                                  }
 
@@ -282,7 +285,7 @@ class GlobalLogic:
                 local_functions_dict = {
                                   'parse_tests_queries':   False,
                                   'import_patterns':       imports_f,
-                                  'prepcoc_patterns':      preproc_f,
+                                  'preproc_patterns':      preproc_f,
                                   'syntax_check':          syntax_check_f
                                  }
 
@@ -318,7 +321,7 @@ class GlobalLogic:
                 local_functions_dict = {
                                   'parse_tests_queries':   query_t,
                                   'import_patterns':       imports_f,
-                                  'prepcoc_patterns':      preproc_f,
+                                  'preproc_patterns':      preproc_f,
                                   'syntax_check':          syntax_check_f
                                  }
 
@@ -344,36 +347,36 @@ class GlobalLogic:
                                   'parse_tests_patterns':  False,
                                   'parse_tests_queries':   False,
                                   'import_patterns':       False,
-                                  'prepcoc_patterns':      preproc_f,
+                                  'preproc_patterns':      preproc_f,
                                   'syntax_check':          False
                                  }
 
+
+        # TODO This scenario is still not fully understood. Should think on this more.
         elif self.file_ext == "tpl":
             """
             Here: if you just editing usual tpl file - you don't need to tpreproc it.
             Probably imports and recursive imports SHOULD NOT be implemented for usual tpl.
-            
+
             NOTE: There is a logical problem:
             - if tpl file is editing - does it mean - I need to find imports for it?
                 - if yes - so there should be path to each import file which I can follow, but there is no prognoses-able
-                    way to obtain this path. This means - that if we are editing single TPL file - we just want to 
+                    way to obtain this path. This means - that if we are editing single TPL file - we just want to
                     check syntax and upload it to ADDM "as is"!
                     Single TPL file will be uploaded. Or folder with them?
                     Single TPL file cannot be syntax checked because it require imports!
-                 
+
             """
             log.info("This is not a DEV file. I will just upload it on ADDM as is and activate.")
             local_functions_dict = {
                               'parse_tests_patterns':  False,
                               'parse_tests_queries':   False,
                               'import_patterns':       False,
-                              'prepcoc_patterns':      False,
+                              'preproc_patterns':      False,
                               'syntax_check':          False
                              }
 
-        # TODO: Simultaneously check ADDM options and compose dict of possible options and scenarios.
-        # TODO: Do not forget about syntax checks!
-
+        # Check ADDM, Upload patterns if addm has or has not DEV path but we have workspace:
         if self.ssh and self.workspace:
             '''
             All pattern actions should be finished before I came here: Imports, Preproc, Syntax.
@@ -393,57 +396,174 @@ class GlobalLogic:
              
             '''
 
-            if self.dev_vm_check:
-                '''
-                If ADDM has in its FS paths to local tku like: .host:/tku_patterns/CORE/
-                       88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
-                So I can use SSH commands and not upload anything from dev paths.
-                '''
-                log.info("ADDM: Is working in dev mode with HGFS confirmed. "
-                         "I will compose path based on tkn_main logic.")
+            # TODO: This logic is too complex to handle it easily. Need to make it shorter and OOP
+            if self.file_ext == "tplpre":
 
-                local_logic = LocalLogic(log)
-                addm_working_dir = local_logic.addm_compose_paths(dev_vm_path=self.dev_vm_path,
-                                                                  pattern_folder=self.full_path_args['pattern_folder'])
-
-                '''
-                Preproc result folder is consist of working path and tplver 
-                from addm and may have IMPORTS subdir or not based on args.
-                '''
-                if self.usual_imports or self.recursive_imports:
+                if self.dev_vm_check:
                     '''
-                    Path to result is the path of imported, preprocessed and tested patterns forder in local system
-                    and this path like it mirrored in remote system with HGFS.
+                    If ADDM has in its FS paths to local tku like: .host:/tku_patterns/CORE/
+                           88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
+                    So I can use SSH commands and not upload anything from dev paths.
                     '''
-                    log.debug("DEV IMPORTS to addm: Making zip from imported patterns, activating them.")
+                    log.info("ADDM: Is working in dev mode with HGFS confirmed. "
+                             "I will compose path based on tkn_main logic.")
 
-                    # Possible path to local results folder and remote mirror:
-                    path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
-                    path_to_result_remote = addm_working_dir+"/imports/"+self.tpl_folder
-                    zip_mirror = path_to_result_remote+"/"+self.full_path_args['pattern_folder'] + '.zip'
+                    local_logic = LocalLogic(log)
+                    addm_working_dir = local_logic.addm_compose_paths(dev_vm_path=self.dev_vm_path,
+                                                                      pattern_folder=self.full_path_args['pattern_folder'])
 
-                    # Making function obj for ZIP
-                    addm_zip_f = self.make_zip(path_to_result)
-
-                    # Use zip path to start activation process with path composed for mirror addm FS:
-                    addm_activate_f = self.activate_local_zip(zip_mirror)
-
-                    addm_operations_dict = {
-                                            'addm_zip_pattern':      addm_zip_f,
-                                            'addm_activate_pattern': addm_activate_f,
-                                            'addm_upload_pattern':   False,
-                                            'addm_start_scan':       False,
-                                            'addm_gather_data':      False,
-                                            'addm_verify_data':      False,
-                                            'addm_save_model':       False
-                                            }
-
-                elif not self.usual_imports and not self.recursive_imports:
                     '''
-                    Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
+                    Preproc result folder is consist of working path and tplver 
+                    from addm and may have IMPORTS subdir or not based on args.
                     '''
+                    if self.usual_imports or self.recursive_imports:
+                        '''
+                        Path to result is the path of imported, preprocessed and tested patterns forder in local system
+                        and this path like it mirrored in remote system with HGFS.
+                        '''
+                        log.debug("DEV IMPORTS to addm: Making zip from imported patterns, activating them.")
+
+                        # Possible path to local results folder and remote mirror:
+                        path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
+                        path_to_result_remote = addm_working_dir+"/imports/"+self.tpl_folder
+                        zip_mirror = path_to_result_remote+"/"+self.full_path_args['pattern_folder'] + '.zip'
+
+                        # Making function obj for ZIP
+                        addm_zip_f = self.make_zip(path_to_result)
+
+                        # Use zip path to start activation process with path composed for mirror addm FS:
+                        addm_activate_f = self.activate_local_zip(zip_mirror)
+
+                        addm_operations_dict = {
+                                                'addm_zip_pattern':      addm_zip_f,
+                                                'addm_activate_pattern': addm_activate_f,
+                                                'addm_upload_pattern':   False,
+                                                'addm_start_scan':       False,
+                                                'addm_gather_data':      False,
+                                                'addm_verify_data':      False,
+                                                'addm_save_model':       False
+                                                }
+
+                    elif not self.usual_imports and not self.recursive_imports:
+                        '''
+                        Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
+                        '''
+                        log.debug("DEV SOLO Pattern: activating local pattern in remote system.")
+                        rem_patt = addm_working_dir+"/"+self.tpl_folder+"/" + self.full_path_args['file_name']+".tpl"
+                        addm_activate_f = self.activate_local_zip(rem_patt)
+
+                        addm_operations_dict = {
+                                                'addm_zip_pattern':      False,
+                                                'addm_activate_pattern': addm_activate_f,
+                                                'addm_upload_pattern':   False,
+                                                'addm_start_scan':       False,
+                                                'addm_gather_data':      False,
+                                                'addm_verify_data':      False,
+                                                'addm_save_model':       False
+                                                }
+
+                elif not self.dev_vm_check:
+                    '''
+                    When ADDM VM shares was not confirmed - I will upload all 
+                    active files into dev dir: /usr/tideway/TKU/Tpl_DEV/
+                    This dir will be created if not exist on args check stage.
+                    
+                    Use logic from if self.dev_vm_check: but with remote hardcoded path.
+                    '''
+                    log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
+                             "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
+
+                    if self.usual_imports or self.recursive_imports:
+                        '''
+                        Path to result is the path of imported, preprocessed and tested patterns forder in local system
+                        and this path like it mirrored in remote system with HGFS.
+                        '''
+                        log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
+                                  "activating them.")
+
+                        # HARDCODED path which will be created during args check if HGFS share is not confirmed:
+                        addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
+
+                        # Local path to zip will be:
+                        path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
+                        # Remote path to zip will be:
+                        zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
+                        zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+
+                        # Making function obj for ZIP
+                        addm_zip_f = self.make_zip(path_to_result)
+
+                        # UPLOAD zip to ADDM via SFTP:
+                        upload_f = self.upload_remote(zip_on_local, zip_on_remote)
+
+                        # Use zip path to start activation process with path to zip in hardcoded path:
+                        addm_activate_f = self.activate_local_zip(zip_on_remote)
+
+                        addm_operations_dict = {
+                                                'addm_zip_pattern':      addm_zip_f,
+                                                'addm_activate_pattern': addm_activate_f,
+                                                'addm_upload_pattern':   upload_f,
+                                                'addm_start_scan':       False,
+                                                'addm_gather_data':      False,
+                                                'addm_verify_data':      False,
+                                                'addm_save_model':       False
+                                                }
+
+                    elif not self.usual_imports and not self.recursive_imports:
+                        '''
+                        Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
+                        '''
+                        log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
+                                  "activating them.")
+
+                        # HARDCODED path which will be created during args check if HGFS share is not confirmed:
+                        addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
+
+                        # Local path to zip will be:
+                        path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
+                        # Remote path to zip will be:
+                        zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
+                        zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+
+                        # Making function obj for ZIP
+                        addm_zip_f = self.make_zip(path_to_result)
+
+                        # UPLOAD zip to ADDM via SFTP:
+                        upload_f = self.upload_remote(zip_on_local, zip_on_remote)
+
+                        # Use zip path to start activation process with path to zip in hardcoded path:
+                        addm_activate_f = self.activate_local_zip(zip_on_remote)
+
+                        addm_operations_dict = {
+                                                'addm_zip_pattern':      addm_zip_f,
+                                                'addm_activate_pattern': addm_activate_f,
+                                                'addm_upload_pattern':   upload_f,
+                                                'addm_start_scan':       False,
+                                                'addm_gather_data':      False,
+                                                'addm_verify_data':      False,
+                                                'addm_save_model':       False
+                                                }
+
+            # TODO This scenario is still not fully understood. Should think on this more.
+            elif self.file_ext == "tpl":
+                """
+                Here: if you just editing usual tpl file - you don't need to tpreproc it.
+                Probably imports and recursive imports SHOULD NOT be implemented for usual tpl.
+                """
+                log.info("This is not a DEV file. I will just upload it on ADDM as is and activate.")
+
+                if self.dev_vm_check:
+                    log.info("ADDM: Is working in dev mode with HGFS confirmed. "
+                             "I will compose path based on tkn_main logic.")
+
+                    local_logic = LocalLogic(log)
+                    addm_working_dir = local_logic.addm_compose_paths(dev_vm_path=self.dev_vm_path,
+                                                                      pattern_folder=self.full_path_args['pattern_folder'])
+
                     log.debug("DEV SOLO Pattern: activating local pattern in remote system.")
-                    rem_patt = addm_working_dir+"/"+self.tpl_folder+"/" + self.full_path_args['file_name']+".tpl"
+                    rem_patt = addm_working_dir + "/" + self.full_path_args['working_dir'] + "/" + \
+                                                        self.full_path_args['file_name'] + "." + \
+                                                        self.full_path_args['file_ext']
                     addm_activate_f = self.activate_local_zip(rem_patt)
 
                     addm_operations_dict = {
@@ -456,59 +576,9 @@ class GlobalLogic:
                                             'addm_save_model':       False
                                             }
 
-            elif not self.dev_vm_check:
-                '''
-                When ADDM VM shares was not confirmed - I will upload all 
-                active files into dev dir: /usr/tideway/TKU/Tpl_DEV/
-                This dir will be created if not exist on args check stage.
-                
-                Use logic from if self.dev_vm_check: but with remote hardcoded path.
-                '''
-                log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
-                         "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
-
-                if self.usual_imports or self.recursive_imports:
-                    '''
-                    Path to result is the path of imported, preprocessed and tested patterns forder in local system
-                    and this path like it mirrored in remote system with HGFS.
-                    '''
-                    log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
-                              "activating them.")
-
-                    # HARDCODED path which will be created during args check if HGFS share is not confirmed:
-                    addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
-
-                    # Local path to zip will be:
-                    path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
-                    # Remote path to zip will be:
-                    zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
-                    zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
-
-                    # Making function obj for ZIP
-                    addm_zip_f = self.make_zip(path_to_result)
-
-                    # UPLOAD zip to ADDM via SFTP:
-                    upload_f = self.upload_remote(zip_on_local, zip_on_remote)
-
-                    # Use zip path to start activation process with path to zip in hardcoded path:
-                    addm_activate_f = self.activate_local_zip(zip_on_remote)
-
-                    addm_operations_dict = {
-                                            'addm_zip_pattern':      addm_zip_f,
-                                            'addm_activate_pattern': addm_activate_f,
-                                            'addm_upload_pattern':   upload_f,
-                                            'addm_start_scan':       False,
-                                            'addm_gather_data':      False,
-                                            'addm_verify_data':      False,
-                                            'addm_save_model':       False
-                                            }
-
-                elif not self.usual_imports and not self.recursive_imports:
-                    '''
-                    Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
-                    '''
-                    log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
-                              "activating them.")
+                elif not self.dev_vm_check:
+                    log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
+                             "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
 
                     # HARDCODED path which will be created during args check if HGFS share is not confirmed:
                     addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
@@ -538,6 +608,7 @@ class GlobalLogic:
                                             'addm_save_model':       False
                                             }
 
+        # Check ADDM, Upload patterns if addm has or has not DEV path but we DO NOT have workspace:
         elif self.ssh and not self.workspace:
             '''
             When local workspace was not confirmed and paths to %workspace%\\addm\\tkn_main\\tku_patterns\\..
@@ -547,14 +618,20 @@ class GlobalLogic:
             log.info("ADDM: Workspace path was not found and cannot be composed, so I will upload any active files"
                      "into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
 
-            if self.scan_hosts and self.disco:
-                '''
-                    Check when we use arguments with 
-                        'scan_hosts': '172.25.144.95, 172.25.144.39', and 
-                        'disco_mode': 'record'
-                    Use them for execute commands after upload activated and further use for DML and RecData gathering.
-                '''
-                log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
+        # ADDM Start scan in disco mode
+        if self.scan_hosts and self.disco:
+            '''
+                Check when we use arguments with 
+                    'scan_hosts': '172.25.144.95, 172.25.144.39', and 
+                    'disco_mode': 'record'
+                Use them for execute commands after upload activated and further use for DML and RecData gathering.
+            '''
+            log.info("ADDM: Scan host found, discovery mode:"+str(self.disco))
+
+        # ADDM Start scan in standard mode:
+        elif self.scan_hosts and not self.disco:
+            log.info("ADDM: Scan host found, discovery mode wasn't set I'll use standard by default.")
+
 
         return local_functions_dict, addm_operations_dict
 

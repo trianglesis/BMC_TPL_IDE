@@ -342,7 +342,7 @@ class ArgsParse:
                                      'pattern_folder':      pattern_folder,
                                      'file_name':           file_name,
                                      'file_ext':            file_ext,
-                                     'working_dir':         '',
+                                     'working_dir':         tpl_folder,
                                      'full_path':           full_path,
                                      'tkn_main_t':          tkn_main_t,
                                      'tku_patterns_t':      tku_patterns_t,
@@ -772,8 +772,6 @@ class ArgsParse:
 
         if vm_dev_path:
             dev_vm_check = True
-            # TODO: Delete when debug finished:
-            dev_vm_check = False
             log.debug("This is probably a dev VM and HGFS share for /addm/tkn_main/tku_patterns/ "
                       "is on place: "+str(vm_dev_path))
 
