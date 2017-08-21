@@ -143,60 +143,101 @@ class GlobalLogic:
         # TODO: Compose set of functions filled with all needed args for each scenario and return in to main module to execute.
         # Now only debug messages just to describe logic:
         if file_ext == "tplpre":
+            # When this is tplpre - need to run set of preparations:
             log.debug("File is TPLRPE")
 
             if workspace:
+                # When path to tku patterns is valid in local system
                 log.debug("Workspace is found and used, so options will be parsed based on it.")
 
                 if usual_imports:
+                    # Import modules from pattern by Preproc
                     log.debug("USUAL IMPORTS Will run as TPLPreproc do.")
 
                 elif recursive_imports and not read_test:
+                    # Recursive import patterns with my logic.
                     log.debug("RECURSIVE IMPORTS Will run with my logic.")
 
                 elif read_test and recursive_imports:
+                    # Recursively import patterns PLUS all from test.py with my logic.
                     log.debug("TESTs + RECURSIVE IMPORTS Will run - with all patterns included in test.py")
 
                 else:
+                    # Imports not set - only active pattern will be processed and uploaded:
                     log.debug("Nothing will be imported, just active pattern will be used for upload and activate.")
             else:
+                # Without proper workspace - I cant found preprocessor, imports etc. So I do nothing.
                 log.debug("No workspace was found so nothing can be done with TPLPRE!")
 
             if ssh and workspace:
+                # TODO: I can add in this if another file types just for upload (and smth. else)
+                # When SSH is open and  path to tku patterns is valid in local system
                 log.debug("When SSH is on and workspace is set I can activate patterns")
 
                 if file_ext == "tplpre":
+                    # When this is tplpre - so we can download result folders in pattern folder, not the tplpre file.
                     log.debug("I can upload pattern based on it's extension - tplpre")
 
                     if dev_vm:
+                        # When ADDM vm has shared folders - I can upload nothing - just activate it.
                         log.debug("HGFS is True so I can just activate file locally.")
 
                         if usual_imports or recursive_imports:
+                            # When imports - I need to zip folder 'imports' in pattern folder.
                             log.debug("Making zip from imported patterns, activating them.")
 
                         elif not usual_imports and not recursive_imports:
+                            # When there was no imports - I just zip folder with tpl in pattern folder.
                             log.debug("Pattern: activating local pattern in remote system.")
 
                     elif not dev_vm:
+                        # When ADDM vm has not shared folders - I need to upload patterns via SFTP.
                         log.debug("HGFS is False so I can upload and then activate file remotely.")
 
                         if usual_imports or recursive_imports:
+                            # When imports - I need to zip folder 'imports' in pattern folder.
                             log.debug("Making zip from imported patterns, UPLOAD, activating them.")
 
                         elif not usual_imports and not recursive_imports:
+                            # When there was no imports - I just zip folder with tpl in pattern folder.
                             log.debug("Pattern: uploading local pattern in remote system.")
 
                 elif file_ext == "tpl":
+                    # When file is tpl - I've just uploac or activate it, based on ADDM VM state
                     log.debug("I can upload pattern based on it's extension - tpl")
 
                     if dev_vm:
+                        # If ADDM is DEV - I just activate pattern in mirror FS.
                         log.debug("HGFS is True so I can just activate file locally.")
 
                     elif not dev_vm:
+                        # When ADDM is not dev - J upload pattern and then activate.
                         log.debug("HGFS is False so I can upload and then activate file remotely.")
 
+                elif file_ext == "py":
+                    # When file is py - I can only run it in TH mode and see output ONLY if ADDM VM is DEV
+                    log.debug("")
+
+                elif file_ext == "dml":
+                    # When file is py - I can use it for tests or convert DML to REC DATA or so...
+                    log.debug("")
+
+                elif file_ext == "model":
+                    # When file is tpl -I don't know what I can do, but I will think about it.
+                    log.debug("")
+
             elif ssh and not workspace:
+                # NO Tpreproc, no Syntax, no imports - just upload and activate.
+                # This cannot be used for TPLPRE
                 log.debug("When SSH is on but workspace is NOT set I can DOWNLOAD and then activate patterns")
+
+                if file_ext == "tpl":
+                    # ONLY When file is tpl - I've just uploac or activate it, based on ADDM VM state
+                    log.debug("I can upload pattern based on it's extension - tpl")
+
+                elif file_ext == "dml":
+                    # When file is py - I can use it for tests or convert DML to REC DATA or so...
+                    log.debug("")
 
         elif file_ext == "tpl":
             log.debug("File is tpl - no Preproc.")
