@@ -120,12 +120,12 @@ make_preproc = local_functions_dict['prepcoc_patterns']
 make_preproc()
 
 
-addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-if addm_upload_pattern:
-    addm_upload_pattern()
-
-addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-addm_activate_pattern()
+# addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
+# if addm_upload_pattern:
+#     addm_upload_pattern()
+#
+# addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+# addm_activate_pattern()
 # True\False check TEST
 
 
