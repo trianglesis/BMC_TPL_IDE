@@ -47,34 +47,34 @@ class AddmOperations:
         self.upload_activated_check = re.compile('(\d+\sknowledge\supload\sactivated)')
         self.upload_num_item = re.compile('Uploaded\s+\S+\s+as\s\"([^"]+)\"')
 
-    def upload_knowledge(self, local_file, file_path):
+    def upload_knowledge(self, zip_on_local, zip_on_remote):
         """
         Use local path to zip file and remote path where to download.
         Check md5sum of both files after upload.
         Use hardcoded path.
             This path should be checked and created in parse_args.check_folders()
 
-        :param local_file: str - path to zip in local system
-        :param file_path: str - path where put this zip
+        :param zip_on_local: str - path to zip in local system
+        :param zip_on_remote: str - path where put this zip
         """
 
         log = self.logging
 
-        log.info("local_file:" + local_file)
-        remote_path = '/usr/tideway/TKU/Tpl_DEV/' + local_file
+        log.info("zip file local: " + zip_on_local)
+        log.info("zip file remote: " + zip_on_remote)
 
         ftp = self.ssh_cons.open_sftp()
         try:
-            ftp.put(local_file, remote_path)
+            ftp.put(zip_on_local, zip_on_remote)
             ftp.close()
             log.info("Patterns zip to ADDM upload:" + "PASSED!")
         except:
             log.error("Something goes wrong with ftp connection or zip file! Check if file path or folder exists")
 
-        if local_file:
-            file_check = self.check_file_pattern(local_file=local_file, remote_file=remote_path)
+        if zip_on_local:
+            file_check = self.check_file_pattern(local_file=zip_on_local, remote_file=zip_on_remote)
         else:
-            file_check = self.check_file_pattern(local_file=file_path, remote_file=remote_path)
+            file_check = self.check_file_pattern(local_file=zip_on_remote, remote_file=zip_on_local)
 
         return file_check
 
@@ -105,7 +105,7 @@ class AddmOperations:
         log = self.logging
 
         uploaded_activated = False  # 1 knowledge upload activated
-        log.debug("Activate local zip: ensure we have rights of 777 on this file.")
+        log.debug("Activate local zip: ensure we have rights of 777 on this file: "+str(zip_path))
 
         self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
         log.info("Installing and activating pattern modules.")
@@ -153,6 +153,9 @@ class AddmOperations:
         :return:
         """
         log = self.logging
+
+        log.debug("MD5SUM: Checking file sum of local_file: "+str(local_file))
+        log.debug("MD5SUM: Checking file sum of remote_file: "+str(remote_file))
 
         local_hash5 = hashlib.md5(open(local_file, 'rb').read()).hexdigest()
         _, stdout, stderr = self.ssh_cons.exec_command("md5sum " + remote_file)

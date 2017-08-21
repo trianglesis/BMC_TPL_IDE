@@ -123,14 +123,46 @@ if syntax_check:
         make_preproc = local_functions_dict['prepcoc_patterns']
         make_preproc()
 
-        # if addm_operations_dict['addm_upload_pattern']:
-        #     addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-        #     if addm_upload_pattern:
-        #         addm_upload_pattern()
-        #
-        # if addm_operations_dict['addm_activate_pattern']:
-        #     addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-        #     addm_activate_pattern()
+        if addm_operations_dict['addm_zip_pattern']:
+            addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
+            if addm_zip_pattern:
+                addm_zip_pattern()
+
+        if addm_operations_dict['addm_upload_pattern']:
+            addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
+            addm_upload_pattern()
+
+            if addm_operations_dict['addm_activate_pattern']:
+                addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+                addm_activate_pattern()
+        else:
+            if addm_operations_dict['addm_activate_pattern']:
+                addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+                addm_activate_pattern()
+else:
+    make_preproc = local_functions_dict['prepcoc_patterns']
+    make_preproc()
+
+    if addm_operations_dict['addm_zip_pattern']:
+        addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
+        if addm_zip_pattern:
+            addm_zip_pattern()
+
+    if addm_operations_dict['addm_upload_pattern']:
+        addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
+        addm_upload_pattern()
+
+        if addm_operations_dict['addm_activate_pattern']:
+            addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+            addm_activate_pattern()
+    else:
+        if addm_operations_dict['addm_activate_pattern']:
+            addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+            addm_activate_pattern()
+
+
+
+
 # True\False check TEST
 
 

@@ -362,7 +362,14 @@ class GlobalLogic:
                     Single TPL file cannot be syntax checked because it require imports!
                  
             """
-            log.info("This is not a DEV file.")
+            log.info("This is not a DEV file. I will just upload it on ADDM as is and activate.")
+            local_functions_dict = {
+                              'parse_tests_patterns':  False,
+                              'parse_tests_queries':   False,
+                              'import_patterns':       False,
+                              'prepcoc_patterns':      False,
+                              'syntax_check':          False
+                             }
 
         # TODO: Simultaneously check ADDM options and compose dict of possible options and scenarios.
         # TODO: Do not forget about syntax checks!
@@ -416,23 +423,15 @@ class GlobalLogic:
                     zip_mirror = path_to_result_remote+"/"+self.full_path_args['pattern_folder'] + '.zip'
 
                     # Making function obj for ZIP
-                    addm_upload_f = self.make_zip(path_to_result)
+                    addm_zip_f = self.make_zip(path_to_result)
 
                     # Use zip path to start activation process with path composed for mirror addm FS:
                     addm_activate_f = self.activate_local_zip(zip_mirror)
 
-                    if self.scan_hosts and self.disco:
-                        '''
-                            Check when we use arguments with 
-                                'scan_hosts': '172.25.144.95, 172.25.144.39', and 
-                                'disco_mode': 'record'
-                            Use them for execute commands after upload activated and further use for DML and RecData gathering.
-                        '''
-                        log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
-
                     addm_operations_dict = {
-                                            'addm_upload_pattern':   addm_upload_f,
+                                            'addm_zip_pattern':      addm_zip_f,
                                             'addm_activate_pattern': addm_activate_f,
+                                            'addm_upload_pattern':   False,
                                             'addm_start_scan':       False,
                                             'addm_gather_data':      False,
                                             'addm_verify_data':      False,
@@ -448,23 +447,14 @@ class GlobalLogic:
                     addm_activate_f = self.activate_local_zip(rem_patt)
 
                     addm_operations_dict = {
-                                            'addm_check_ssh':        False,
-                                            'addm_upload_pattern':   False,
+                                            'addm_zip_pattern':      False,
                                             'addm_activate_pattern': addm_activate_f,
+                                            'addm_upload_pattern':   False,
                                             'addm_start_scan':       False,
                                             'addm_gather_data':      False,
                                             'addm_verify_data':      False,
                                             'addm_save_model':       False
                                             }
-
-                if self.scan_hosts and self.disco:
-                    '''
-                        Check when we use arguments with 
-                            'scan_hosts': '172.25.144.95, 172.25.144.39', and 
-                            'disco_mode': 'record'
-                        Use them for execute commands after upload activated and further use for DML and RecData gathering.
-                    '''
-                    log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
 
             elif not self.dev_vm_check:
                 '''
@@ -477,16 +467,76 @@ class GlobalLogic:
                 log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
                          "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
 
-                # TODO: Copy logic from if self.usual_imports or self.recursive_imports
+                if self.usual_imports or self.recursive_imports:
+                    '''
+                    Path to result is the path of imported, preprocessed and tested patterns forder in local system
+                    and this path like it mirrored in remote system with HGFS.
+                    '''
+                    log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
+                              "activating them.")
 
-                if self.scan_hosts and self.disco:
+                    # HARDCODED path which will be created during args check if HGFS share is not confirmed:
+                    addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
+
+                    # Local path to zip will be:
+                    path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
+                    # Remote path to zip will be:
+                    zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
+                    zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+
+                    # Making function obj for ZIP
+                    addm_zip_f = self.make_zip(path_to_result)
+
+                    # UPLOAD zip to ADDM via SFTP:
+                    upload_f = self.upload_remote(zip_on_local, zip_on_remote)
+
+                    # Use zip path to start activation process with path to zip in hardcoded path:
+                    addm_activate_f = self.activate_local_zip(zip_on_remote)
+
+                    addm_operations_dict = {
+                                            'addm_zip_pattern':      addm_zip_f,
+                                            'addm_activate_pattern': addm_activate_f,
+                                            'addm_upload_pattern':   upload_f,
+                                            'addm_start_scan':       False,
+                                            'addm_gather_data':      False,
+                                            'addm_verify_data':      False,
+                                            'addm_save_model':       False
+                                            }
+
+                elif not self.usual_imports and not self.recursive_imports:
                     '''
-                        Check when we use arguments with 
-                            'scan_hosts': '172.25.144.95, 172.25.144.39', and 
-                            'disco_mode': 'record'
-                        Use them for execute commands after upload activated and further use for DML and RecData gathering.
+                    Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
                     '''
-                    log.info("ADDM: Scan mode arguments confirmed and will be used for scenario act.")
+                    log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
+                              "activating them.")
+
+                    # HARDCODED path which will be created during args check if HGFS share is not confirmed:
+                    addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
+
+                    # Local path to zip will be:
+                    path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
+                    # Remote path to zip will be:
+                    zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
+                    zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+
+                    # Making function obj for ZIP
+                    addm_zip_f = self.make_zip(path_to_result)
+
+                    # UPLOAD zip to ADDM via SFTP:
+                    upload_f = self.upload_remote(zip_on_local, zip_on_remote)
+
+                    # Use zip path to start activation process with path to zip in hardcoded path:
+                    addm_activate_f = self.activate_local_zip(zip_on_remote)
+
+                    addm_operations_dict = {
+                                            'addm_zip_pattern':      addm_zip_f,
+                                            'addm_activate_pattern': addm_activate_f,
+                                            'addm_upload_pattern':   upload_f,
+                                            'addm_start_scan':       False,
+                                            'addm_gather_data':      False,
+                                            'addm_verify_data':      False,
+                                            'addm_save_model':       False
+                                            }
 
         elif self.ssh and not self.workspace:
             '''
@@ -621,7 +671,7 @@ class GlobalLogic:
 
         return activate
 
-    def upload_remote(self, local_file):
+    def upload_remote(self, local_file, remote_file):
         """
         Closure for pattern upload on remote addm via SFTP.
         IN PROGRESS!
@@ -632,7 +682,7 @@ class GlobalLogic:
         def activate():
             addm = AddmOperations(log, self.ssh)
             # Activate local zip package using remote mirror path to it:
-            addm.upload_knowledge(local_file, self.full_path_args['pattern_folder'])
+            addm.upload_knowledge(zip_on_local=local_file, zip_on_remote=remote_file)
 
         return activate
 
