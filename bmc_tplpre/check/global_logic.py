@@ -129,11 +129,10 @@ class GlobalLogic:
             self.usual_imports     = False
             self.read_test         = False
 
-    def check_file_extension(self, file_ext):
+    def check_file_extension(self, file_ext, workspace, usual_imports, recursive_imports, read_test,
+                             ssh, dev_vm, scan_hosts, disco):
         """
         Based on file extension - describe further scenario with current file
-
-
 
         :param file_ext:
         :return:
@@ -141,22 +140,110 @@ class GlobalLogic:
 
         log = self.logging
 
-        # TODO: Compose set of functions filled with all
-        # TODO: needed args for each scenario and return in to main module to execute.
+        # TODO: Compose set of functions filled with all needed args for each scenario and return in to main module to execute.
+        # Now only debug messages just to describe logic:
         if file_ext == "tplpre":
-            tpl_preproc = Preproc(log)
+            log.debug("File is TPLRPE")
 
-            log.debug("")
+            if workspace:
+                log.debug("Workspace is found and used, so options will be parsed based on it.")
+
+                if usual_imports:
+                    log.debug("USUAL IMPORTS Will run as TPLPreproc do.")
+
+                elif recursive_imports and not read_test:
+                    log.debug("RECURSIVE IMPORTS Will run with my logic.")
+
+                elif read_test and recursive_imports:
+                    log.debug("TESTs + RECURSIVE IMPORTS Will run - with all patterns included in test.py")
+
+                else:
+                    log.debug("Nothing will be imported, just active pattern will be used for upload and activate.")
+            else:
+                log.debug("No workspace was found so nothing can be done with TPLPRE!")
+
+            if ssh and workspace:
+                log.debug("When SSH is on and workspace is set I can activate patterns")
+
+                if file_ext == "tplpre":
+                    log.debug("I can upload pattern based on it's extension - tplpre")
+
+                    if dev_vm:
+                        log.debug("HGFS is True so I can just activate file locally.")
+
+                        if usual_imports or recursive_imports:
+                            log.debug("Making zip from imported patterns, activating them.")
+
+                        elif not usual_imports and not recursive_imports:
+                            log.debug("Pattern: activating local pattern in remote system.")
+
+                    elif not dev_vm:
+                        log.debug("HGFS is False so I can upload and then activate file remotely.")
+
+                        if usual_imports or recursive_imports:
+                            log.debug("Making zip from imported patterns, UPLOAD, activating them.")
+
+                        elif not usual_imports and not recursive_imports:
+                            log.debug("Pattern: uploading local pattern in remote system.")
+
+                elif file_ext == "tpl":
+                    log.debug("I can upload pattern based on it's extension - tpl")
+
+                    if dev_vm:
+                        log.debug("HGFS is True so I can just activate file locally.")
+
+                    elif not dev_vm:
+                        log.debug("HGFS is False so I can upload and then activate file remotely.")
+
+            elif ssh and not workspace:
+                log.debug("When SSH is on but workspace is NOT set I can DOWNLOAD and then activate patterns")
+
         elif file_ext == "tpl":
-            log.debug("")
+            log.debug("File is tpl - no Preproc.")
+
+            # If some workspace found - then use syntax check and imports:
+            if workspace:
+                log.debug("Workspace is found and used, so options will be parsed based on it.")
+
+                if recursive_imports:
+                    log.debug("PLAN MODE: RECURSIVE IMPORTS Will run with my logic for tpl files from Technology-Knowledge-Update.")
+
+            else:
+                log.debug("No workspace was found for TPL, only Upload.")
+
         elif file_ext == "py":
-            log.debug("")
+            log.debug("File is PY")
+
+            if workspace:
+                log.debug("Workspace is found and used, so options will be parsed based on it.")
+            else:
+                log.debug("No workspace was found so nothing can be done with PY!")
+
         elif file_ext == "dml":
-            log.debug("")
+            log.debug("File is dml")
+
+            if workspace:
+                log.debug("Workspace is found and used, so options will be parsed based on it.")
+            else:
+                log.debug("No workspace was found so nothing can be done with DML!")
+
         elif file_ext == "model":
-            log.debug("")
+            log.debug("File is model")
+
+            if workspace:
+                log.debug("Workspace is found and used, so options will be parsed based on it.")
+            else:
+                log.debug("No workspace was found so nothing can be done with MODEL!")
+
         else:
-            log.error("There is no file extension!")
+            log.error("I can't use this file extension: "+str(file_ext))
+
+        if scan_hosts and disco:
+            log.info("ADDM: Scan host found, discovery mode:"+str(disco))
+
+        elif scan_hosts and not disco:
+            log.info("ADDM: Scan host found, discovery mode wasn't set I'll use standard by default.")
+
 
     def check_args_set(self, known_args, extra_args):
         """
@@ -631,7 +718,6 @@ class GlobalLogic:
         # ADDM Start scan in standard mode:
         elif self.scan_hosts and not self.disco:
             log.info("ADDM: Scan host found, discovery mode wasn't set I'll use standard by default.")
-
 
         return local_functions_dict, addm_operations_dict
 
