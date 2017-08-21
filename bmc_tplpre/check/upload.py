@@ -6,9 +6,7 @@ Allows you to automate usual routine in pattern development.
 """
 
 import hashlib
-import os
 import re
-import zipfile
 
 
 '''
@@ -41,7 +39,6 @@ Idea:
 class AddmOperations:
 
     def __init__(self, logging, ssh):
-        # TODO: Get args for TPL version to upload and zip this
         # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
 
         self.logging = logging

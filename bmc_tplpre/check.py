@@ -102,8 +102,8 @@ log.critical("CRITICAL TEST")
 
 funcs_run = GlobalLogic(log, known_args, extra_args)
 local_functions_dict, addm_operations_dict = funcs_run.make_function_set()
-print("FUNCTIONS OBJ SET: "+str(addm_operations_dict))
-print("FUNCTIONS OBJ SET: "+str(local_functions_dict))
+print("ADDM addm_operations_dict: "+str(addm_operations_dict))
+print("LOCAL local_functions_dict: "+str(local_functions_dict))
 
 # Manual functions execution:
 # TODO: This will be removed and execute only by set of composed functions.
@@ -116,16 +116,23 @@ test_patterns = local_functions_dict['parse_tests_patterns']
 if test_patterns:
     print(test_patterns)
 
-make_preproc = local_functions_dict['prepcoc_patterns']
-make_preproc()
+syntax_check = local_functions_dict['syntax_check']
+if syntax_check:
+    syntax_run = syntax_check()
+    if syntax_run:
+        print(syntax_run)
 
+        make_preproc = local_functions_dict['prepcoc_patterns']
+        make_preproc()
 
-# addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-# if addm_upload_pattern:
-#     addm_upload_pattern()
-#
-# addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-# addm_activate_pattern()
+if addm_operations_dict['addm_upload_pattern']:
+    addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
+    if addm_upload_pattern:
+        addm_upload_pattern()
+
+if addm_operations_dict['addm_activate_pattern']:
+    addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+    addm_activate_pattern()
 # True\False check TEST
 
 

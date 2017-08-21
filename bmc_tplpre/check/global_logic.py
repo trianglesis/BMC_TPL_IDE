@@ -193,6 +193,10 @@ class GlobalLogic:
         :param args_set:
         :return:
         """
+        # Init empty:
+        parsable_args_set = dict()
+        addm_args_set = dict()
+        operational_args = dict()
         log = self.logging
 
         parse_args = ArgsParse(log)
@@ -215,20 +219,41 @@ class GlobalLogic:
         :return:
         """
         log = self.logging
-        preproc_f          = ''
-        imports_f          = ''
-        imports_t          = ''
-        query_t            = ''
-        syntax_check_f     = ''
-        addm_check_f       = ''
-        addm_upload_f      = ''
-        addm_activate_f    = ''
-        addm_start_scan_f  = ''
-        addm_gather_data_f = ''
-        addm_verify_data_f = ''
-        addm_save_model_f  = ''
+        # Init empty:
+
+        preproc_f          = False
+        imports_f          = False
+        imports_t          = False
+        query_t            = False
+        syntax_check_f     = False
+        addm_check_f       = False
+        addm_upload_f      = False
+        addm_activate_f    = False
+        addm_start_scan_f  = False
+        addm_gather_data_f = False
+        addm_verify_data_f = False
+        addm_save_model_f  = False
+
+        addm_operations_dict = {
+                                'addm_check_ssh':        addm_check_f,
+                                'addm_upload_pattern':   addm_upload_f,
+                                'addm_activate_pattern': addm_activate_f,
+                                'addm_start_scan':       addm_start_scan_f,
+                                'addm_gather_data':      addm_gather_data_f,
+                                'addm_verify_data':      addm_verify_data_f,
+                                'addm_save_model':       addm_save_model_f
+                                }
+
+        local_functions_dict = {
+                          'parse_tests_patterns':  imports_t,
+                          'parse_tests_queries':   query_t,
+                          'import_patterns':       imports_f,
+                          'prepcoc_patterns':      preproc_f,
+                          'syntax_check':          syntax_check_f
+                         }
 
         # TODO Wisely add conditions to decide what logic to use when file is different ext or from diff places.
+        # TODO Syntax check for tplpre, tpl, and optionally switch of if debug run.
         if self.file_ext == "tplpre":
 
             """
@@ -241,6 +266,7 @@ class GlobalLogic:
             Start scan.
             Generate data, dml, models etc.
             """
+            # NORMAL IMPORTS
             if self.usual_imports:
                 """
                 When you don't want to import whole set of modules but only ones are used in current pattern.
@@ -250,6 +276,10 @@ class GlobalLogic:
                                                    input_path=self.full_path,
                                                    output_path=self.working_dir,
                                                    mode="usual_imports")
+
+                syntax_check_f = self.make_syntax_check(self.working_dir)
+
+            # RECURSIVE MODE:
             elif self.recursive_imports:
                 """
                 When you want to import modules for each pattern in working dir and each it recursive.
@@ -265,8 +295,9 @@ class GlobalLogic:
                                                    output_path=output,
                                                    mode="recursive_imports")
                 # After TPLPreprocessor finished its work - run Syntax Check on folder imports
-                # TODO: Syntat check.
+                syntax_check_f = self.make_syntax_check(output)
 
+            # TESTs + RECURSIVE MODE:
             elif self.read_test and self.recursive_imports:
                 """
                 As recursive imports but also includes patterns from self.setupPatterns from test.py
@@ -289,8 +320,9 @@ class GlobalLogic:
                                                    mode="recursive_imports")
 
                 # After TPLPreprocessor finished its work - run Syntax Check on folder imports
-                # TODO: Syntat check.
+                syntax_check_f = self.make_syntax_check(output)
 
+            # SOLO MODE:
             else:
                 """
                 If file is tplre - but no dev args found.
@@ -305,6 +337,8 @@ class GlobalLogic:
                                                    input_path=self.full_path,
                                                    output_path=self.working_dir,
                                                    mode="solo_mode")
+                # No SYNTAX CHECK should be used in solo mode, because there is no imported modules in results folder!
+                # syntax_check_f = self.make_syntax_check(self.working_dir)
 
             local_functions_dict = {
                               'parse_tests_patterns':  imports_t,
@@ -534,6 +568,22 @@ class GlobalLogic:
             test_read.query_pattern_tests(self.working_dir)
         # return test_read.query_pattern_tests(self.working_dir)
         return test_queries
+
+    def make_syntax_check(self, working_dir):
+        """
+        Run LOCAL syntax check procedure in selected folders or files.
+        Can run ONLY when imports from patter are also in the same folder.
+        Should be ignored in SOLO MODE.
+
+        :return:
+        """
+        log = self.logging
+
+        def syntax_chek():
+            syntax = SyntaxCheck(log)
+            syntax.syntax_check(working_dir)
+
+        return syntax_chek
 
     def addm_test(self):
         """

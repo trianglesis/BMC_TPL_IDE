@@ -8,6 +8,7 @@ Allows you to automate usual routine in pattern development.
 import subprocess
 import re
 import sys
+import os
 
 '''
 1. Use working dir and tpl ver and run syntax check (input)
@@ -37,13 +38,16 @@ class SyntaxCheck:
 
         self.logging = logging
 
-    def syntax_check(self, curr_work_dir, working_dir, tpl_version):
+    def syntax_check(self, working_dir):
         """
         Check the syntax in working dir for all found files.
+        Tpl version for check will be used from ADDM.
+        If no ADDM ip was added in args - will latest available hardcoded.
 
-        :param curr_work_dir:
+        Until tplint updated - it can check syntax only for max version 10.2.
+
+        :param tpl_mod_dir: Place where tplint is situated. By default it should be place where TPL language module lies.
         :param working_dir:
-        :param tpl_version:
         :return:
         """
         log = self.logging
@@ -54,29 +58,41 @@ class SyntaxCheck:
 
         result = ''
         syntax_passed = False
-        log.debug("Will check all files in path: " + str(working_dir))
+        log.debug("Syntax: Will check all files in path: " + str(working_dir))
 
-        # print('"' + curr_work_dir + '\\tplint\\tplint.exe" --discovery-versions=' + tpl_version + ' --loglevel=WARN -t "'+ curr_work_dir + '\\taxonomy\\00taxonomy.xml"')
-        # print("WORK DIR CWD: "+str(working_dir))
+        tpl_mod_dir = os.getcwd()
+        print(tpl_mod_dir)
+
+
+        # NOTE: When checking syntax - is better to use all versions of tpl, because it can produce old-version errors.
+        # It's longer but work for all versions.
         try:
-            open_path = subprocess.Popen('"' + curr_work_dir + '\\tplint\\tplint.exe" --discovery-versions=' + tpl_version +
-                                         ' --loglevel=WARN -t "'+ curr_work_dir + '\\taxonomy\\00taxonomy.xml"',
+            log.debug("Syntax: Checking syntax. Options: -a --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
+
+            open_path = subprocess.Popen('"' + tpl_mod_dir + '\\tplint\\tplint.exe" '
+                                                             '-a --loglevel=WARN -t "'
+                                         + tpl_mod_dir + '\\taxonomy\\00taxonomy.xml"',
                                          cwd=working_dir, stdout=subprocess.PIPE)
+
             result = open_path.stdout.read().decode()
+
             if "No issues found!" in result:
                 syntax_passed = True
                 log.info("Syntax: PASSED!")
+
             elif match_result.findall(result):
                 error_modules = mod_re.findall(result)
                 errors = errors_re.findall(result)
-                log.error("ERROR: Some issues found!""\n" + "Module " + str(error_modules) + "\nErrors: " + str(errors))
+                log.error("Syntax: ERROR: Some issues found!""\n" + "Module " + str(error_modules) + "\nErrors: " + str(errors))
+
             else:
-                print("Something is not OK")
-                print(result)
-                log.debug("Something is not OK" + str(result))
+                log.error("Syntax: Something is not OK. RAW Result:")
+                log.error(result)
+                log.debug("Syntax: Something is not OK \n" + str(result))
+
         except:
-            log.error("Tplint cannot run, check if working dir is present!")
-            log.error("Tplint use path: " +  curr_work_dir)
+            log.error("Syntax: Tplint cannot run, check if working dir is present!")
+            log.error("Syntax: Tplint use path: " +tpl_mod_dir)
 
         return syntax_passed, result
 
