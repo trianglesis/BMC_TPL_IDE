@@ -9,7 +9,7 @@ This is script for use logical decisions based on args obtained.
 
 Later I will add here scenarios.
 
-    If file is .tplpre we need to
+    If file is .tplpre I need to
         - check imports and add if any (args based)
         - run TPLPreprocessor on it and check results (ALWAYS for tplpre but based or args (file|dir))
         - run Syntax check  (args based)
@@ -63,14 +63,13 @@ class GlobalLogic:
 
             '''
 
-            print("PATH ARGS: "+str(self.full_path_args))
+            # print("PATH ARGS: "+str(self.full_path_args))
 
             self.tku_patterns_t = self.full_path_args['tku_patterns_t']
             self.CORE_t         = self.full_path_args['CORE_t']
             self.workspace      = self.full_path_args['workspace']
             self.full_path      = self.full_path_args['full_path']
             self.working_dir    = self.full_path_args['working_dir']
-            self.workspace      = self.full_path_args['workspace']
             self.file_ext       = self.full_path_args['file_ext']
 
             log.debug("Arguments from -full_path are obtained and program will make decisions.")
@@ -89,7 +88,7 @@ class GlobalLogic:
                            'addm_ver': '11.1'}
             '''
 
-            print("ADDM VM ARGS: "+str(self.addm_args_set))
+            # print("ADDM VM ARGS: "+str(self.addm_args_set))
 
             self.ssh            = self.addm_args_set['ssh_connection']
             self.disco          = self.addm_args_set['disco_mode']
@@ -111,7 +110,7 @@ class GlobalLogic:
                               'read_test': False}
             '''
 
-            print("OPERATIONS ARGS: "+str(self.operational_args))
+            # print("OPERATIONS ARGS: "+str(self.operational_args))
 
             self.recursive_imports = self.operational_args['recursive_imports']
             self.usual_imports     = self.operational_args['usual_imports']
@@ -129,8 +128,8 @@ class GlobalLogic:
             self.usual_imports     = False
             self.read_test         = False
 
-    def check_file_extension(self, file_ext, workspace, usual_imports, recursive_imports, read_test,
-                             ssh, dev_vm, scan_hosts, disco):
+
+    def check_file_extension(self, file_ext, workspace, usual_imports, recursive_imports, read_test, ssh, dev_vm, scan_hosts, disco):
         """
         DEV
         Based on file extension - describe further scenario with current file
@@ -172,7 +171,7 @@ class GlobalLogic:
                 log.debug("When SSH is on and workspace is set I can activate patterns")
 
                 if file_ext == "tplpre":
-                    # When this is tplpre - so we can download result folders in pattern folder, not the tplpre file.
+                    # When this is tplpre - so I can download result folders in pattern folder, not the tplpre file.
                     log.debug("I can upload pattern based on it's extension - tplpre")
 
                     if dev_vm:
@@ -311,12 +310,83 @@ class GlobalLogic:
         parse_args = ArgsParse(log)
 
         parsable_args_set, operational_args = parse_args.gather_args(known_args, extra_args)
+        # TODO: Move this to parse_args and update above func for 3 vars.
         addm_args_set = parse_args.addm_args(known_args)
         # print(parsable_args_set)
 
         return parsable_args_set, addm_args_set, operational_args
 
-    def 
+    def conditions_from_arguments(self, **args_set):
+        """
+        DEV - just list here each scenarion to use.
+        No need to check is args or ssh is present - they have been checked before in parse_args, and if some arg failed
+        error will raise in that class. Here I will just compose logic.
+
+        Examples:
+        Development:
+            For upload:
+                Dev VM:
+                    workspace, tplpre, no imports, preproc, syntax_check, addm_dev, ssh
+                    workspace, tplpre, recursive imports, preproc, syntax_check, addm_dev, ssh
+                    workspace, tplpre, test + recursive imports, preproc, syntax_check, addm_dev, ssh
+                    workspace, -
+                        if addm_dev workspace did not match - upload to hardcoded dev.
+                Not dev vm:
+                    workspace, tplpre, no imports, preproc, syntax_check, addm_dev, ssh
+                    workspace, tplpre, recursive imports, preproc, syntax_check, addm_dev, ssh
+                    workspace, tplpre, test + recursive imports, preproc, syntax_check, addm_dev, ssh
+                    workspace, -
+                        if addm_dev workspace did not match - upload to hardcoded dev.
+
+            For local only:
+                workspace, tplpre, no imports, preproc, syntax_check
+                workspace, tplpre, recursive imports, preproc, syntax_check
+                workspace, tplpre, test + recursive imports, preproc, syntax_check
+
+            Out of workspace:
+                p4_workspace, tpl, ssh
+                p4_workspace, tpl, No ssh
+
+        Customer:
+            tku_workspace, tpl, no imports, ssh
+            tku_workspace, tpl, recursive imports, ssh
+
+        :return:
+        """
+        log = self.logging
+
+        # TODO: Add check for empty dict:
+        addm_conditions = args_set['addm_args_set']
+        local_conditions = args_set['full_path_args']
+        operational_conditions = args_set['operational_args']
+
+        # Addm args for scan
+        if addm_conditions['scan_hosts'] and addm_conditions['disco_mode']:
+            log.info("ADDM Scan args are present, current files will be uploaded to ADDM and Scan started.")
+
+            addm_working_dir = self.addm_dev_vm_condition_chooser(addm_conditions['dev_vm_check'])
+            import_condition = self.import_condition_chooser(operational_conditions)
+
+        # When I have no args for scan AND NO args for ADDM disco, but have arg for tpl_vers - proceed files locally with that version.
+        elif not addm_conditions['disco_mode'] and not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder']:
+            # TODO: Print addm vesrions here:
+            log.info("No ADDM Scan args are present. Local processing with tpl version from ADDM.")
+
+        # When I have NO args for Scan, but have args for ADDM status and disco - will start upload only.
+        elif not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder'] and addm_conditions['disco_mode']:
+            log.info("ADDM Upload args are present, current files will be uploaded to ADDM.")
+
+            addm_working_dir = self.addm_dev_vm_condition_chooser(addm_conditions['dev_vm_check'])
+            import_condition = self.import_condition_chooser(operational_conditions)
+
+        # No addm args:
+        elif not addm_conditions['ssh_connection']:
+            log.info("No ADDM connections args are present. Local processing.")
+
+        # pattern_folder = full_path_args['pattern_folder']
+        print(local_conditions)
+        print(addm_conditions)
+        print(operational_conditions)
 
     def make_function_set(self):
         """
@@ -335,7 +405,12 @@ class GlobalLogic:
         local_functions_dict = dict()
         addm_operations_dict = dict()
 
-        # TODO Wisely add conditions to decide what logic to use when file is different ext or from diff places.
+        future_function_set = self.conditions_from_arguments(full_path_args = self.full_path_args,
+                                                             # addm_args_set = 'fake',
+                                                             addm_args_set = self.addm_args_set,
+                                                             operational_args = self.operational_args)
+        # print(future_function_set)
+
         # TODO Syntax check for tplpre, tpl, and optionally switch of if debug run.
 
         # Make imports, check syntax, run TPLPreprocessor:
@@ -410,7 +485,7 @@ class GlobalLogic:
                 query_t = self.make_test_read_query()
 
                 # Read test.py and extract list of patterns from self.setupPatterns
-                # This is list of patterns we need to import from test.py.
+                # This is list of patterns I need to import from test.py.
                 imports_t = TestRead(log).import_pattern_tests(self.working_dir, self.tku_patterns_t)
 
                 # Import tplpre's in recursive mode with extras from test.py:
@@ -472,7 +547,7 @@ class GlobalLogic:
             NOTE: There is a logical problem:
             - if tpl file is editing - does it mean - I need to find imports for it?
                 - if yes - so there should be path to each import file which I can follow, but there is no prognoses-able
-                    way to obtain this path. This means - that if we are editing single TPL file - we just want to
+                    way to obtain this path. This means - that if I are editing single TPL file - I just want to
                     check syntax and upload it to ADDM "as is"!
                     Single TPL file will be uploaded. Or folder with them?
                     Single TPL file cannot be syntax checked because it require imports!
@@ -487,7 +562,7 @@ class GlobalLogic:
                               'syntax_check':          False
                              }
 
-        # Check ADDM, Upload patterns if addm has or has not DEV path but we have workspace:
+        # Check ADDM, Upload patterns if addm has or has not DEV path but I have workspace:
         if self.ssh and self.workspace:
             '''
             All pattern actions should be finished before I came here: Imports, Preproc, Syntax.
@@ -495,7 +570,7 @@ class GlobalLogic:
             If SSH connetsion is present - then ADDM was checked and I have a set of arguments to further use:
 
                 if dev_vm with HGFS shares - compose remote path based on local (they are the same!) and
-                    NOT UPLOAD files - but activate patterns with path which were composed here.
+                    NOT UPLOAD files - but activate patterns with path which Ire composed here.
                 if workspace then local dev path is confirmed
                 
                 if not dev_vm with HGFS - just use (created) hardcoded dev path as: /usr/tideway/TKU/Tpl_DEV/ and
@@ -719,7 +794,7 @@ class GlobalLogic:
                                             'addm_save_model':       False
                                             }
 
-        # Check ADDM, Upload patterns if addm has or has not DEV path but we DO NOT have workspace:
+        # Check ADDM, Upload patterns if addm has or has not DEV path but I DO NOT have workspace:
         elif self.ssh and not self.workspace:
             '''
             When local workspace was not confirmed and paths to %workspace%\\addm\\tkn_main\\tku_patterns\\..
@@ -732,7 +807,7 @@ class GlobalLogic:
         # ADDM Start scan in disco mode
         if self.scan_hosts and self.disco:
             '''
-                Check when we use arguments with 
+                Check when I use arguments with 
                     'scan_hosts': '172.25.144.95, 172.25.144.39', and 
                     'disco_mode': 'record'
                 Use them for execute commands after upload activated and further use for DML and RecData gathering.
@@ -751,6 +826,58 @@ class GlobalLogic:
 
         :return:
         """
+
+    def addm_dev_vm_condition_chooser(self, addm_vm_condition):
+        """
+        Based on args - make decision is ADDM dev or not - and compose paths for DEV or not.
+
+        :return: paths
+        """
+        log = self.logging
+
+        if addm_vm_condition:
+            log.info("ADDM VM Condition - DEV ADDM VM is working - files will be activated in mirrored filesystem.")
+
+            # Compose paths:
+            local_logic = LocalLogic(log)
+            addm_working_dir = local_logic.addm_compose_paths(dev_vm_path=self.dev_vm_path,
+                                                              pattern_folder=self.full_path_args['pattern_folder'])
+
+        elif not addm_vm_condition:
+            log.info("ADDM VM Condition - ADDM VM is working - files will be uploaded to dev folder and activated.")
+            addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
+
+        return addm_working_dir
+
+    def import_condition_chooser(self, operational_conditions):
+        """
+        Based on operational conditions - decide which path to use for patterns zip and upload\activate
+        :return:
+        """
+        log = self.logging
+
+        # TODO: Try to include here logic for tpl file from line 734: elif self.file_ext == "tpl":
+
+        if operational_conditions['usual_imports'] or operational_conditions['recursive_imports']:
+            log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, activating them.")
+
+            path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
+            path_to_result_remote = addm_working_dir+"/imports/"+self.tpl_folder
+            zip_mirror = path_to_result_remote+"/"+self.full_path_args['pattern_folder'] + '.zip'
+
+            # Making function obj for ZIP
+            addm_zip_f = self.make_zip(path_to_result)
+
+            # Use zip path to start activation process with path composed for mirror addm FS:
+            addm_activate_f = self.activate_local_zip(zip_mirror)
+
+        elif not operational_conditions['usual_imports'] and not operational_conditions['recursive_imports']:
+            log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, activating them.")
+
+            rem_patt = addm_working_dir+"/"+self.tpl_folder+"/" + self.full_path_args['file_name']+".tpl"
+            addm_activate_f = self.activate_local_zip(rem_patt)
+
+            addm_activate_f = self.activate_local_zip(rem_patt)
 
     def make_preprocessor(self, workspace, input_path, output_path, mode):
         """
