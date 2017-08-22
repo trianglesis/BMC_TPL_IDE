@@ -132,6 +132,7 @@ class GlobalLogic:
     def check_file_extension(self, file_ext, workspace, usual_imports, recursive_imports, read_test,
                              ssh, dev_vm, scan_hosts, disco):
         """
+        DEV
         Based on file extension - describe further scenario with current file
 
         :param file_ext:
@@ -149,19 +150,15 @@ class GlobalLogic:
             if workspace:
                 # When path to tku patterns is valid in local system
                 log.debug("Workspace is found and used, so options will be parsed based on it.")
-
                 if usual_imports:
                     # Import modules from pattern by Preproc
                     log.debug("USUAL IMPORTS Will run as TPLPreproc do.")
-
                 elif recursive_imports and not read_test:
                     # Recursive import patterns with my logic.
                     log.debug("RECURSIVE IMPORTS Will run with my logic.")
-
                 elif read_test and recursive_imports:
                     # Recursively import patterns PLUS all from test.py with my logic.
                     log.debug("TESTs + RECURSIVE IMPORTS Will run - with all patterns included in test.py")
-
                 else:
                     # Imports not set - only active pattern will be processed and uploaded:
                     log.debug("Nothing will be imported, just active pattern will be used for upload and activate.")
@@ -181,11 +178,9 @@ class GlobalLogic:
                     if dev_vm:
                         # When ADDM vm has shared folders - I can upload nothing - just activate it.
                         log.debug("HGFS is True so I can just activate file locally.")
-
                         if usual_imports or recursive_imports:
                             # When imports - I need to zip folder 'imports' in pattern folder.
                             log.debug("Making zip from imported patterns, activating them.")
-
                         elif not usual_imports and not recursive_imports:
                             # When there was no imports - I just zip folder with tpl in pattern folder.
                             log.debug("Pattern: activating local pattern in remote system.")
@@ -193,11 +188,9 @@ class GlobalLogic:
                     elif not dev_vm:
                         # When ADDM vm has not shared folders - I need to upload patterns via SFTP.
                         log.debug("HGFS is False so I can upload and then activate file remotely.")
-
                         if usual_imports or recursive_imports:
                             # When imports - I need to zip folder 'imports' in pattern folder.
                             log.debug("Making zip from imported patterns, UPLOAD, activating them.")
-
                         elif not usual_imports and not recursive_imports:
                             # When there was no imports - I just zip folder with tpl in pattern folder.
                             log.debug("Pattern: uploading local pattern in remote system.")
@@ -205,11 +198,9 @@ class GlobalLogic:
                 elif file_ext == "tpl":
                     # When file is tpl - I've just uploac or activate it, based on ADDM VM state
                     log.debug("I can upload pattern based on it's extension - tpl")
-
                     if dev_vm:
                         # If ADDM is DEV - I just activate pattern in mirror FS.
                         log.debug("HGFS is True so I can just activate file locally.")
-
                     elif not dev_vm:
                         # When ADDM is not dev - J upload pattern and then activate.
                         log.debug("HGFS is False so I can upload and then activate file remotely.")
@@ -217,11 +208,9 @@ class GlobalLogic:
                 elif file_ext == "py":
                     # When file is py - I can only run it in TH mode and see output ONLY if ADDM VM is DEV
                     log.debug("")
-
                 elif file_ext == "dml":
                     # When file is py - I can use it for tests or convert DML to REC DATA or so...
                     log.debug("")
-
                 elif file_ext == "model":
                     # When file is tpl -I don't know what I can do, but I will think about it.
                     log.debug("")
@@ -230,11 +219,9 @@ class GlobalLogic:
                 # NO Tpreproc, no Syntax, no imports - just upload and activate.
                 # This cannot be used for TPLPRE
                 log.debug("When SSH is on but workspace is NOT set I can DOWNLOAD and then activate patterns")
-
                 if file_ext == "tpl":
                     # ONLY When file is tpl - I've just uploac or activate it, based on ADDM VM state
                     log.debug("I can upload pattern based on it's extension - tpl")
-
                 elif file_ext == "dml":
                     # When file is py - I can use it for tests or convert DML to REC DATA or so...
                     log.debug("")
@@ -251,7 +238,6 @@ class GlobalLogic:
 
             else:
                 log.debug("No workspace was found for TPL, only Upload.")
-
         elif file_ext == "py":
             log.debug("File is PY")
 
@@ -259,7 +245,6 @@ class GlobalLogic:
                 log.debug("Workspace is found and used, so options will be parsed based on it.")
             else:
                 log.debug("No workspace was found so nothing can be done with PY!")
-
         elif file_ext == "dml":
             log.debug("File is dml")
 
@@ -267,7 +252,6 @@ class GlobalLogic:
                 log.debug("Workspace is found and used, so options will be parsed based on it.")
             else:
                 log.debug("No workspace was found so nothing can be done with DML!")
-
         elif file_ext == "model":
             log.debug("File is model")
 
@@ -275,16 +259,12 @@ class GlobalLogic:
                 log.debug("Workspace is found and used, so options will be parsed based on it.")
             else:
                 log.debug("No workspace was found so nothing can be done with MODEL!")
-
         else:
             log.error("I can't use this file extension: "+str(file_ext))
-
         if scan_hosts and disco:
             log.info("ADDM: Scan host found, discovery mode:"+str(disco))
-
         elif scan_hosts and not disco:
             log.info("ADDM: Scan host found, discovery mode wasn't set I'll use standard by default.")
-
 
     def check_args_set(self, known_args, extra_args):
         """
@@ -335,6 +315,8 @@ class GlobalLogic:
         # print(parsable_args_set)
 
         return parsable_args_set, addm_args_set, operational_args
+
+    def 
 
     def make_function_set(self):
         """
@@ -424,6 +406,7 @@ class GlobalLogic:
                 As recursive imports but also includes patterns from self.setupPatterns from test.py
                 """
                 # Read test.py and extract query for future validation after addm scan and save model:
+                # Later if -T in arg - use this, if no - just ignore.
                 query_t = self.make_test_read_query()
 
                 # Read test.py and extract list of patterns from self.setupPatterns
