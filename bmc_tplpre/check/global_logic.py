@@ -21,6 +21,7 @@ Later I will add here scenarios.
         - generate used query file (args based)
 
 """
+
 import os
 from check.parse_args import ArgsParse
 from check.preproc import Preproc
@@ -127,7 +128,6 @@ class GlobalLogic:
             self.recursive_imports = False
             self.usual_imports     = False
             self.read_test         = False
-
 
     def check_file_extension(self, file_ext, workspace, usual_imports, recursive_imports, read_test, ssh, dev_vm, scan_hosts, disco):
         """
@@ -358,14 +358,34 @@ class GlobalLogic:
         # TODO: Add check for empty dict:
         addm_conditions = args_set['addm_args_set']
         local_conditions = args_set['full_path_args']
-        operational_conditions = args_set['operational_args']
+        # operational_conditions = args_set['operational_args']
+
+        # TODO: Debug disable:
+        operational_conditions = {'recursive_imports': False, 'usual_imports': False, 'read_test': False}
+
+        print("Local Conditions"+str(local_conditions))
+        print("ADDM Conditions"+str(addm_conditions))
+        print("Oper Conditions"+str(operational_conditions))
 
         # Addm args for scan
         if addm_conditions['scan_hosts'] and addm_conditions['disco_mode']:
             log.info("ADDM Scan args are present, current files will be uploaded to ADDM and Scan started.")
 
-            addm_working_dir = self.addm_dev_vm_condition_chooser(addm_conditions['dev_vm_check'])
-            import_condition = self.import_condition_chooser(operational_conditions)
+            # Genarate addm working dir based on DEV condition:
+            addm_working_dir = self.addm_dev_cond(addm_conditions['dev_vm_check'])
+
+            # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
+            addm_zip_f, path_to_zip, local_zip = self.import_cond(addm_conditions['dev_vm_check'],
+                                                                               operational_conditions,
+                                                                               addm_working_dir)
+
+            # Decide if I need to upload zip or just activate mirrored:
+
+
+            # Using path to zip result from above - activate it in ADDM
+            zip_activation = self.zip_activ_cond(addm_conditions['dev_vm_check'],
+                                                                           # addm_working_dir,
+                                                                           path_to_zip)
 
         # When I have no args for scan AND NO args for ADDM disco, but have arg for tpl_vers - proceed files locally with that version.
         elif not addm_conditions['disco_mode'] and not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder']:
@@ -376,17 +396,34 @@ class GlobalLogic:
         elif not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder'] and addm_conditions['disco_mode']:
             log.info("ADDM Upload args are present, current files will be uploaded to ADDM.")
 
-            addm_working_dir = self.addm_dev_vm_condition_chooser(addm_conditions['dev_vm_check'])
-            import_condition = self.import_condition_chooser(operational_conditions)
+            # Genarate addm working dir based on DEV condition:
+            addm_working_dir = self.addm_dev_cond(addm_conditions['dev_vm_check'])
+
+            # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
+            addm_zip_f, path_to_zip, local_zip = self.import_cond(addm_conditions['dev_vm_check'],
+                                                                               operational_conditions,
+                                                                               addm_working_dir)
+
+            # Decide if I need to upload zip or just activate mirrored:
+
+
+            # Using path to zip result from above - activate it in ADDM
+            zip_activation = self.zip_activ_cond(addm_conditions['dev_vm_check'],
+                                                                           # addm_working_dir,
+                                                                           path_to_zip)
 
         # No addm args:
         elif not addm_conditions['ssh_connection']:
             log.info("No ADDM connections args are present. Local processing.")
 
+
+
         # pattern_folder = full_path_args['pattern_folder']
-        print(local_conditions)
-        print(addm_conditions)
-        print(operational_conditions)
+        print("ADDM working dir: "+str(addm_working_dir))
+        print("Import condition addm_zip_f: "+str(addm_zip_f))
+        print("Import condition path_to_zip: "+str(path_to_zip))
+        print("ADDM Activate f: "+str(zip_activation))
+
 
     def make_function_set(self):
         """
@@ -405,11 +442,13 @@ class GlobalLogic:
         local_functions_dict = dict()
         addm_operations_dict = dict()
 
+        print("self.operational_args: "+str(self.operational_args))
+
         future_function_set = self.conditions_from_arguments(full_path_args = self.full_path_args,
                                                              # addm_args_set = 'fake',
                                                              addm_args_set = self.addm_args_set,
                                                              operational_args = self.operational_args)
-        # print(future_function_set)
+        print("future_function_set: "+str(future_function_set))
 
         # TODO Syntax check for tplpre, tpl, and optionally switch of if debug run.
 
@@ -827,7 +866,7 @@ class GlobalLogic:
         :return:
         """
 
-    def addm_dev_vm_condition_chooser(self, addm_vm_condition):
+    def addm_dev_cond(self, addm_vm_condition):
         """
         Based on args - make decision is ADDM dev or not - and compose paths for DEV or not.
 
@@ -849,35 +888,153 @@ class GlobalLogic:
 
         return addm_working_dir
 
-    def import_condition_chooser(self, operational_conditions):
+    def import_cond(self, addm_vm_condition, operational_conditions, addm_working_dir):
         """
         Based on operational conditions - decide which path to use for patterns zip and upload\activate
+
+        This functions should be called with argument (result) from addm_dev_cond()
+            which is path to remote result folder where zip patterns activate or where to download if dev_vm is False.
+
+        Possible paths based on args:
+
+            if solo_mode:
+                - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.tpl
+                - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
+            if usual_imports or recursive_imports:
+                - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.tpl
+                - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
+
+            if dev_vm:
+                local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
+                               - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
+
+                remote(mirror) - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/tpl<version>/PatternName.zip
+                               - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/imports/tpl<version>/PatternName.zip
+            if not dev_vm:
+                local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
+                               - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
+
+                remote(not DEV) - /usr/tideway/TKU/Tpl_DEV/PatternName.zip
+
         :return:
         """
         log = self.logging
 
         # TODO: Try to include here logic for tpl file from line 734: elif self.file_ext == "tpl":
 
-        if operational_conditions['usual_imports'] or operational_conditions['recursive_imports']:
-            log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, activating them.")
+        # TODO: Debug disable:
+        addm_vm_condition = False
 
-            path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
-            path_to_result_remote = addm_working_dir+"/imports/"+self.tpl_folder
-            zip_mirror = path_to_result_remote+"/"+self.full_path_args['pattern_folder'] + '.zip'
+        if operational_conditions['usual_imports'] or operational_conditions['recursive_imports']:
+            log.debug("Imports condition - IMPORTS to addm: Making zip from imported patterns.")
+
+            # Include 'imports' dir into the path:
+            imports_dir = os.sep+"imports"+os.sep
+            # Path of acive pattern folder + imports dir + tpl<version dir>:
+            # path_to_result: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\imports\tpl113\
+            # 'working_dir': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem',
+            path_to_result = self.full_path_args['working_dir']+imports_dir+self.tpl_folder+os.sep
+
+            # Pattern remote path in ADDM FS:
+            if addm_vm_condition:
+                # On DEV ADDM (example docs: remote(mirror)): /usr/tideway/TKU/addm/tkn_main/tku_patterns/...
+                addm_result_folder = addm_working_dir+"/imports/"+self.tpl_folder
+                # I do not need this, because on DEV VM I will just activate zip in mirror FS
+                local_zip = ''
+            elif not addm_vm_condition:
+                # Not on DEV ADDM (example docs: remote(not DEV)): /usr/tideway/TKU/Tpl_DEV/
+                addm_result_folder = addm_working_dir
+                # local_zip: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl113\BMCRemedyARSystem.zip
+                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                log.debug("IMP COND local_zip: "+str(local_zip))
 
             # Making function obj for ZIP
+            zip_mirror = addm_result_folder+"/"+self.full_path_args['pattern_folder'] + '.zip'
             addm_zip_f = self.make_zip(path_to_result)
 
-            # Use zip path to start activation process with path composed for mirror addm FS:
-            addm_activate_f = self.activate_local_zip(zip_mirror)
+            # Path to zip with import included:
+            # path_to_zip: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/imports/tpl113/BMCRemedyARSystem.zip
+            addm_zip = zip_mirror
+
+            log.debug("IMP COND addm_zip: "+str(addm_zip))
+            log.debug("IMP COND addm_result_folder: "+str(addm_result_folder))
+            log.debug("IMP COND path_to_result: "+str(path_to_result))
 
         elif not operational_conditions['usual_imports'] and not operational_conditions['recursive_imports']:
-            log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, activating them.")
+            log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip with one active file.")
 
-            rem_patt = addm_working_dir+"/"+self.tpl_folder+"/" + self.full_path_args['file_name']+".tpl"
-            addm_activate_f = self.activate_local_zip(rem_patt)
+            # Path of active pattern to ZIP:
+            # path_to_result: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl113\
+            # 'working_dir': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem',
+            path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
 
-            addm_activate_f = self.activate_local_zip(rem_patt)
+            # Pattern remote path in ADDM FS:
+            # addm_zip_path = addm_working_dir+"/"+self.tpl_folder+"/"+self.full_path_args['file_name']+".tpl"
+
+            # Pattern remote path in ADDM FS:
+            if addm_vm_condition:
+                # On DEV ADDM (example docs: remote(mirror)):
+                # addm_result_folder: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/tpl113
+                addm_result_folder = addm_working_dir+"/"+self.tpl_folder
+                # I do not need this, because on DEV VM I will just activate zip in mirror FS
+                local_zip = ''
+            elif not addm_vm_condition:
+                # Not on DEV ADDM (example docs: remote(not DEV)): /usr/tideway/TKU/Tpl_DEV/
+                addm_result_folder = addm_working_dir
+                # local_zip: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl113\BMCRemedyARSystem.zip
+                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                log.debug("IMP COND local_zip: "+str(local_zip))
+
+            # Making function obj for ZIP
+            zip_remote = addm_result_folder+"/"+self.full_path_args['pattern_folder'] + '.zip'
+            addm_zip_f = self.make_zip(path_to_result)
+
+            # Path to zip with single pattern included:
+            # addm_zip: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/tpl113/BMCRemedyARSystem.zip
+            addm_zip = zip_remote
+
+            log.debug("IMP COND addm_zip: "+str(addm_zip))
+            log.debug("IMP COND addm_result_folder: "+str(addm_result_folder))
+            log.debug("IMP COND path_to_result: "+str(path_to_result))
+
+        return addm_zip_f, addm_zip, local_zip
+
+    def zip_activ_cond(self, addm_vm_condition, path_to_zip):
+        """
+        Based on ADDM state - if DEV_VM or not - choose folder where activate or upload and activate ZIP with patterns.
+
+            if dev_vm:
+                local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
+                               - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
+
+                remote(mirror) - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/tpl<version>/PatternName.zip
+                               - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/imports/tpl<version>/PatternName.zip
+            if not dev_vm:
+                local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
+                               - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
+
+                remote         - /usr/tideway/TKU/Tpl_DEV/PatternName.zip
+
+        :param path_to_zip:
+        :return:
+        """
+        log = self.logging
+
+        if addm_vm_condition:
+            # Just activate zip in mirrored path:
+            log.info("ZIP: - DEV ADDM VM is working - files will be activated in mirrored filesystem.")
+            addm_activate_f = self.activate_local_zip(path_to_zip)
+
+        elif not addm_vm_condition:
+            # Upload zip to addm custom folder and then activate:
+            log.info("ZIP: - ADDM VM is working - files will be uploaded to dev folder and activated.")
+
+            # UPLOAD zip to ADDM via SFTP:
+            upload_f = self.upload_remote(zip_on_local, zip_on_remote)
+
+            addm_activate_f = self.activate_local_zip(path_to_zip)
+
+        return addm_activate_f
 
     def make_preprocessor(self, workspace, input_path, output_path, mode):
         """

@@ -86,7 +86,7 @@ common.add_argument("-l",
 common.add_argument('--version', action='version', version='%(prog)s 1.0')
 
 known_args, extra_args = parser.parse_known_args()
-print(known_args)
+print("Known args: "+str(known_args))
 
 
 def log_constructor():
@@ -108,30 +108,30 @@ local_functions_dict, addm_operations_dict = funcs_run.make_function_set()
 # TODO: This will be removed and execute only by set of composed functions.
 #
 
-file_extension = funcs_run.full_path_args['file_ext']
-
-if file_extension == "tplpre":
+# file_extension = funcs_run.full_path_args['file_ext']
+#
+# if file_extension == "tplpre":
 
     # import_patterns = local_functions_dict['import_patterns']
     # if import_patterns:
     #     print("Import patterns")
     #     import_patterns()
-
-    syntax_check = local_functions_dict['syntax_check']
-    if syntax_check:
-        # syntax_run = syntax_check()
-
-        syntax_run = True
-        if syntax_run:
-
-            make_preproc = local_functions_dict['preproc_patterns']
-            make_preproc()
-
-            if addm_operations_dict:
-                if addm_operations_dict['addm_zip_pattern']:
-                    addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
-                    if addm_zip_pattern:
-                        addm_zip_pattern()
+    #
+    # syntax_check = local_functions_dict['syntax_check']
+    # if syntax_check:
+    #     # syntax_run = syntax_check()
+    #
+    #     syntax_run = True
+    #     if syntax_run:
+    #
+    #         make_preproc = local_functions_dict['preproc_patterns']
+    #         make_preproc()
+    #
+    #         if addm_operations_dict:
+    #             if addm_operations_dict['addm_zip_pattern']:
+    #                 addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
+    #                 if addm_zip_pattern:
+    #                     addm_zip_pattern()
 
                 # if addm_operations_dict['addm_upload_pattern']:
                 #     addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
@@ -144,15 +144,15 @@ if file_extension == "tplpre":
                 #     if addm_operations_dict['addm_activate_pattern']:
                 #         addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
                 #         addm_activate_pattern()
-    else:
-        make_preproc = local_functions_dict['preproc_patterns']
-        make_preproc()
-
-        if addm_operations_dict:
-            if addm_operations_dict['addm_zip_pattern']:
-                addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
-                if addm_zip_pattern:
-                    addm_zip_pattern()
+    # else:
+    #     make_preproc = local_functions_dict['preproc_patterns']
+    #     make_preproc()
+    #
+    #     if addm_operations_dict:
+    #         if addm_operations_dict['addm_zip_pattern']:
+    #             addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
+    #             if addm_zip_pattern:
+    #                 addm_zip_pattern()
 
             # if addm_operations_dict['addm_upload_pattern']:
             #     addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
@@ -166,25 +166,25 @@ if file_extension == "tplpre":
             #         addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
             #         addm_activate_pattern()
 
-
-elif file_extension == "tpl":
-
-    if addm_operations_dict['addm_zip_pattern']:
-        addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
-        if addm_zip_pattern:
-            addm_zip_pattern()
-
-    if addm_operations_dict['addm_upload_pattern']:
-        addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-        addm_upload_pattern()
-
-        if addm_operations_dict['addm_activate_pattern']:
-            addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-            addm_activate_pattern()
-    else:
-        if addm_operations_dict['addm_activate_pattern']:
-            addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-            addm_activate_pattern()
+#
+# elif file_extension == "tpl":
+#
+#     if addm_operations_dict['addm_zip_pattern']:
+#         addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
+#         if addm_zip_pattern:
+#             addm_zip_pattern()
+#
+#     if addm_operations_dict['addm_upload_pattern']:
+#         addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
+#         addm_upload_pattern()
+#
+#         if addm_operations_dict['addm_activate_pattern']:
+#             addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+#             addm_activate_pattern()
+#     else:
+#         if addm_operations_dict['addm_activate_pattern']:
+#             addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
+#             addm_activate_pattern()
 
 
 # True\False check TEST

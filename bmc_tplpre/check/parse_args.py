@@ -639,16 +639,23 @@ class ArgsParse:
 
     def operational_mode_check(self, known_args):
         """
+        Dict should not be empty even if there is no args for that.
+        Further Ill check and use logic.
+        Vars should be re-written of True:
 
         :param known_args:
-        :return:
+        :return: dict of Bool actions
         """
         log = self.logging
 
         recursive_imports = False
         usual_imports = False
         read_test = False
-        oper_args_set = ''
+        oper_args_set = {
+            'recursive_imports': recursive_imports,
+            'usual_imports': usual_imports,
+            'read_test': read_test,
+        }
 
         if known_args.T:
             read_test = True
