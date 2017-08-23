@@ -66,7 +66,6 @@ class LocalLogic:
         """
         log = self.logging
         # Paths from local to remote:
-        # TODO: Maybe need to check if exist here:
         workspace = dev_vm_path
 
         tkn_main_virt = workspace + "/addm/tkn_main"
@@ -81,7 +80,7 @@ class LocalLogic:
 
         # Composing working dir as in def full_path_parse() but now for remote mirror:
         working_dir_virt = CORE_virt+"/"+pattern_folder
-        log.debug("ADDM: Virtual working_dir: for addm is: "+str(working_dir_virt))
+        log.debug("Mirrored working dir for ADDM VM is: "+str(working_dir_virt))
 
         return working_dir_virt
 

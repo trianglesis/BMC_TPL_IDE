@@ -84,6 +84,7 @@ class TPLimports:
 
         self.full_path_args = full_path_args
 
+        # TODO: Update paths to state when TKU path on Customer
         if self.full_path_args:
 
             # log.debug("PATH ARGS: "+str(self.full_path_args))
@@ -267,6 +268,7 @@ class TPLimports:
 
         folder_content = os.listdir(search_path)
         for file in folder_content:
+            # TODO: Add case for Customer with tpl
             if file.endswith(".tplpre"):
 
                 open_file = open(search_path + os.sep + file, "r")

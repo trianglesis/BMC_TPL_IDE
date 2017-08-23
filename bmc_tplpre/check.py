@@ -20,7 +20,8 @@ developer.add_argument("-tpl",
                        action='store',
                        dest="version_tpl",
                        default="",
-                       help="Set this to correspond tpl version to upload folder of TPLPreprocessor output result "
+                       help="Ignored option. In progress..."
+                            "Set this to correspond tpl version to upload folder of TPLPreprocessor output result "
                             "ignoring ADDM tpl version check procedure. "
                             "Use when you want upload older or newer tpl on ADDM"
                             "If file is not a .tplpre - this option will be ignored.")
@@ -83,7 +84,9 @@ common.add_argument("-l",
                     dest="log_lvl",
                     default="1",
                     help="Please set log level")  # info, quiet, warn, debug, output, error
-common.add_argument('--version', action='version', version='%(prog)s 1.0')
+common.add_argument('--version',
+                    action='version',
+                    version='%(prog)s 1.0')
 
 known_args, extra_args = parser.parse_known_args()
 print("Known args: "+str(known_args))
@@ -99,245 +102,11 @@ log.info("-=== INITIALISING Check script from here:")
 log.warn("WARN TEST")
 log.critical("CRITICAL TEST")
 
-funcs_run = GlobalLogic(log, known_args, extra_args)
-local_functions_dict, addm_operations_dict = funcs_run.make_function_set()
-# print("\tADDM addm_operations_dict: "+str(addm_operations_dict))
-# print("\tLOCAL local_functions_dict: "+str(local_functions_dict))
+funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
+conditional_functions, conditional_results = funcs_run.make_function_set()
+print("\tconditional_functions: "+str(conditional_functions))
+print("\tconditional_results: "+str(conditional_results))
 
 # Manual functions execution:
-# TODO: This will be removed and execute only by set of composed functions.
-#
-
-# file_extension = funcs_run.full_path_args['file_ext']
-#
-# if file_extension == "tplpre":
-
-    # import_patterns = local_functions_dict['import_patterns']
-    # if import_patterns:
-    #     print("Import patterns")
-    #     import_patterns()
-    #
-    # syntax_check = local_functions_dict['syntax_check']
-    # if syntax_check:
-    #     # syntax_run = syntax_check()
-    #
-    #     syntax_run = True
-    #     if syntax_run:
-    #
-    #         make_preproc = local_functions_dict['preproc_patterns']
-    #         make_preproc()
-    #
-    #         if addm_operations_dict:
-    #             if addm_operations_dict['addm_zip_pattern']:
-    #                 addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
-    #                 if addm_zip_pattern:
-    #                     addm_zip_pattern()
-
-                # if addm_operations_dict['addm_upload_pattern']:
-                #     addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-                #     addm_upload_pattern()
-                #
-                #     if addm_operations_dict['addm_activate_pattern']:
-                #         addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-                #         addm_activate_pattern()
-                # else:
-                #     if addm_operations_dict['addm_activate_pattern']:
-                #         addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-                #         addm_activate_pattern()
-    # else:
-    #     make_preproc = local_functions_dict['preproc_patterns']
-    #     make_preproc()
-    #
-    #     if addm_operations_dict:
-    #         if addm_operations_dict['addm_zip_pattern']:
-    #             addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
-    #             if addm_zip_pattern:
-    #                 addm_zip_pattern()
-
-            # if addm_operations_dict['addm_upload_pattern']:
-            #     addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-            #     addm_upload_pattern()
-            #
-            #     if addm_operations_dict['addm_activate_pattern']:
-            #         addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-            #         addm_activate_pattern()
-            # else:
-            #     if addm_operations_dict['addm_activate_pattern']:
-            #         addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-            #         addm_activate_pattern()
-
-#
-# elif file_extension == "tpl":
-#
-#     if addm_operations_dict['addm_zip_pattern']:
-#         addm_zip_pattern = addm_operations_dict['addm_zip_pattern']
-#         if addm_zip_pattern:
-#             addm_zip_pattern()
-#
-#     if addm_operations_dict['addm_upload_pattern']:
-#         addm_upload_pattern = addm_operations_dict['addm_upload_pattern']
-#         addm_upload_pattern()
-#
-#         if addm_operations_dict['addm_activate_pattern']:
-#             addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-#             addm_activate_pattern()
-#     else:
-#         if addm_operations_dict['addm_activate_pattern']:
-#             addm_activate_pattern = addm_operations_dict['addm_activate_pattern']
-#             addm_activate_pattern()
-
-
-# True\False check TEST
-
-
-# parse_args = ArgsParse(log)
-# parsable_args_set = parse_args.gather_args(known_args, extra_args)
-# full_path_args = parsable_args_set
-
-# Path to this script and tplint binaries
-# sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
-# sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
-# log.debug("Using script path as: " + sublime_working_dir)
-
-# Not sure if we need this, or maybe just subproc this and nevermind
-# tpl_preproc = Preproc(log)
-# tpl_preproc_dir, tpl_preproc_py = tpl_preproc.find_tplpreprocessor(workspace=full_path_args['workspace'])
-# tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver = tpl_preproc.read_tplpreprocessor(tpl_preproc_dir)
-
-# Preproc in usual way
-
-
-# ADDM ARGS CHECK
-
-
-
-
-# if full_path_args['file_ext'] == "tplpre":
-#
-#     '''
-#     This will try to read current pattern or each pattern in working directory, find import modules
-#     and then try to find them in SupportingFiles and copy to a working directory.
-#     No need to use it now.
-#     '''
-#
-#     # To be removed from here to GlobalLogic
-#     # import_included_modules = import_modules(working_dir)
-#
-#     '''
-#     To be REMOVEd - will use path functions or preproc for tplver get and compare with ADDM tpl ver.
-#     Check if tpl version arguments set. Required for syntax check and upload after tplpreproc
-#
-#     tpl_folder, version_tpl = tpl_version_check(args.version_tpl)
-#     '''
-#
-#
-#     '''
-#     DECOMMISSION: will use full_path_args()
-#     result_file_path, pattern_name, pattern_path, pattern_file_path = full_current_path_check(args.full_curr_path,
-#                                                                                     working_dir=working_dir,
-#                                                                                     tpl_folder=tpl_folder)
-#     '''
-#
-#     # print("pattern_file_path PATH: "+str(pattern_file_path))
-#     # print("result_file_path PATH: "+str(result_file_path))
-#
-#     ''' Local fast syntax and types check. Under development for custom linting. '''
-#     # if extra_args:
-#     #     local_syntax_check(extra_args[0])
-#
-#     '''
-#     If  tpl folder composed - will run TplPreprocessor on one of two options:
-#     1. on pattern in %file_path% 2. on whole folder in %working_dir%
-#     Then Syntax check will run on preproc result folder with tpl version which was set in args
-#     '''
-#     preproc_result = False
-#     # TODO: Remove:
-#     tpl_folder = False
-#     if tpl_folder and result_file_path:
-#
-#         # preproc_result = tpl_preprocessor(tpl_preproc_py, tpl_preprocessor_class, full_path_args_dict)
-#         # preproc_result = tpl_preprocessor(tpl_preproc_dir, tpl_preprocessor_main, full_path_args_dict)
-#
-#         preproc_result = tpl_preprocessor_old(sublime_working_dir=tpl_preproc_dir,
-#                                           working_dir=working_dir,
-#                                           dir_label=dir_label,
-#                                           full_curr_path=pattern_path,
-#                                           file_path=result_file_path)
-#
-#
-#
-#     syntax_passed = False
-#     if preproc_result:
-#         syntax_passed, result = syntax_check(curr_work_dir=sublime_working_dir,
-#                                              working_dir=result_file_path,
-#                                              tpl_version=version_tpl)
-#
-#         # Make output as STDERR for linter plugin with "-l quiet"
-#         if log == 4:
-#             parse_syntax_result(result)
-#
-#     '''
-#     1. Scenario:
-#     When syntax check is OK and args have addm IP, user and password.
-#     This will try to open SSH session and check if it's alive.
-#     Then it will check if ADDM has needed folders and wipe old files on them.
-#     Then if will try to upload file or files (as zip) from local path
-#     It will use folder after TPLpreprocessor and if there is -full_path arg - upload this one file,
-#     if no -full_path arg - folder content will be zipped and sent.
-#     Based on full_current_path_check() :result_file_path
-#
-#     2. Scenario
-#     In case - when user wants to upload clean tpl file or folder which was created before (or manually)
-#     this tool will run the second scenario. When args have addm credentials and IP but have no tpl-ver and
-#     Tplpreprocessor was not run - this scenario will upload currently opened file or folder.
-#
-#     '''
-#     ssh = ''
-#     uploaded_activated = False
-#     if syntax_passed and (args.addm_host and args.user and args.password):
-#         ssh = addm_host_check(addm_host=args.addm_host,
-#                               user=args.user,
-#                               password=args.password)
-#
-#         if ssh.get_transport().is_active():
-#             if log == (1 or 2 or 3 or 0):
-#                 print("SSH connection os ON!")
-#
-#             folders = check_folders(path="/usr/tideway/TKU/Tpl_DEV", ssh=ssh)
-#
-#             if pattern_file_path:
-#                 output, uploaded_activated = upload_knowledge(ssh, pattern_name, dir_label, pattern_file_path)
-#             else:
-#                 output, uploaded_activated = upload_knowledge(ssh, pattern_name, dir_label, result_file_path)
-#
-#     elif args.addm_host and args.user and args.password and not preproc_result:
-#         ssh = addm_host_check(addm_host=args.addm_host,
-#                               user=args.user,
-#                               password=args.password)
-#
-#         if ssh.get_transport().is_active():
-#             if log == (1 or 2 or 3 or 0):
-#                 print("SSH connection os ON!")
-#
-#             folders = check_folders(path="/usr/tideway/TKU/Tpl_DEV", ssh=ssh)
-#
-#             output, uploaded_activated = upload_knowledge(ssh, pattern_name, dir_label, result_file_path)
-#
-#     '''
-#     This section will start if upload_knowledge() returnt True in :uploaded_activated
-#     This means that uploaded patterns was activated without errors or warnings.
-#     Then it will check current discovery mode and switch it to one from args (if exist), if -disco_mode arg
-#     is not present will use 'standard'
-#     If arg -hosl_list is present and -disco_mode is set - will start scan with hosts from -host_list arg.
-#     '''
-#     if uploaded_activated:
-#
-#         disco_mode = discovery_mode_check(disco_mode=args.disco_mode)
-#
-#         host_list = host_list_check(host_list=args.scan_host_list)
-#
-#         if host_list and disco_mode:
-#             start_scan = addm_scan(ssh, disco_mode, host_list, dir_label)
-#             ssh.close()
 
 log.info("-=== FINISHING Check script.")

@@ -17,15 +17,12 @@ Allows you to automate usual routine in pattern development.
 
 class AddmScan:
 
-
     def __init__(self, logging, ssh):
-        # TODO: Get args for TPL version to upload and zip this
-        # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
 
         self.logging = logging
         self.ssh_cons = ssh
 
-    def addm_scan(self, ssh, disco_mode, host_list, dir_label):
+    def addm_scan(self, disco_mode, host_list, dir_label):
         """
         [tideway@localhost ~]$ tw_disco_control -p system -v
         BMC Discovery Version: 11.1.0.5 Release: 698363
@@ -42,9 +39,9 @@ class AddmScan:
         log = self.logging
 
         if disco_mode:
-            stdin, stdout, stderr = ssh.exec_command("/usr/tideway/bin/tw_disco_control -p system --"+disco_mode)
+            stdin, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_disco_control -p system --"+disco_mode)
         else:
-            stdin, stdout, stderr = ssh.exec_command("/usr/tideway/bin/tw_disco_control -p system --standard")
+            stdin, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_disco_control -p system --standard")
 
         if stdout:
             result = stdout.readlines()
@@ -54,8 +51,8 @@ class AddmScan:
         log.info("Host(s) to scan: " + host_list)
         log.info("Scan will be named as: " + dir_label)
 
-        ssh.exec_command("/usr/tideway/bin/tw_scan_control -p system --start")
-        stdin, stdout, stderr = ssh.exec_command("/usr/tideway/bin/tw_scan_control -p system --add --label="+dir_label+" --loglevel=debug --list "+host_list)
+        self.ssh_cons.exec_command("/usr/tideway/bin/tw_scan_control -p system --start")
+        stdin, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_scan_control -p system --add --label="+dir_label+" --loglevel=debug --list "+host_list)
         if stdout:
             result = stdout.read().decode()
             log.info("Scan has been added to the Currently Processing Runs: \n"+result)
@@ -78,7 +75,7 @@ class AddmScan:
         """
         log = self.logging
 
-    def addm_scan_reasoning_on_off(self, ssh, reasoning_flag):
+    def addm_scan_reasoning_on_off(self, reasoning_flag):
         """
         Start/Stop reasoning.
 

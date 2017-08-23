@@ -185,6 +185,7 @@ class Preproc:
         :param mode: imports \ recursise imports
         :return: True\False
         """
+        # TODO: What if I add tpl version to generate - can it be faster?
 
         _, t_pre = self.find_tplpreprocessor(workspace)
         # print(t_pre)

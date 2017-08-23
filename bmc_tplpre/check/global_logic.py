@@ -35,16 +35,19 @@ from check.scan import AddmScan
 
 class GlobalLogic:
 
-    def __init__(self, logging, known_args, extra_args):
-        # TODO: Make func sets and then execute each one by one in right order) or not (closure)
-        # TODO: (ex above) - use to execute each function in right order right here
-        # TODO: LATER: Switch to **kwargs because I mostly use sets of options!
+    def __init__(self, **kwargs):
 
+        logging = kwargs['logging']
         self.logging = logging
-
-        self.full_path_args, self.addm_args_set, self.operational_args = self.check_args_set(known_args, extra_args)
-
         log = self.logging
+
+        # Get all available arguments in three sets based on its type:
+        self.full_path_args, \
+        self.operational_args, \
+        self.addm_args_set = self.check_args_set(known_args = kwargs['known_args'],
+                                                 extra_args = kwargs['extra_args'])
+
+        # Check args in init module to furter assign on function bodies:
         if self.full_path_args:
             '''
             PATH ARGS: {'file_name': 'BMCRemedyARSystem', 
@@ -65,17 +68,14 @@ class GlobalLogic:
             '''
 
             # print("PATH ARGS: "+str(self.full_path_args))
-
             self.tku_patterns_t = self.full_path_args['tku_patterns_t']
-            self.CORE_t         = self.full_path_args['CORE_t']
             self.workspace      = self.full_path_args['workspace']
             self.full_path      = self.full_path_args['full_path']
             self.working_dir    = self.full_path_args['working_dir']
-            self.file_ext       = self.full_path_args['file_ext']
 
-            log.debug("Arguments from -full_path are obtained and program will make decisions.")
+            log.debug("Full path arguments are set. It will be used to choose programm working scenario.")
         else:
-            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
+            log.debug("No full path arguments are set. I can do nothing with this.")
 
         if self.addm_args_set:
             '''
@@ -90,19 +90,14 @@ class GlobalLogic:
             '''
 
             # print("ADDM VM ARGS: "+str(self.addm_args_set))
-
             self.ssh            = self.addm_args_set['ssh_connection']
-            self.disco          = self.addm_args_set['disco_mode']
-            self.scan_hosts     = self.addm_args_set['scan_hosts']
-            self.tpl_vers       = self.addm_args_set['tpl_vers']
             self.tpl_folder     = self.addm_args_set['tpl_folder']
-            self.scan_hosts     = self.addm_args_set['scan_hosts']
-            self.dev_vm_check   = self.addm_args_set['dev_vm_check']
             self.dev_vm_path    = self.addm_args_set['dev_vm_path']
 
-            log.debug("Arguments from -addm are obtained and program will make decisions.")
+            log.debug("ADDM arguments are gathered from addm host. "
+                      "It will be used to choose programm working scenario.")
         else:
-            log.warn("Arguments from -addm_args_set are'n obtained and program cannot make decisions.")
+            log.debug("ADDM arguments are gathered or wasn't set. Programm will work on local mode.")
 
         if self.operational_args:
             '''
@@ -117,155 +112,29 @@ class GlobalLogic:
             self.usual_imports     = self.operational_args['usual_imports']
             self.read_test         = self.operational_args['read_test']
 
-            if self.recursive_imports:
-                log.debug("Argument recursive imports is true - will find imports in TKN_CORE if exist!")
-            if self.usual_imports:
-                log.debug("Argument usual imports is true - will find imports in TKN_CORE if exist!")
-            if self.read_test:
-                log.debug("Argument test read is true - will find imports from test.py "
-                          "(recursive always) in TKN_CORE if exist!")
+            if self.recursive_imports and not self.usual_imports and not self.read_test:
+                log.debug("Recursive imports used - I will find and copy any imports I found in TKN_CORE.")
+
+            elif self.usual_imports and not self.recursive_imports and not self.read_test:
+                log.debug("Usual imports used - TPLPreprocessor will copy pattern imports in usual way.")
+
+            elif self.read_test and self.recursive_imports and not self.usual_imports:
+                log.debug("Recursive imports with test patterns used - I will find and copy any imports I found in "
+                          "TKN_CORE including patterns from test.py")
+
+            elif self.read_test and not self.recursive_imports and not self.usual_imports:
+                log.debug("No imports will be run but test.py will be parsed to use it's arguments in further process.")
+
+            else:
+                log.info("Import arguments not set or don't know what scenario to use it this case: "+str(self.operational_args))
         else:
+            log.info("Import arguments not set or don't know what scenario to use it this case: "+str(self.operational_args))
+            log.debug("Import arguments are set to False.")
             self.recursive_imports = False
             self.usual_imports     = False
             self.read_test         = False
 
-    def check_file_extension(self, file_ext, workspace, usual_imports, recursive_imports, read_test, ssh, dev_vm, scan_hosts, disco):
-        """
-        DEV
-        Based on file extension - describe further scenario with current file
-
-        :param file_ext:
-        :return:
-        """
-
-        log = self.logging
-
-        # TODO: Compose set of functions filled with all needed args for each scenario and return in to main module to execute.
-        # Now only debug messages just to describe logic:
-        if file_ext == "tplpre":
-            # When this is tplpre - need to run set of preparations:
-            log.debug("File is TPLRPE")
-
-            if workspace:
-                # When path to tku patterns is valid in local system
-                log.debug("Workspace is found and used, so options will be parsed based on it.")
-                if usual_imports:
-                    # Import modules from pattern by Preproc
-                    log.debug("USUAL IMPORTS Will run as TPLPreproc do.")
-                elif recursive_imports and not read_test:
-                    # Recursive import patterns with my logic.
-                    log.debug("RECURSIVE IMPORTS Will run with my logic.")
-                elif read_test and recursive_imports:
-                    # Recursively import patterns PLUS all from test.py with my logic.
-                    log.debug("TESTs + RECURSIVE IMPORTS Will run - with all patterns included in test.py")
-                else:
-                    # Imports not set - only active pattern will be processed and uploaded:
-                    log.debug("Nothing will be imported, just active pattern will be used for upload and activate.")
-            else:
-                # Without proper workspace - I cant found preprocessor, imports etc. So I do nothing.
-                log.debug("No workspace was found so nothing can be done with TPLPRE!")
-
-            if ssh and workspace:
-                # TODO: I can add in this if another file types just for upload (and smth. else)
-                # When SSH is open and  path to tku patterns is valid in local system
-                log.debug("When SSH is on and workspace is set I can activate patterns")
-
-                if file_ext == "tplpre":
-                    # When this is tplpre - so I can download result folders in pattern folder, not the tplpre file.
-                    log.debug("I can upload pattern based on it's extension - tplpre")
-
-                    if dev_vm:
-                        # When ADDM vm has shared folders - I can upload nothing - just activate it.
-                        log.debug("HGFS is True so I can just activate file locally.")
-                        if usual_imports or recursive_imports:
-                            # When imports - I need to zip folder 'imports' in pattern folder.
-                            log.debug("Making zip from imported patterns, activating them.")
-                        elif not usual_imports and not recursive_imports:
-                            # When there was no imports - I just zip folder with tpl in pattern folder.
-                            log.debug("Pattern: activating local pattern in remote system.")
-
-                    elif not dev_vm:
-                        # When ADDM vm has not shared folders - I need to upload patterns via SFTP.
-                        log.debug("HGFS is False so I can upload and then activate file remotely.")
-                        if usual_imports or recursive_imports:
-                            # When imports - I need to zip folder 'imports' in pattern folder.
-                            log.debug("Making zip from imported patterns, UPLOAD, activating them.")
-                        elif not usual_imports and not recursive_imports:
-                            # When there was no imports - I just zip folder with tpl in pattern folder.
-                            log.debug("Pattern: uploading local pattern in remote system.")
-
-                elif file_ext == "tpl":
-                    # When file is tpl - I've just uploac or activate it, based on ADDM VM state
-                    log.debug("I can upload pattern based on it's extension - tpl")
-                    if dev_vm:
-                        # If ADDM is DEV - I just activate pattern in mirror FS.
-                        log.debug("HGFS is True so I can just activate file locally.")
-                    elif not dev_vm:
-                        # When ADDM is not dev - J upload pattern and then activate.
-                        log.debug("HGFS is False so I can upload and then activate file remotely.")
-
-                elif file_ext == "py":
-                    # When file is py - I can only run it in TH mode and see output ONLY if ADDM VM is DEV
-                    log.debug("")
-                elif file_ext == "dml":
-                    # When file is py - I can use it for tests or convert DML to REC DATA or so...
-                    log.debug("")
-                elif file_ext == "model":
-                    # When file is tpl -I don't know what I can do, but I will think about it.
-                    log.debug("")
-
-            elif ssh and not workspace:
-                # NO Tpreproc, no Syntax, no imports - just upload and activate.
-                # This cannot be used for TPLPRE
-                log.debug("When SSH is on but workspace is NOT set I can DOWNLOAD and then activate patterns")
-                if file_ext == "tpl":
-                    # ONLY When file is tpl - I've just uploac or activate it, based on ADDM VM state
-                    log.debug("I can upload pattern based on it's extension - tpl")
-                elif file_ext == "dml":
-                    # When file is py - I can use it for tests or convert DML to REC DATA or so...
-                    log.debug("")
-
-        elif file_ext == "tpl":
-            log.debug("File is tpl - no Preproc.")
-
-            # If some workspace found - then use syntax check and imports:
-            if workspace:
-                log.debug("Workspace is found and used, so options will be parsed based on it.")
-
-                if recursive_imports:
-                    log.debug("PLAN MODE: RECURSIVE IMPORTS Will run with my logic for tpl files from Technology-Knowledge-Update.")
-
-            else:
-                log.debug("No workspace was found for TPL, only Upload.")
-        elif file_ext == "py":
-            log.debug("File is PY")
-
-            if workspace:
-                log.debug("Workspace is found and used, so options will be parsed based on it.")
-            else:
-                log.debug("No workspace was found so nothing can be done with PY!")
-        elif file_ext == "dml":
-            log.debug("File is dml")
-
-            if workspace:
-                log.debug("Workspace is found and used, so options will be parsed based on it.")
-            else:
-                log.debug("No workspace was found so nothing can be done with DML!")
-        elif file_ext == "model":
-            log.debug("File is model")
-
-            if workspace:
-                log.debug("Workspace is found and used, so options will be parsed based on it.")
-            else:
-                log.debug("No workspace was found so nothing can be done with MODEL!")
-        else:
-            log.error("I can't use this file extension: "+str(file_ext))
-        if scan_hosts and disco:
-            log.info("ADDM: Scan host found, discovery mode:"+str(disco))
-        elif scan_hosts and not disco:
-            log.info("ADDM: Scan host found, discovery mode wasn't set I'll use standard by default.")
-
-    def check_args_set(self, known_args, extra_args):
+    def check_args_set(self, **args_from_cmd):
         """
         This will check args set in input.
         Based on set of args - it will compose another set of functions.
@@ -301,570 +170,409 @@ class GlobalLogic:
         :param args_set:
         :return:
         """
-        # Init empty:
-        parsable_args_set = dict()
-        addm_args_set = dict()
-        operational_args = dict()
         log = self.logging
-
         parse_args = ArgsParse(log)
 
-        parsable_args_set, operational_args = parse_args.gather_args(known_args, extra_args)
-        # TODO: Move this to parse_args and update above func for 3 vars.
-        addm_args_set = parse_args.addm_args(known_args)
-        # print(parsable_args_set)
+        return parse_args.gather_args(known_args=args_from_cmd['known_args'],
+                                      extra_args=args_from_cmd['extra_args'])
 
-        return parsable_args_set, addm_args_set, operational_args
-
-    def conditions_from_arguments(self, **args_set):
+    def cond_args(self, **conditional_args_set):
         """
-        DEV - just list here each scenarion to use.
-        No need to check is args or ssh is present - they have been checked before in parse_args, and if some arg failed
-        error will raise in that class. Here I will just compose logic.
+        This section will compose sets of functions to execute.
+        Each function will use conditional arguments to understand which scenario to use now.
+        To understand each scenario - read the correspond function with suffix 'cond'.
 
-        Examples:
-        Development:
-            For upload:
-                Dev VM:
-                    workspace, tplpre, no imports, preproc, syntax_check, addm_dev, ssh
-                    workspace, tplpre, recursive imports, preproc, syntax_check, addm_dev, ssh
-                    workspace, tplpre, test + recursive imports, preproc, syntax_check, addm_dev, ssh
-                    workspace, -
-                        if addm_dev workspace did not match - upload to hardcoded dev.
-                Not dev vm:
-                    workspace, tplpre, no imports, preproc, syntax_check, addm_dev, ssh
-                    workspace, tplpre, recursive imports, preproc, syntax_check, addm_dev, ssh
-                    workspace, tplpre, test + recursive imports, preproc, syntax_check, addm_dev, ssh
-                    workspace, -
-                        if addm_dev workspace did not match - upload to hardcoded dev.
+        This is some logic explanation, but not the active scheme to implement:
+            Examples:
+            Development:
+                For upload:
+                    Dev VM:
+                        workspace, tplpre, no imports, preproc, syntax_check, addm_dev, ssh
+                        workspace, tplpre, recursive imports, preproc, syntax_check, addm_dev, ssh
+                        workspace, tplpre, test + recursive imports, preproc, syntax_check, addm_dev, ssh
+                        workspace, -
+                            if addm_dev workspace did not match - upload to hardcoded dev.
+                    Not dev vm:
+                        workspace, tplpre, no imports, preproc, syntax_check, addm_dev, ssh
+                        workspace, tplpre, recursive imports, preproc, syntax_check, addm_dev, ssh
+                        workspace, tplpre, test + recursive imports, preproc, syntax_check, addm_dev, ssh
+                        workspace, -
+                            if addm_dev workspace did not match - upload to hardcoded dev.
 
-            For local only:
-                workspace, tplpre, no imports, preproc, syntax_check
-                workspace, tplpre, recursive imports, preproc, syntax_check
-                workspace, tplpre, test + recursive imports, preproc, syntax_check
+                For local only:
+                    workspace, tplpre, no imports, preproc, syntax_check
+                    workspace, tplpre, recursive imports, preproc, syntax_check
+                    workspace, tplpre, test + recursive imports, preproc, syntax_check
 
-            Out of workspace:
-                p4_workspace, tpl, ssh
-                p4_workspace, tpl, No ssh
+                Out of workspace:
+                    p4_workspace, tpl, ssh
+                    p4_workspace, tpl, No ssh
 
-        Customer:
-            tku_workspace, tpl, no imports, ssh
-            tku_workspace, tpl, recursive imports, ssh
+            Customer:
+                tku_workspace, tpl, no imports, ssh
+                tku_workspace, tpl, recursive imports, ssh
 
         :return:
         """
         log = self.logging
 
         # TODO: Add check for empty dict:
-        addm_conditions = args_set['addm_args_set']
-        local_conditions = args_set['full_path_args']
-        # operational_conditions = args_set['operational_args']
+        addm_conditions = conditional_args_set['addm_args_set']
+        local_conditions = conditional_args_set['full_path_args']
+        operational_conditions = conditional_args_set['operational_args']
+
+        # This will be re-write if success:
+        imports_f = False
+        preproc_f = False
+        syntax_check_f = False
+        zip_files_f = False
+        addm_activate_f = False
+        upload_f = False
+        scan_f = False
+
+        addm_zip = ''
+        local_zip = ''
 
         # TODO: Debug disable:
-        operational_conditions = {'recursive_imports': False, 'usual_imports': False, 'read_test': False}
+        operational_conditions_debug = {'recursive_imports': False,
+                                        'usual_imports': False,
+                                        'read_test': False}
 
-        print("Local Conditions"+str(local_conditions))
-        print("ADDM Conditions"+str(addm_conditions))
-        print("Oper Conditions"+str(operational_conditions))
+        addm_conditions_debug = {
+                                 'scan_hosts': '172.25.144.95, 172.25.144.39',
+                                 # 'scan_hosts': '',
+                                 'addm_prod': 'Bobblehat',
+                                 'disco_mode': 'record',
+                                 # 'disco_mode': '',
+                                 'addm_ver': '11.1',
+                                 'ssh_connection': False,
+                                 # 'ssh_connection': addm_conditions['ssh_connection'],
+                                 'tpl_folder': 'tpl113',
+                                 'dev_vm_check': True,
+                                 'dev_vm_path': '/usr/tideway/TKU',
+                                 'tpl_vers': '1.13'
+                                }
+
+        # addm_conditions = addm_conditions_debug
+        # operational_conditions = operational_conditions_debug
 
         # Addm args for scan
-        if addm_conditions['scan_hosts'] and addm_conditions['disco_mode']:
-            log.info("ADDM Scan args are present, current files will be uploaded to ADDM and Scan started.")
+        if addm_conditions['scan_hosts'] \
+                and addm_conditions['disco_mode'] \
+                and addm_conditions['ssh_connection']:
+
+            log.info("ADDM Scan args are present, current files will be uploaded to ADDM and Scan will be started.")
+
+            # Import patterns if needed on mode set in operational_conditions
+            imports_f = self.imports_cond(operational_conditions)
+
+            # Run preproc on patterns based on conditional arguments:
+            preproc_f = self.preproc_cond(operational_conditions)
+
+            # Run syntax check based on cond args:
+            syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
+                                              tpl_version=addm_conditions['addm_ver'])
 
             # Genarate addm working dir based on DEV condition:
             addm_working_dir = self.addm_dev_cond(addm_conditions['dev_vm_check'])
 
             # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
-            addm_zip_f, path_to_zip, local_zip = self.import_cond(addm_conditions['dev_vm_check'],
-                                                                               operational_conditions,
-                                                                               addm_working_dir)
-
-            # Decide if I need to upload zip or just activate mirrored:
-
+            zip_files_f, \
+            addm_zip, \
+            local_zip = self.pattern_path_cond(addm_conditions['dev_vm_check'],
+                                               operational_conditions,
+                                               addm_working_dir)
 
             # Using path to zip result from above - activate it in ADDM
-            zip_activation = self.zip_activ_cond(addm_conditions['dev_vm_check'],
-                                                                           # addm_working_dir,
-                                                                           path_to_zip)
+            upload_f, \
+            addm_activate_f = self.zip_activ_cond(addm_vm_condition=addm_conditions['dev_vm_check'],
+                                                  addm_zip=addm_zip,
+                                                  local_zip=local_zip,
+                                                  module_name=self.full_path_args['pattern_folder'])
+
+            # Start scan action:
+            scan_f = self.make_scan(disco_mode=addm_conditions['disco_mode'],
+                                    host_list=addm_conditions['scan_hosts'],
+                                    module_name=self.full_path_args['pattern_folder']
+                                    )
 
         # When I have no args for scan AND NO args for ADDM disco, but have arg for tpl_vers - proceed files locally with that version.
-        elif not addm_conditions['disco_mode'] and not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder']:
-            # TODO: Print addm vesrions here:
-            log.info("No ADDM Scan args are present. Local processing with tpl version from ADDM.")
+        elif not addm_conditions['disco_mode'] \
+                and not addm_conditions['scan_hosts'] \
+                and addm_conditions['tpl_folder'] \
+                and addm_conditions['ssh_connection']:
+
+            log.info("No ADDM Scan and discovery args are present. Local processing with tpl version gathered from live ADDM.")
+
+            # Import patterns if needed on mode set in operational_conditions
+            imports_f = self.imports_cond(operational_conditions)
+
+            # Run preproc on patterns based on conditional arguments:
+            preproc_f = self.preproc_cond(operational_conditions)
+
+            # Run syntax check based on cond args:
+            syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
+                                              tpl_version=addm_conditions['addm_ver'])
+
+            # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
+            addm_working_dir = 'Null'
+            zip_files_f, \
+            addm_zip, \
+            local_zip = self.pattern_path_cond(addm_vm_condition=None,
+                                               operational_conditions=operational_conditions,
+                                               addm_working_dir=addm_working_dir)
+
+            log.info("Patterns zipped with tpl_ver from ADDM: "+str(addm_conditions['tpl_folder'])+" path to zip: "+str(local_zip))
 
         # When I have NO args for Scan, but have args for ADDM status and disco - will start upload only.
-        elif not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder'] and addm_conditions['disco_mode']:
-            log.info("ADDM Upload args are present, current files will be uploaded to ADDM.")
+        elif not addm_conditions['scan_hosts'] \
+                and addm_conditions['tpl_folder'] \
+                and addm_conditions['disco_mode'] \
+                and addm_conditions['ssh_connection']:
+
+            log.info("ADDM Upload args are present, current files will be uploaded to ADDM. No scan.")
+
+            # Import patterns if needed on mode set in operational_conditions
+            imports_f = self.imports_cond(operational_conditions)
+
+            # Run preproc on patterns based on conditional arguments:
+            preproc_f = self.preproc_cond(operational_conditions)
+
+            # Run syntax check based on cond args:
+            syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
+                                              tpl_version=addm_conditions['addm_ver'])
 
             # Genarate addm working dir based on DEV condition:
             addm_working_dir = self.addm_dev_cond(addm_conditions['dev_vm_check'])
 
             # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
-            addm_zip_f, path_to_zip, local_zip = self.import_cond(addm_conditions['dev_vm_check'],
-                                                                               operational_conditions,
-                                                                               addm_working_dir)
-
-            # Decide if I need to upload zip or just activate mirrored:
+            zip_files_f, \
+            addm_zip, \
+            local_zip = self.pattern_path_cond(addm_conditions['dev_vm_check'],
+                                               operational_conditions,
+                                               addm_working_dir)
 
 
             # Using path to zip result from above - activate it in ADDM
-            zip_activation = self.zip_activ_cond(addm_conditions['dev_vm_check'],
-                                                                           # addm_working_dir,
-                                                                           path_to_zip)
+            upload_f, \
+            addm_activate_f = self.zip_activ_cond(addm_vm_condition=addm_conditions['dev_vm_check'],
+                                                  addm_zip=addm_zip,
+                                                  local_zip=local_zip,
+                                                  module_name=self.full_path_args['pattern_folder'])
+
+            # No Scan action because: not addm_conditions['scan_hosts'] just upload and activate.
 
         # No addm args:
         elif not addm_conditions['ssh_connection']:
+            # I have no active connection to ADDM so I don't know about tpl version to geregate and zip
+            #  - SO I will just import, prepcor and check syntax
             log.info("No ADDM connections args are present. Local processing.")
 
+            # Import patterns if needed on mode set in operational_conditions
+            imports_f = self.imports_cond(operational_conditions)
 
+            # Run preproc on patterns based on conditional arguments:
+            preproc_f = self.preproc_cond(operational_conditions)
 
-        # pattern_folder = full_path_args['pattern_folder']
-        print("ADDM working dir: "+str(addm_working_dir))
-        print("Import condition addm_zip_f: "+str(addm_zip_f))
-        print("Import condition path_to_zip: "+str(path_to_zip))
-        print("ADDM Activate f: "+str(zip_activation))
+            # Run syntax check based on cond args:
+            # Maybe I can add tpl_version for offline checks but what for?
+            syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
+                                              tpl_version='')
 
+            addm_zip = 'There is no ADDM connection, programm is running in local mode.'
+            local_zip = 'There is no ADDM connection, programm is running in local mode.'
+            addm_working_dir = 'There is no ADDM connection, programm is running in local mode.'
+
+        # I don't know:
+        else:
+            log.info("This set of conditional arguments is not supported with my logic, Please read docs.")
+
+        conditional_functions = {
+            'imports_f': imports_f,
+            'preproc_f': preproc_f,
+            'syntax_check_f': syntax_check_f,
+            'zip_files_f': zip_files_f,
+            'upload_f': upload_f,
+            'addm_activate_f': addm_activate_f,
+            'scan_f': scan_f,
+        }
+
+        conditional_results = {
+            'addm_zip': addm_zip,
+            'local_zip': local_zip,
+            'addm_working_dir': addm_working_dir,
+        }
+
+        return conditional_functions, conditional_results
 
     def make_function_set(self):
         """
-        This function will decide WHAT set of other functions to RUN -
-        - based on arguments which was initialized in Class.
-        So this mean - the execution process will run HERE and args -
-        - will choose what behaviour to use.
 
-        Will be used for functions set.
+        :return: pair of function sets with conditional functions to execute and result to debug.
+        """
+        log = self.logging
 
+        conditional_functions, \
+        conditional_results = self.cond_args(full_path_args = self.full_path_args,
+                                             addm_args_set = self.addm_args_set,
+                                             operational_args = self.operational_args)
+
+        return conditional_functions, conditional_results
+
+    def imports_cond(self, operational_conditions):
+        """
+        Based on condition argumets use different scenarios of importing patterns:
+        usual_imports - When you don't want to import whole set of modules but only ones are used in current pattern.
+            Preprocessor will import.
+
+        recursive_imports - When you want to import modules for each pattern in working dir and each it recursive.
+            I will import in my own way for active pattern + all imports and included.
+
+        test + recursive_imports - As recursive imports but also includes patterns from self.setupPatterns from test.py
+            I will import anything from active pattern + all I found in test.py and included.
+
+
+        :param local_conditions:
+        :param operational_conditions:
         :return:
         """
         log = self.logging
-        # Init empty:
 
-        local_functions_dict = dict()
-        addm_operations_dict = dict()
 
-        print("self.operational_args: "+str(self.operational_args))
+        # NORMAL IMPORTS
+        if operational_conditions['usual_imports']:
+            log.debug("No extra imports will be run. Tplpreprocessor will import as is.")
 
-        future_function_set = self.conditions_from_arguments(full_path_args = self.full_path_args,
-                                                             # addm_args_set = 'fake',
-                                                             addm_args_set = self.addm_args_set,
-                                                             operational_args = self.operational_args)
-        print("future_function_set: "+str(future_function_set))
+            import_cond_dict = {
+                                'parse_tests_patterns':  False,
+                                'parse_tests_queries':   False,
+                                'import_patterns':       False
+                               }
 
-        # TODO Syntax check for tplpre, tpl, and optionally switch of if debug run.
+        # RECURSIVE MODE:
+        elif operational_conditions['recursive_imports'] and not operational_conditions['read_test']:
+            log.debug("Run recursive imports mode.")
 
-        # Make imports, check syntax, run TPLPreprocessor:
-        if self.file_ext == "tplpre":
+            # Import tplpre's in recursive mode:
+            imports_f = self.make_imports(extra_patterns=None)
 
-            """
-            Run developments procedures only if this is tplpre file.
-            Import modules from active pattern + extra from tests.
-            Run TPLPreprocessor on result folder or file.
-            Ask ADDM for version.
-            Check syntax for correspond tpl version.
-            Upload to ADDM zip of patterns.
-            Start scan.
-            Generate data, dml, models etc.
-            """
-            # NORMAL IMPORTS
-            if self.usual_imports:
-                log.debug("Run usual imports mode.")
-                """
-                When you don't want to import whole set of modules but only ones are used in current pattern.
-                """
+            import_cond_dict = {
+                                'parse_tests_patterns': False,
+                                'parse_tests_queries': False,
+                                'import_patterns': imports_f
+                               }
 
-                preproc_f = self.make_preprocessor(workspace=self.workspace,
-                                                   input_path=self.full_path,
-                                                   output_path=self.working_dir,
-                                                   mode="usual_imports")
-                # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
-                syntax_check_f = self.make_syntax_check(self.working_dir, disco_ver=self.addm_args_set['addm_ver'])
+        # TESTs + RECURSIVE MODE:
+        elif operational_conditions['read_test'] and operational_conditions['recursive_imports']:
+            log.debug("Run test+recursive imports mode.")
 
-                local_functions_dict = {
-                                  'parse_tests_queries':   False,
-                                  'import_patterns':       False,
-                                  'preproc_patterns':      preproc_f,
-                                  'syntax_check':          syntax_check_f
-                                 }
+            # Read test.py and extract query for future validation after addm scan and save model:
+            # Later if -T in arg - use this, if no - just ignore.
+            query_t = self.make_test_read_query()
 
-            # RECURSIVE MODE:
-            elif self.recursive_imports and not self.read_test:
-                log.debug("Run recursive imports mode.")
-                """
-                When you want to import modules for each pattern in working dir and each it recursive.
-                """
-                # Import tplpre's in recursive mode:
-                imports_f = self.make_imports(extra_patterns=None)
+            # Read test.py and extract list of patterns from self.setupPatterns
+            # This is list of patterns I need to import from test.py.
+            imports_t = TestRead(log).import_pattern_tests(self.working_dir, self.tku_patterns_t)
 
-                # After R imports are finish its work - run TPLPreprocessor on it
-                input = self.working_dir + "\\imports"
-                output = self.working_dir + "\\imports"
-                preproc_f = self.make_preprocessor(workspace=self.workspace,
-                                                   input_path=input,
-                                                   output_path=output,
-                                                   mode="recursive_imports")
-                # After TPLPreprocessor finished its work - run Syntax Check on folder imports
-                # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
-                syntax_check_f = self.make_syntax_check(output, disco_ver=self.addm_args_set['addm_ver'])
+            # Import tplpre's in recursive mode with extras from test.py:
+            imports_f = self.make_imports(imports_t)
 
-                local_functions_dict = {
-                                  'parse_tests_queries':   False,
-                                  'import_patterns':       imports_f,
-                                  'preproc_patterns':      preproc_f,
-                                  'syntax_check':          syntax_check_f
-                                 }
+            import_cond_dict = {
+                                'parse_tests_queries': query_t,
+                                'parse_tests_patterns': False,
+                                'import_patterns': imports_f
+                               }
 
-            # TESTs + RECURSIVE MODE:
-            elif self.read_test and self.recursive_imports:
-                log.debug("Run test+recursive imports mode.")
-                """
-                As recursive imports but also includes patterns from self.setupPatterns from test.py
-                """
-                # Read test.py and extract query for future validation after addm scan and save model:
-                # Later if -T in arg - use this, if no - just ignore.
-                query_t = self.make_test_read_query()
+        # SOLO MODE:
+        elif not operational_conditions['read_test'] and not operational_conditions['recursive_imports'] and not operational_conditions['usual_imports']:
+            log.info("There are no dev arguments found for Test read, or imports, or recursive imports. "
+                     "Using as standalone tplpre.")
 
-                # Read test.py and extract list of patterns from self.setupPatterns
-                # This is list of patterns I need to import from test.py.
-                imports_t = TestRead(log).import_pattern_tests(self.working_dir, self.tku_patterns_t)
+            import_cond_dict = {
+                                'parse_tests_patterns': False,
+                                'parse_tests_queries': False,
+                                'import_patterns': False
+                               }
 
-                # Import tplpre's in recursive mode with extras from test.py:
-                imports_f = self.make_imports(imports_t)
+        return import_cond_dict
 
-                # After R imports are finish its work - run TPLPreprocessor on it
-                input = self.working_dir + "\\imports"
-                output = self.working_dir + "\\imports"
-                preproc_f = self.make_preprocessor(workspace=self.workspace,
-                                                   input_path=input,
-                                                   output_path=output,
-                                                   mode="recursive_imports")
-
-                # After TPLPreprocessor finished its work - run Syntax Check on folder imports
-                # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
-                syntax_check_f = self.make_syntax_check(output, disco_ver=self.addm_args_set['addm_ver'])
-
-                # Uncomment if list of patterns from test is needed:
-                local_functions_dict = {
-                                  'parse_tests_queries':   query_t,
-                                  'import_patterns':       imports_f,
-                                  'preproc_patterns':      preproc_f,
-                                  'syntax_check':          syntax_check_f
-                                 }
-
-            # SOLO MODE:
-            else:
-                """
-                If file is tplre - but no dev args found.
-                This can be an alone tplpre from folder Download for example.
-                In this case I will try to ask windows PATH for TKN_CORE or 
-                run p4 command to obtain workspace path and compose dev paths to all I need to run and use.  
-                """
-                log.info("There are no dev arguments found for Test read, or imports, or recursive imports. "
-                         "Using as standalone tplpre and trying to search TKN_CORE!")
-
-                preproc_f = self.make_preprocessor(workspace=self.workspace,
-                                                   input_path=self.full_path,
-                                                   output_path=self.working_dir,
-                                                   mode="solo_mode")
-                # No SYNTAX CHECK should be used in solo mode, because there is no imported modules in results folder!
-                # syntax_check_f = self.make_syntax_check(self.working_dir)
-
-                local_functions_dict = {
-                                  'parse_tests_patterns':  False,
-                                  'parse_tests_queries':   False,
-                                  'import_patterns':       False,
-                                  'preproc_patterns':      preproc_f,
-                                  'syntax_check':          False
-                                 }
-
-
-        # TODO This scenario is still not fully understood. Should think on this more.
-        elif self.file_ext == "tpl":
-            """
-            Here: if you just editing usual tpl file - you don't need to tpreproc it.
-            Probably imports and recursive imports SHOULD NOT be implemented for usual tpl.
-
-            NOTE: There is a logical problem:
-            - if tpl file is editing - does it mean - I need to find imports for it?
-                - if yes - so there should be path to each import file which I can follow, but there is no prognoses-able
-                    way to obtain this path. This means - that if I are editing single TPL file - I just want to
-                    check syntax and upload it to ADDM "as is"!
-                    Single TPL file will be uploaded. Or folder with them?
-                    Single TPL file cannot be syntax checked because it require imports!
-
-            """
-            log.info("This is not a DEV file. I will just upload it on ADDM as is and activate.")
-            local_functions_dict = {
-                              'parse_tests_patterns':  False,
-                              'parse_tests_queries':   False,
-                              'import_patterns':       False,
-                              'preproc_patterns':      False,
-                              'syntax_check':          False
-                             }
-
-        # Check ADDM, Upload patterns if addm has or has not DEV path but I have workspace:
-        if self.ssh and self.workspace:
-            '''
-            All pattern actions should be finished before I came here: Imports, Preproc, Syntax.
-            
-            If SSH connetsion is present - then ADDM was checked and I have a set of arguments to further use:
-
-                if dev_vm with HGFS shares - compose remote path based on local (they are the same!) and
-                    NOT UPLOAD files - but activate patterns with path which Ire composed here.
-                if workspace then local dev path is confirmed
-                
-                if not dev_vm with HGFS - just use (created) hardcoded dev path as: /usr/tideway/TKU/Tpl_DEV/ and
-                    upload files via SFTP
-                if workspace then local dev path is confirmed
-                
-                if not workspace then local dev path is not found an upload path should be /usr/tideway/TKU/Tpl_DEV/
-                    and ignore HGFS even if it was found
-             
-            '''
-
-            # TODO: This logic is too complex to handle it easily. Need to make it shorter and OOP
-            if self.file_ext == "tplpre":
-
-                if self.dev_vm_check:
-                    '''
-                    If ADDM has in its FS paths to local tku like: .host:/tku_patterns/CORE/
-                           88G   48G   41G  54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE
-                    So I can use SSH commands and not upload anything from dev paths.
-                    '''
-                    log.info("ADDM: Is working in dev mode with HGFS confirmed. "
-                             "I will compose path based on tkn_main logic.")
-
-                    local_logic = LocalLogic(log)
-                    addm_working_dir = local_logic.addm_compose_paths(dev_vm_path=self.dev_vm_path,
-                                                                      pattern_folder=self.full_path_args['pattern_folder'])
-
-                    '''
-                    Preproc result folder is consist of working path and tplver 
-                    from addm and may have IMPORTS subdir or not based on args.
-                    '''
-                    if self.usual_imports or self.recursive_imports:
-                        '''
-                        Path to result is the path of imported, preprocessed and tested patterns forder in local system
-                        and this path like it mirrored in remote system with HGFS.
-                        '''
-                        log.debug("DEV IMPORTS to addm: Making zip from imported patterns, activating them.")
-
-                        # Possible path to local results folder and remote mirror:
-                        path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
-                        path_to_result_remote = addm_working_dir+"/imports/"+self.tpl_folder
-                        zip_mirror = path_to_result_remote+"/"+self.full_path_args['pattern_folder'] + '.zip'
-
-                        # Making function obj for ZIP
-                        addm_zip_f = self.make_zip(path_to_result)
-
-                        # Use zip path to start activation process with path composed for mirror addm FS:
-                        addm_activate_f = self.activate_local_zip(zip_mirror)
-
-                        addm_operations_dict = {
-                                                'addm_zip_pattern':      addm_zip_f,
-                                                'addm_activate_pattern': addm_activate_f,
-                                                'addm_upload_pattern':   False,
-                                                'addm_start_scan':       False,
-                                                'addm_gather_data':      False,
-                                                'addm_verify_data':      False,
-                                                'addm_save_model':       False
-                                                }
-
-                    elif not self.usual_imports and not self.recursive_imports:
-                        '''
-                        Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
-                        '''
-                        log.debug("DEV SOLO Pattern: activating local pattern in remote system.")
-                        rem_patt = addm_working_dir+"/"+self.tpl_folder+"/" + self.full_path_args['file_name']+".tpl"
-                        addm_activate_f = self.activate_local_zip(rem_patt)
-
-                        addm_operations_dict = {
-                                                'addm_zip_pattern':      False,
-                                                'addm_activate_pattern': addm_activate_f,
-                                                'addm_upload_pattern':   False,
-                                                'addm_start_scan':       False,
-                                                'addm_gather_data':      False,
-                                                'addm_verify_data':      False,
-                                                'addm_save_model':       False
-                                                }
-
-                elif not self.dev_vm_check:
-                    '''
-                    When ADDM VM shares was not confirmed - I will upload all 
-                    active files into dev dir: /usr/tideway/TKU/Tpl_DEV/
-                    This dir will be created if not exist on args check stage.
-                    
-                    Use logic from if self.dev_vm_check: but with remote hardcoded path.
-                    '''
-                    log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
-                             "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
-
-                    if self.usual_imports or self.recursive_imports:
-                        '''
-                        Path to result is the path of imported, preprocessed and tested patterns forder in local system
-                        and this path like it mirrored in remote system with HGFS.
-                        '''
-                        log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
-                                  "activating them.")
-
-                        # HARDCODED path which will be created during args check if HGFS share is not confirmed:
-                        addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
-
-                        # Local path to zip will be:
-                        path_to_result = self.full_path_args['working_dir']+os.sep+"imports"+os.sep+self.tpl_folder+os.sep
-                        # Remote path to zip will be:
-                        zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
-                        zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
-
-                        # Making function obj for ZIP
-                        addm_zip_f = self.make_zip(path_to_result)
-
-                        # UPLOAD zip to ADDM via SFTP:
-                        upload_f = self.upload_remote(zip_on_local, zip_on_remote)
-
-                        # Use zip path to start activation process with path to zip in hardcoded path:
-                        addm_activate_f = self.activate_local_zip(zip_on_remote)
-
-                        addm_operations_dict = {
-                                                'addm_zip_pattern':      addm_zip_f,
-                                                'addm_activate_pattern': addm_activate_f,
-                                                'addm_upload_pattern':   upload_f,
-                                                'addm_start_scan':       False,
-                                                'addm_gather_data':      False,
-                                                'addm_verify_data':      False,
-                                                'addm_save_model':       False
-                                                }
-
-                    elif not self.usual_imports and not self.recursive_imports:
-                        '''
-                        Just use full path to pattern tpl result and upload it to ADDM via SSH then activate.
-                        '''
-                        log.debug("NOT DEV IMPORTS to addm: Making zip from imported patterns, uploading to addm, "
-                                  "activating them.")
-
-                        # HARDCODED path which will be created during args check if HGFS share is not confirmed:
-                        addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
-
-                        # Local path to zip will be:
-                        path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
-                        # Remote path to zip will be:
-                        zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
-                        zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
-
-                        # Making function obj for ZIP
-                        addm_zip_f = self.make_zip(path_to_result)
-
-                        # UPLOAD zip to ADDM via SFTP:
-                        upload_f = self.upload_remote(zip_on_local, zip_on_remote)
-
-                        # Use zip path to start activation process with path to zip in hardcoded path:
-                        addm_activate_f = self.activate_local_zip(zip_on_remote)
-
-                        addm_operations_dict = {
-                                                'addm_zip_pattern':      addm_zip_f,
-                                                'addm_activate_pattern': addm_activate_f,
-                                                'addm_upload_pattern':   upload_f,
-                                                'addm_start_scan':       False,
-                                                'addm_gather_data':      False,
-                                                'addm_verify_data':      False,
-                                                'addm_save_model':       False
-                                                }
-
-            # TODO This scenario is still not fully understood. Should think on this more.
-            elif self.file_ext == "tpl":
-                """
-                Here: if you just editing usual tpl file - you don't need to tpreproc it.
-                Probably imports and recursive imports SHOULD NOT be implemented for usual tpl.
-                """
-                log.info("This is not a DEV file. I will just upload it on ADDM as is and activate.")
-
-                if self.dev_vm_check:
-                    log.info("ADDM: Is working in dev mode with HGFS confirmed. "
-                             "I will compose path based on tkn_main logic.")
-
-                    local_logic = LocalLogic(log)
-                    addm_working_dir = local_logic.addm_compose_paths(dev_vm_path=self.dev_vm_path,
-                                                                      pattern_folder=self.full_path_args['pattern_folder'])
-
-                    log.debug("DEV SOLO Pattern: activating local pattern in remote system.")
-                    rem_patt = addm_working_dir + "/" + self.full_path_args['working_dir'] + "/" + \
-                                                        self.full_path_args['file_name'] + "." + \
-                                                        self.full_path_args['file_ext']
-                    addm_activate_f = self.activate_local_zip(rem_patt)
-
-                    addm_operations_dict = {
-                                            'addm_zip_pattern':      False,
-                                            'addm_activate_pattern': addm_activate_f,
-                                            'addm_upload_pattern':   False,
-                                            'addm_start_scan':       False,
-                                            'addm_gather_data':      False,
-                                            'addm_verify_data':      False,
-                                            'addm_save_model':       False
-                                            }
-
-                elif not self.dev_vm_check:
-                    log.info("ADDM: Is not working in dev mode, HGFS is not confirmed. "
-                             "I will upload files into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
-
-                    # HARDCODED path which will be created during args check if HGFS share is not confirmed:
-                    addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
-
-                    # Local path to zip will be:
-                    path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
-                    # Remote path to zip will be:
-                    zip_on_remote = addm_working_dir+"/"+self.full_path_args['pattern_folder'] + '.zip'
-                    zip_on_local = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
-
-                    # Making function obj for ZIP
-                    addm_zip_f = self.make_zip(path_to_result)
-
-                    # UPLOAD zip to ADDM via SFTP:
-                    upload_f = self.upload_remote(zip_on_local, zip_on_remote)
-
-                    # Use zip path to start activation process with path to zip in hardcoded path:
-                    addm_activate_f = self.activate_local_zip(zip_on_remote)
-
-                    addm_operations_dict = {
-                                            'addm_zip_pattern':      addm_zip_f,
-                                            'addm_activate_pattern': addm_activate_f,
-                                            'addm_upload_pattern':   upload_f,
-                                            'addm_start_scan':       False,
-                                            'addm_gather_data':      False,
-                                            'addm_verify_data':      False,
-                                            'addm_save_model':       False
-                                            }
-
-        # Check ADDM, Upload patterns if addm has or has not DEV path but I DO NOT have workspace:
-        elif self.ssh and not self.workspace:
-            '''
-            When local workspace was not confirmed and paths to %workspace%\\addm\\tkn_main\\tku_patterns\\..
-            cannot be composed - I can only upload current files via SFTP to usual dev path: /usr/tideway/TKU/Tpl_DEV/
-            This dir will be created if not exist - on args check stage.
-            '''
-            log.info("ADDM: Workspace path was not found and cannot be composed, so I will upload any active files"
-                     "into /usr/tideway/TKU/Tpl_DEV/ folder via SFTP.")
-
-        # ADDM Start scan in disco mode
-        if self.scan_hosts and self.disco:
-            '''
-                Check when I use arguments with 
-                    'scan_hosts': '172.25.144.95, 172.25.144.39', and 
-                    'disco_mode': 'record'
-                Use them for execute commands after upload activated and further use for DML and RecData gathering.
-            '''
-            log.info("ADDM: Scan host found, discovery mode:"+str(self.disco))
-
-        # ADDM Start scan in standard mode:
-        elif self.scan_hosts and not self.disco:
-            log.info("ADDM: Scan host found, discovery mode wasn't set I'll use standard by default.")
-
-        return local_functions_dict, addm_operations_dict
-
-    def remote_func_set(self):
+    def preproc_cond(self, operational_conditions):
         """
-        Maybe better to verify first if local functions ready?
+        Based on conditional args - run Preproc with import folder
+        after my own method, or usual preproc method or even solo pattern preproc.
 
+        :param operational_conditions: What type of imports dict
         :return:
         """
+        log = self.logging
+
+        # Preproc on NORMAL IMPORTS
+        if operational_conditions['usual_imports'] and not operational_conditions['recursive_imports'] and not operational_conditions['read_test']:
+            log.info("TPLPreprocessor will run on active file and import by its own logic.")
+            preproc_f = self.make_preproc(workspace=self.workspace,
+                                          input_path=self.full_path,
+                                          output_path=self.working_dir,
+                                          mode="usual_imports")
+
+        # Preproc will run on all files from folder 'imports'
+        elif operational_conditions['recursive_imports'] or operational_conditions['read_test'] and not operational_conditions['usual_imports']:
+            log.info("TPLPreprocessor will run on imports folder after my importing logic.")
+            # After R imports are finish its work - run TPLPreprocessor on it
+            preproc_f = self.make_preproc(workspace=self.workspace,
+                                          input_path=self.working_dir+os.sep+"imports",
+                                          output_path=self.working_dir+os.sep+"imports",
+                                          mode="recursive_imports")
+
+        # SOLO MODE:
+        elif not operational_conditions['read_test'] and not operational_conditions['recursive_imports'] and not operational_conditions['usual_imports']:
+            log.info("TPLPreprocessor will run on active file without any additional imports.")
+
+            preproc_f = self.make_preproc(workspace=self.workspace,
+                                          input_path=self.full_path,
+                                          output_path=self.working_dir,
+                                          mode="solo_mode")
+
+        return preproc_f
+
+    def syntax_cond(self, operational_conditions, tpl_version):
+        """
+        Run syntax with options based on conditional arguments.
+
+        If ADDM did not return any version - syntax check will run for all available versions.
+        Optional: arg set of tpl version can be used here.
+        :return:
+        """
+        log = self.logging
+
+        # Preproc on NORMAL IMPORTS
+        if operational_conditions['usual_imports']:
+            log.info("Syntax check will run on tpl folders after usual TPLPreproc output.")
+
+            # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+            syntax_check_f = self.make_syntax_check(self.working_dir,
+                                                    disco_ver=tpl_version)
+
+        # Preproc will run on all files from folder 'imports'
+        elif operational_conditions['recursive_imports'] or operational_conditions['read_test']:
+            log.info("Syntax check will run on imports folder after my importing logic.")
+
+            # After TPLPreprocessor finished its work - run Syntax Check on folder imports
+            # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+            syntax_check_f = self.make_syntax_check(self.working_dir+os.sep+"imports",
+                                                    disco_ver=tpl_version)
+
+        # SOLO MODE:
+        elif not operational_conditions['read_test'] and not operational_conditions['recursive_imports'] and not operational_conditions['usual_imports']:
+            log.info("1/1 Syntax check will run on active file without any additional imports.")
+            log.debug("1/2 This means that all imports was already created and you just want to check syntax for active pattern.")
+
+            # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+            # In this condition syntax check will hope that imports are already in folder after previous runs.
+            syntax_check_f = self.make_syntax_check(self.working_dir,
+                                                    disco_ver=tpl_version)
+
+
+        return syntax_check_f
 
     def addm_dev_cond(self, addm_vm_condition):
         """
@@ -875,7 +583,7 @@ class GlobalLogic:
         log = self.logging
 
         if addm_vm_condition:
-            log.info("ADDM VM Condition - DEV ADDM VM is working - files will be activated in mirrored filesystem.")
+            log.info("DEV ADDM is working - files will be activated in mirrored filesystem.")
 
             # Compose paths:
             local_logic = LocalLogic(log)
@@ -883,12 +591,12 @@ class GlobalLogic:
                                                               pattern_folder=self.full_path_args['pattern_folder'])
 
         elif not addm_vm_condition:
-            log.info("ADDM VM Condition - ADDM VM is working - files will be uploaded to dev folder and activated.")
+            log.info("Usual ADDM is working - files will be uploaded to '/usr/tideway/TKU/Tpl_DEV/' folder and activated.")
             addm_working_dir = '/usr/tideway/TKU/Tpl_DEV'
 
         return addm_working_dir
 
-    def import_cond(self, addm_vm_condition, operational_conditions, addm_working_dir):
+    def pattern_path_cond(self, addm_vm_condition, operational_conditions, addm_working_dir):
         """
         Based on operational conditions - decide which path to use for patterns zip and upload\activate
 
@@ -916,23 +624,23 @@ class GlobalLogic:
 
                 remote(not DEV) - /usr/tideway/TKU/Tpl_DEV/PatternName.zip
 
-        :return:
+        addm_zip_f - closure functions of zipping patterns
+        addm_zip - path to zip in addm FS if available
+        local_zip - path to zip in local FS
+
+
+        :return: addm_zip_f, addm_zip, local_zip
         """
         log = self.logging
 
-        # TODO: Try to include here logic for tpl file from line 734: elif self.file_ext == "tpl":
-
-        # TODO: Debug disable:
-        addm_vm_condition = False
-
         if operational_conditions['usual_imports'] or operational_conditions['recursive_imports']:
-            log.debug("Imports condition - IMPORTS to addm: Making zip from imported patterns.")
+            log.debug("Making zip from imported patterns.")
 
             # Include 'imports' dir into the path:
             imports_dir = os.sep+"imports"+os.sep
             # Path of acive pattern folder + imports dir + tpl<version dir>:
-            # path_to_result: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\imports\tpl113\
             # 'working_dir': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem',
+            # path_to_result: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\imports\tpl113\
             path_to_result = self.full_path_args['working_dir']+imports_dir+self.tpl_folder+os.sep
 
             # Pattern remote path in ADDM FS:
@@ -940,32 +648,40 @@ class GlobalLogic:
                 # On DEV ADDM (example docs: remote(mirror)): /usr/tideway/TKU/addm/tkn_main/tku_patterns/...
                 addm_result_folder = addm_working_dir+"/imports/"+self.tpl_folder
                 # I do not need this, because on DEV VM I will just activate zip in mirror FS
-                local_zip = ''
+                local_zip = 'ADDM is in DEV mode - not need to point to local zip file.'
             elif not addm_vm_condition:
                 # Not on DEV ADDM (example docs: remote(not DEV)): /usr/tideway/TKU/Tpl_DEV/
+                # addm_result_folder: /usr/tideway/TKU/Tpl_DEV
                 addm_result_folder = addm_working_dir
-                # local_zip: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl113\BMCRemedyARSystem.zip
+                # local_zip: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\imports\tpl113\BMCRemedyARSystem.zip
                 local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
-                log.debug("IMP COND local_zip: "+str(local_zip))
+                log.debug("local_zip: "+str(local_zip))
+            else:
+                # I don not use this, because I want ti zip files without uploading:
+                addm_result_folder = addm_working_dir
+                # Just make zip on local files and don't move it:
+                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                log.debug("local_zip: "+str(local_zip))
 
             # Making function obj for ZIP
             zip_mirror = addm_result_folder+"/"+self.full_path_args['pattern_folder'] + '.zip'
-            addm_zip_f = self.make_zip(path_to_result)
+            addm_zip_f = self.make_zip(path_to_result=path_to_result,
+                                       active_folder=self.full_path_args['pattern_folder'])
 
             # Path to zip with import included:
             # path_to_zip: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/imports/tpl113/BMCRemedyARSystem.zip
             addm_zip = zip_mirror
 
-            log.debug("IMP COND addm_zip: "+str(addm_zip))
-            log.debug("IMP COND addm_result_folder: "+str(addm_result_folder))
-            log.debug("IMP COND path_to_result: "+str(path_to_result))
+            log.debug("addm_zip: "+str(addm_zip))
+            log.debug("addm_result_folder: "+str(addm_result_folder))
+            log.debug("path_to_result: "+str(path_to_result))
 
         elif not operational_conditions['usual_imports'] and not operational_conditions['recursive_imports']:
             log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip with one active file.")
 
             # Path of active pattern to ZIP:
-            # path_to_result: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl113\
             # 'working_dir': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem',
+            # path_to_result: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl113\
             path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
 
             # Pattern remote path in ADDM FS:
@@ -977,88 +693,102 @@ class GlobalLogic:
                 # addm_result_folder: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/tpl113
                 addm_result_folder = addm_working_dir+"/"+self.tpl_folder
                 # I do not need this, because on DEV VM I will just activate zip in mirror FS
-                local_zip = ''
+                local_zip = 'ADDM is in DEV mode - not need to point to local zip file.'
             elif not addm_vm_condition:
                 # Not on DEV ADDM (example docs: remote(not DEV)): /usr/tideway/TKU/Tpl_DEV/
+                # addm_result_folder: /usr/tideway/TKU/Tpl_DEV
                 addm_result_folder = addm_working_dir
                 # local_zip: d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\tpl113\BMCRemedyARSystem.zip
                 local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
-                log.debug("IMP COND local_zip: "+str(local_zip))
+                log.debug("local_zip: "+str(local_zip))
+            else:
+                # I don not use this, because I want ti zip files without uploading:
+                addm_result_folder = addm_working_dir
+                # Just make zip on local files and don't move it:
+                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                log.debug("local_zip: "+str(local_zip))
 
             # Making function obj for ZIP
             zip_remote = addm_result_folder+"/"+self.full_path_args['pattern_folder'] + '.zip'
-            addm_zip_f = self.make_zip(path_to_result)
+            addm_zip_f = self.make_zip(path_to_result=path_to_result,
+                                       active_folder=self.full_path_args['pattern_folder'])
 
             # Path to zip with single pattern included:
             # addm_zip: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/tpl113/BMCRemedyARSystem.zip
             addm_zip = zip_remote
 
-            log.debug("IMP COND addm_zip: "+str(addm_zip))
-            log.debug("IMP COND addm_result_folder: "+str(addm_result_folder))
-            log.debug("IMP COND path_to_result: "+str(path_to_result))
+            log.debug("addm_zip: "+str(addm_zip))
+            log.debug("addm_result_folder: "+str(addm_result_folder))
+            log.debug("path_to_result: "+str(path_to_result))
 
         return addm_zip_f, addm_zip, local_zip
 
-    def zip_activ_cond(self, addm_vm_condition, path_to_zip):
+    def zip_activ_cond(self, addm_vm_condition, addm_zip, local_zip, module_name):
         """
         Based on ADDM state - if DEV_VM or not - choose folder where activate or upload and activate ZIP with patterns.
 
-            if dev_vm:
-                local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
-                               - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
+        if dev_vm:
+            local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
+                           - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
 
-                remote(mirror) - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/tpl<version>/PatternName.zip
-                               - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/imports/tpl<version>/PatternName.zip
-            if not dev_vm:
-                local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
-                               - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
+            remote(mirror) - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/tpl<version>/PatternName.zip
+                           - /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternFolder/imports/tpl<version>/PatternName.zip
+        if not dev_vm:
+            local          - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\tpl<version>\PatternName.zip
+                           - D:\folder\addm\tkn_main\tku_patterns\CORE\PatternFolder\imports\tpl<version>\PatternName.zip
 
-                remote         - /usr/tideway/TKU/Tpl_DEV/PatternName.zip
+            remote         - /usr/tideway/TKU/Tpl_DEV/PatternName.zip
 
-        :param path_to_zip:
-        :return:
+        upload_f - closure function with zip upload to ADDM
+        addm_activate_f - closure function with pattern activation in ADDM (False if upload only mode)
+
+        :param addm_vm_condition: if dev_vm
+        :param addm_zip: path to zip in ADDM FS
+        :param local_zip: path to zip in local FS
+        :param module_name: usually is the name of pattern folder
+        :return: upload_f, addm_activate_f
         """
         log = self.logging
 
         if addm_vm_condition:
             # Just activate zip in mirrored path:
-            log.info("ZIP: - DEV ADDM VM is working - files will be activated in mirrored filesystem.")
-            addm_activate_f = self.activate_local_zip(path_to_zip)
+            log.info("Files will be activated in mirrored filesystem.")
+            addm_activate_f = self.make_activate_zip(zip_path=addm_zip,
+                                                     module_name=module_name)
+            upload_f = False
 
         elif not addm_vm_condition:
             # Upload zip to addm custom folder and then activate:
-            log.info("ZIP: - ADDM VM is working - files will be uploaded to dev folder and activated.")
+            log.info("Files will be uploaded to '/usr/tideway/TKU/Tpl_DEV/' folder and then activated.")
 
             # UPLOAD zip to ADDM via SFTP:
-            upload_f = self.upload_remote(zip_on_local, zip_on_remote)
+            upload_f = self.make_upload_remote(zip_on_local=local_zip, zip_on_remote=addm_zip)
 
-            addm_activate_f = self.activate_local_zip(path_to_zip)
+            addm_activate_f = self.make_activate_zip(zip_path=addm_zip,
+                                                     module_name=module_name)
 
-        return addm_activate_f
+        return upload_f, addm_activate_f
 
-    def make_preprocessor(self, workspace, input_path, output_path, mode):
+    def make_test_read_query(self):
         """
-
-        :param mode:
-        :param output_path:
-        :param input_path:
-        :param workspace:
-        :param args_set:
-        :return:
+        Closure for reading test.py queries.
+        :return: func with query results list.
         """
         log = self.logging
 
-        def pre_processing():
-            preproc = Preproc(log)
-            preproc.tpl_preprocessor(workspace, input_path, output_path, mode)
-        return pre_processing
+        def test_queries():
+            test_read = TestRead(log)
+            test_read.query_pattern_tests(self.working_dir)
+
+        return test_queries
 
     def make_imports(self, extra_patterns):
         """
+        Closure for imports function.
         Based or arguments - decide which import will run.
         Or nothing to run at all.
 
-        :return:
+        :return: func with imports
         """
         log = self.logging
 
@@ -1068,22 +798,35 @@ class GlobalLogic:
             tpl_imports.import_modules(extra_patterns)
         return importer
 
-    def make_test_read_query(self):
+    def make_preproc(self, workspace, input_path, output_path, mode):
+        """
+        Closure for preproc function.
+
+        :param mode: str operational mode
+        :param output_path: str - where to output files.
+        :param input_path: str - what file or folder to preproc.
+        :param workspace: str - path to p4 workspace.
+
+        :return: func preproc with args in it
+        """
         log = self.logging
 
-        def test_queries():
-            test_read = TestRead(log)
-            test_read.query_pattern_tests(self.working_dir)
-        # return test_read.query_pattern_tests(self.working_dir)
-        return test_queries
+        def pre_processing():
+            preproc = Preproc(log)
+            preproc.tpl_preprocessor(workspace, input_path, output_path, mode)
+        return pre_processing
 
     def make_syntax_check(self, working_dir, disco_ver):
         """
+        Closure for syntax check function.
+
         Run LOCAL syntax check procedure in selected folders or files.
         Can run ONLY when imports from patter are also in the same folder.
         Should be ignored in SOLO MODE.
 
-        :return:
+        :param working_dir: str - input dir where run syntax check
+        :param disco_ver: str - version of discover engine to use for check, if empty - run all.
+        :return: func - syntax check with args in it.
         """
         log = self.logging
 
@@ -1094,58 +837,28 @@ class GlobalLogic:
 
         return syntax_check
 
-    def addm_test(self):
+    def make_zip(self, path_to_result, active_folder):
         """
-        Compose ADDM ssh functions: upload, scan, verify and etc.
-        There SHOULD NOT be any checks which was made in parse_args as initial!
-        Put here only file/upload checks or etc.
-
-        :return:
-        """
-        log = self.logging
-
-        def addm_ssh_tpl_version():
-            print(self.ssh)
-            print(self.disco)
-            print(self.scan_hosts)
-            print(self.tpl_vers)
-
-        return addm_ssh_tpl_version
-
-    def make_zip(self, path_to_result):
-        """
-        Closure for zipper.
+        Closure for zipper function.
         Make zip for local folder!
-        :return: zipper func
+        :type active_folder: str - folder where pattern lies and ready to zip
+        :type path_to_result: str - path to zip with patterns
+        :return: func zipper
         """
         log = self.logging
 
         def zipper():
             local_logic = LocalLogic(log)
             # Zip local processed files and return path to zip on local and name if zip for addm mirror FS:
-            local_logic.make_zip(path_to_result, self.full_path_args['pattern_folder'])
+            local_logic.make_zip(path_to_result, active_folder)
 
         return zipper
 
-    def activate_local_zip(self, zip_mirror):
-        """
-        Closure for pattern activation.
-        Activate only on mirror FS on ADDM!
-        :return: activate patterns func
-        """
-        log = self.logging
-
-        def activate():
-            addm = AddmOperations(log, self.ssh)
-            # Activate local zip package using remote mirror path to it:
-            addm.activate_knowledge(zip_mirror, self.full_path_args['pattern_folder'])
-
-        return activate
-
-    def upload_remote(self, local_file, remote_file):
+    def make_upload_remote(self, zip_on_local, zip_on_remote):
         """
         Closure for pattern upload on remote addm via SFTP.
-        IN PROGRESS!
+        :type zip_on_remote: str possible path to remote zip file
+        :type zip_on_local: str actual path to local zip file
         :return: activate patterns func
         """
         log = self.logging
@@ -1153,24 +866,41 @@ class GlobalLogic:
         def activate():
             addm = AddmOperations(log, self.ssh)
             # Activate local zip package using remote mirror path to it:
-            addm.upload_knowledge(zip_on_local=local_file, zip_on_remote=remote_file)
+            addm.upload_knowledge(zip_on_local=zip_on_local, zip_on_remote=zip_on_remote)
 
         return activate
-
-    def activate_remote(self, remote_path):
+    
+    def make_activate_zip(self, zip_path, module_name):
         """
-        Activate remote uploaded zip of patterns.
-        Give me remote path to zip file which was (should be) uploaded before
+        Closure for pattern activation.
+        Input arg to zip path - can be local or remote.
 
-        IN PROGRESS!
-        :zip_remote: remote path to uploaded ZIP!
-        :return: activate patterns func
+        :type module_name: str - usually name of pattern folder
+        :type zip_path: str - actual path to mirrored or uploaded zip
+        :return: func activate patterns
         """
         log = self.logging
 
         def activate():
             addm = AddmOperations(log, self.ssh)
-            # Activate local zip package using remote mirror path to it:
-            addm.activate_knowledge(remote_path, self.full_path_args['pattern_folder'])
+            # Activate zip package using path from arg (local|remote):
+            addm.activate_knowledge(zip_path, module_name)
 
         return activate
+    
+    def make_scan(self, disco_mode, host_list, module_name):
+        """
+        Closure for addm start scan function with args.
+        :type module_name: str - usually name of pattern folder.
+        :type host_list: str - list of hosts to scan, from known_args.
+        :type disco_mode: str - discovery mode, from known_args.
+        :return: func start scan with args
+        """
+        log = self.logging
+
+        def scan():
+            addm = AddmOperations(log, self.ssh)
+            # Activate local zip package using remote mirror path to it:
+            addm.addm_scan(disco_mode, host_list, self.full_path_args['pattern_folder'])
+
+        return scan

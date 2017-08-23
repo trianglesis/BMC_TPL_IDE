@@ -81,13 +81,13 @@ class Logger:
                                                       '%(name)-21s'
                                                       '%(filename)-18s'
                                                       '%(funcName)-28s'
-                                                      'Line:%(lineno)-4s'
+                                                      'Line:%(lineno)-6s'
                                                       ' - %(message)-8s')
 
         con_extra_formatter = logging.Formatter('%(asctime)-24s'
                                                      '%(levelname)-9s'
                                                      '%(funcName)-28s'
-                                                     'Line:%(lineno)-4s'
+                                                     'Line:%(lineno)-6s'
                                                      '%(message)8s')
 
         file_handler.setFormatter(file_formatter)

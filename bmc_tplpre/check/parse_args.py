@@ -133,15 +133,20 @@ class ArgsParse:
         :return:
         """
         log = self.logging
-        local_arguments_set = self.full_path_parse(known_args.full_path)
-        # print(local_arguments_set)
 
+        # Args dedicated to local paths from full path extracted:
+        local_arguments_set = self.full_path_parse(known_args.full_path)
+
+        # Args dedicated to imports logic from args parse:
         operational_args_set = self.operational_mode_check(known_args)
+
+        # Args dedicated to addm actions - gathered from addm ssh connection if available:
+        addm_args_set = self.addm_args(known_args)
 
         if extra_args:
             log.warn("HEY, you forgot some arguments:" + str(extra_args))
 
-        return local_arguments_set, operational_args_set
+        return local_arguments_set, operational_args_set, addm_args_set
 
     def addm_args(self, known_args):
         """
