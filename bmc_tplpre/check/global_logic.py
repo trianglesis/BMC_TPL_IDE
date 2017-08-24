@@ -899,8 +899,8 @@ class GlobalLogic:
         log = self.logging
 
         def scan():
-            addm = AddmOperations(log, self.ssh)
+            addm_scan = AddmScan(log, self.ssh)
             # Activate local zip package using remote mirror path to it:
-            addm.addm_scan(disco_mode, host_list, self.full_path_args['pattern_folder'])
+            addm_scan.addm_scan(disco_mode, host_list, self.full_path_args['pattern_folder'])
 
         return scan

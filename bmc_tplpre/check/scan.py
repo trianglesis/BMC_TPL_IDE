@@ -24,17 +24,11 @@ class AddmScan:
 
     def addm_scan(self, disco_mode, host_list, dir_label):
         """
-        [tideway@localhost ~]$ tw_disco_control -p system -v
-        BMC Discovery Version: 11.1.0.5 Release: 698363
-        Copyright (C) 2003 - 2017, BMC Software
-        Discovery Control Utility
+        Start scan with hosts from args.
 
-
-        :param ssh:
-        :param disco_mode:
-        :param host_list:
-        :param dir_label:
-        :param log_lvl:
+        :param disco_mode: str - discovery mode
+        :param host_list: list - list of hosts to scan. Now only ipv4 supported.
+        :param dir_label: Name of folder where pattern executed.
         """
         log = self.logging
 
@@ -45,8 +39,8 @@ class AddmScan:
 
         if stdout:
             result = stdout.readlines()
-            log.debug("Discovery mode is: " + result[0]+"Discovery status:" + result[1])
-            log.info("=" * 15 + "\nDiscovery started")
+            log.debug("Discovery mode is: " + result[0]+" Discovery status:" + result[1])
+            log.info("Discovery started")
 
         log.info("Host(s) to scan: " + host_list)
         log.info("Scan will be named as: " + dir_label)
@@ -61,6 +55,10 @@ class AddmScan:
         """
         Check scan status.
         Return when scan is finished.
+
+        Added snapshot scan range
+        ID                               Enabled Label             User   Scan type TPL scan Range
+        37bc2e356b0b212b6c787f0000010a7b True    BMCRemedyARSystem system Snapshot  False    172.25.144.95,  172.25.144.39
 
         [root@localhost bin]# /usr/tideway/bin/tw_scan_control -p system --list-full
         ID                               Enabled Label                 User   Scan type Range
