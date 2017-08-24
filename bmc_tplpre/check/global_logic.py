@@ -67,7 +67,7 @@ class GlobalLogic:
 
             '''
 
-            # print("PATH ARGS: "+str(self.full_path_args))
+            print("PATH ARGS: "+str(self.full_path_args))
             self.tku_patterns_t = self.full_path_args['tku_patterns_t']
             self.workspace      = self.full_path_args['workspace']
             self.full_path      = self.full_path_args['full_path']

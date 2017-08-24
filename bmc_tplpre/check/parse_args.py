@@ -54,6 +54,25 @@ class ArgsParse:
                                             self.tpl_folder_rs     + self.win_esc +
                                             self.file_name_rs      + self.file_ext_rs)
 
+        # Check TKU package path:
+        self.tku_path_re = re.compile('(\S+)\\\\Technology-Knowledge-Update-\d+-\d+-\d+-ADDM-\d+\.\d+\+')
+        # Parse TKU package:
+        self.tku_package_re = re.compile('(?P<tku_update_path>'
+                                         '(?P<workspace>\S+)\\\\'
+                                         '(?P<tku_package>Technology-Knowledge-Update)-'
+                                         '(?P<tku_package_year>\d+)-'
+                                         '(?P<tku_package_month>\d+)-'
+                                         '(?P<tku_package_day>\d+)-ADDM-'
+                                         '(?P<tku_package_ADDM_ver>\d+\.\d+)\+)')
+        # Getting names:
+        self.tku_package_name_re = re.compile('TKU-'
+                                              '(?P<tku_package_name>\S+)-'
+                                              '(?P<tku_package_year>\d+)-'
+                                              '(?P<tku_package_month>\d+)-'
+                                              '(?P<tku_package_day>\d+)-ADDM-'
+                                              '(?P<tku_package_ADDM_ver>\d+\.\d+)\+')
+
+
         self.alone_pattern_re = re.compile('([^"]+)\.(tplpre|tpl)')
 
         self.alone_tplpre_re = re.compile(self.pattern_folder_rs + self.win_esc +
@@ -118,8 +137,8 @@ class ArgsParse:
         self.addm_version_re = re.compile("^(\d+(?:\.\d+)?)")
 
         # HGFS ADDM folder shares check
-        self.hgfs_path_re = re.compile("(?P<tku_path>\S+)/addm/tkn_main/tku_patterns/(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
-        self.vm_tku_path_re = re.compile("(?P<tku_path>\S+)/addm/tkn_main/tku_patterns/")
+        self.hgfs_path_re = re.compile("(?P<tkn_path>\S+)/addm/tkn_main/tku_patterns/(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
+        self.vm_tkn_path_re = re.compile("(?P<tkn_path>\S+)/addm/tkn_main/tku_patterns/")
 
     def gather_args(self, known_args, extra_args):
         """
@@ -255,6 +274,7 @@ class ArgsParse:
             log.info("-full_path is: " + full_path)
             # Checking for different paths logic
             dev_path_check = self.dev_path_re.match(full_path)
+            tku_path_check = self.tku_path_re.match(full_path)
 
             # Check path as typical DEV tree:
             # Should match 'd:\perforce\addm\tkn_main\tku_patterns'
@@ -461,10 +481,113 @@ class ArgsParse:
                     log.warn("Did not match TKU DEV pattern path tree! Will use another way to parse.")
                     log.debug("I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
 
+            elif tku_path_check:
+                log.info("Found Technology-Knowledge-Update path.")
+
+                '''
+                Example: 
+                This dict will contain each module I found in folder TKU - where Technology-Knowledge-Update-YY-MM-D-ADDM-VV.V+.zip extracted:
+                    {
+                      "bladeenclosure": {
+                        "tku_package_name": "bladeenclosure",
+                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-BladeEnclosure-2017-07-1-ADDM-11.1+"
+                      },
+                      "core": {
+                        "tku_package_name": "core",
+                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+"
+                      },
+                      "extended-db-discovery": {
+                        "tku_package_name": "extended-db-discovery",
+                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+"
+                      },
+                      "extended-middleware-discovery": {
+                        "tku_package_name": "extended-middleware-discovery",
+                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+"
+                      },
+                      "loadbalancer": {
+                        "tku_package_name": "loadbalancer",
+                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-LoadBalancer-2017-07-1-ADDM-11.1+"
+                      },
+                      "managementcontrollers": {
+                        "tku_package_name": "managementcontrollers",
+                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+"
+                      },
+                      "system": {
+                        "tku_package_name": "system",
+                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-System-2017-07-1-ADDM-11.1+"
+                      },
+                      "tku_package_ADDM_ver": "11.1",
+                      "tku_update": "Technology-Knowledge-Update",
+                      "tku_update_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+"
+                    }
+                '''
+
+                tku_packages = []
+                # Check full arguments:
+                tku_pack_parse = self.tku_package_re.match(full_path)
+                if tku_pack_parse:
+                    log.debug("Parsing path for options.")
+
+                    workspace            = tku_pack_parse.group('workspace')
+                    tku_update_path      = tku_pack_parse.group('tku_update_path')
+                    tku_package          = tku_pack_parse.group('tku_package')
+                    tku_package_year     = tku_pack_parse.group('tku_package_year')
+                    tku_package_month    = tku_pack_parse.group('tku_package_month')
+                    tku_package_day      = tku_pack_parse.group('tku_package_day')
+                    tku_package_ADDM_ver = tku_pack_parse.group('tku_package_ADDM_ver')
+
+                    log.debug("I found following TKU Package details:"
+                              " tku_update_path: "                      + str(tku_update_path)      +
+                              " tku_package: "                          + str(tku_package)          +
+                              " tku_package_year: "                     + str(tku_package_year)     +
+                              " tku_package_month: "                    + str(tku_package_month)    +
+                              " tku_package_day: "                      + str(tku_package_day)      +
+                              " tku_package_ADDM_ver: "                 + str(tku_package_ADDM_ver) +
+                              " Package sutiated in path: workspace: "  + str(workspace)
+                              )
+                    tku_dict = {
+                                'tku_update': tku_package,
+                                'tku_update_path': tku_update_path,
+                                'tku_package_ADDM_ver': tku_package_ADDM_ver,
+                               }
+                    # Listing all other available packages:
+                    tku_pack_tree = os.listdir(tku_update_path)
+                    for item in tku_pack_tree:
+                        item_match_tku = self.tku_package_name_re.match(item)
+                        # Making path:
+                        folder = tku_update_path+os.sep+item
+                        if os.path.isdir(folder):
+                            if item_match_tku:
+                                # For each matched package - make group with its details:
+                                tku_package_name     = item_match_tku.group('tku_package_name')
+                                tku_package_year     = item_match_tku.group('tku_package_year')
+                                tku_package_month    = item_match_tku.group('tku_package_month')
+                                tku_package_day      = item_match_tku.group('tku_package_day')
+                                tku_package_ADDM_ver = item_match_tku.group('tku_package_ADDM_ver')
+
+                                log.debug("I found in current workspace other TKU Package with following details:"
+                                          " tku_package_name: "                     + str(tku_package_name)      +
+                                          " tku_package_year: "                     + str(tku_package_year)     +
+                                          " tku_package_month: "                    + str(tku_package_month)    +
+                                          " tku_package_day: "                      + str(tku_package_day)      +
+                                          " tku_package_ADDM_ver: "                 + str(tku_package_ADDM_ver) +
+                                          " Package path: "  + str(folder)
+                                          )
+                                # Now adding each found package dir and its name to dict.
+                                # In future we may want to check each date and version before add, or not. Will see.
+                                tku_package_name = tku_package_name.lower()
+                                tku_solo_package_dict = {tku_package_name: {'tku_package_name':tku_package_name,
+                                                        'tku_package_path':folder}}
+
+                                # List of packades dicts. Further will nested in tku_dict
+                                tku_dict.update(tku_solo_package_dict)
+
+                print(tku_dict)
+
             # When path to file has no tku_tree in. This is probably standalone file from anywhere.
             else:
                 log.debug('FILE: There is no dev path in -full_path - '
-                          'I expect "..\\addm\\tkn_main\\tku_patterns\\.."\n '
+                          'I expect "..\\addm\\tkn_main\\tku_patterns\\.." '
                           'Trying to locate place for alone pattern file.')
 
                 # To be sure I have here - is a pattern file with tpl or tplre ext.
@@ -772,9 +895,9 @@ class ArgsParse:
             for line in output:
                 command_output_parse = self.hgfs_path_re.search(line)
                 if command_output_parse:
-                    path_search = self.vm_tku_path_re.match(command_output_parse.group(0))
+                    path_search = self.vm_tkn_path_re.match(command_output_parse.group(0))
                     if path_search:
-                        vm_dev_path = path_search.group('tku_path')
+                        vm_dev_path = path_search.group('tkn_path')
                         # Stop after any first match is found.
                         break
         if stderr:
