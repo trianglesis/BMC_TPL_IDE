@@ -54,7 +54,8 @@ class TestRead:
         Send list of patterns to import logic of imports.py
 
 
-        :param working_dir:
+        :param tku_patterns: list of patterns to include.
+        :param working_dir: str: path to patterns folder.
         :return: list of pattern to import for test
         """
         log = self.logging
@@ -62,17 +63,21 @@ class TestRead:
         pattern_import_test = []
         log.debug("Reading import patterns from test.py")
 
-        # Walk in test.py file and get function arguments where import patterns lies:
-        for node in ast.walk(test_tree):
-            if isinstance(node, ast.Expr):
-                if node.value.func.attr == "setupPatterns":
-                    for arg in node.value.args:
-                        pattern_import_test.append(arg.s)
-        # make list of self.setupPatterns() to abs path to each pattern:
-        if pattern_import_test:
-            full_test_patterns_path = self.test_patterns_list(pattern_import_test, working_dir, tku_patterns)
+        if test_tree:
+            # Walk in test.py file and get function arguments where import patterns lies:
+            for node in ast.walk(test_tree):
+                if isinstance(node, ast.Expr):
+                    if node.value.func.attr == "setupPatterns":
+                        for arg in node.value.args:
+                            pattern_import_test.append(arg.s)
+            # make list of self.setupPatterns() to abs path to each pattern:
 
-        return full_test_patterns_path
+            if pattern_import_test:
+                full_test_patterns_path = self.test_patterns_list(pattern_import_test, working_dir, tku_patterns)
+
+            return full_test_patterns_path
+        else:
+            log.warn("Cannot get test patterns. File test.py is not found or not readable in this path: "+str(working_dir))
 
     def query_pattern_tests(self, working_dir):
         """
@@ -93,32 +98,34 @@ class TestRead:
         # TODO: Make walker to get all left and right values in loop.
         # https://ruslanspivak.com/lsbasi-part7/
         # https://stackoverflow.com/questions/9425409/python-ast-package-traversing-object-hierarchies
-        for node in ast.walk(test_tree):
-            if isinstance(node, ast.ClassDef):
-                # Get into the class with name:
-                if node.name == "TestStandalone":
-                    # Pick each item from Class body
-                    for item in node.body:
-                        # Check if this item is var assign:
-                        if isinstance(item, ast.Assign):
-                            # Check if this var is just a string:
-                            if isinstance(item.value, ast.Str):
-                                query_name = item.targets[0].id
-                                query_body = item.value.s
-                                query = {'query_name': query_name, 'query_body': query_body}
-                                query_list.append(query)
-                        '''
-                            When query has two or more binary options:
-                            MEGA_QUERY = NULL_QUERY_2 + GENERAL_QUERY + SMART_QUERY + NULL_QUERY_1
-
-                            Will try to parse it later, after making some kind of construction to get all vars on right order.
-                            https://ruslanspivak.com/lsbasi-part7/
-                        '''
-                        # if isinstance(item.value, ast.BinOp):
-                        #     operators = [item.value.left, item.value.op, item.value.right]
-                        #     log.debug("This is Binary Options. I do not parse it now, sorry. " + str(operators))
-
-        return query_list
+        if test_tree:
+            for node in ast.walk(test_tree):
+                if isinstance(node, ast.ClassDef):
+                    # Get into the class with name:
+                    if node.name == "TestStandalone":
+                        # Pick each item from Class body
+                        for item in node.body:
+                            # Check if this item is var assign:
+                            if isinstance(item, ast.Assign):
+                                # Check if this var is just a string:
+                                if isinstance(item.value, ast.Str):
+                                    query_name = item.targets[0].id
+                                    query_body = item.value.s
+                                    query = {'query_name': query_name, 'query_body': query_body}
+                                    query_list.append(query)
+                            '''
+                                When query has two or more binary options:
+                                MEGA_QUERY = NULL_QUERY_2 + GENERAL_QUERY + SMART_QUERY + NULL_QUERY_1
+    
+                                Will try to parse it later, after making some kind of construction to get all vars on right order.
+                                https://ruslanspivak.com/lsbasi-part7/
+                            '''
+                            # if isinstance(item.value, ast.BinOp):
+                            #     operators = [item.value.left, item.value.op, item.value.right]
+                            #     log.debug("This is Binary Options. I do not parse it now, sorry. " + str(operators))
+            return query_list
+        else:
+            log.warn("Cannot get test queries. File test.py is not found or not readable in this path: "+str(working_dir))
 
     def test_patterns_list(self, setup_patterns, working_dir, tku_patterns):
         """

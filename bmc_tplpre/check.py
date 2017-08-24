@@ -10,6 +10,9 @@ import os
 
 from check.global_logic import GlobalLogic
 
+# DEBUG
+import json
+from pprint import pformat
 
 parser = argparse.ArgumentParser(add_help=True)
 common = parser.add_argument_group("Common options")
@@ -104,7 +107,9 @@ log.critical("CRITICAL TEST")
 
 funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
 conditional_functions, conditional_results = funcs_run.make_function_set()
-print("\tconditional_functions: "+str(conditional_functions))
+
+print("conditional_functions: "+str(json.dumps(conditional_functions, indent=4, ensure_ascii=False, default=pformat)))
+
 scr_conditional_functions = {'upload_f': False,
                              'syntax_check_f': '<function GlobalLogic.make_syntax_check.<locals>.syntax_check at 0x0000000004328488>',
                              'addm_activate_f': '<function GlobalLogic.make_activate_zip.<locals>.activate at 0x0000000004328620>',
@@ -117,7 +122,7 @@ scr_conditional_functions = {'upload_f': False,
                              'preproc_f': '<function GlobalLogic.make_preproc.<locals>.pre_processing at 0x0000000004328268>'
                              }
 
-print("\tconditional_results: "+str(conditional_results))
+print("conditional_results: "+str(json.dumps(conditional_results, indent=4, ensure_ascii=False, default=pformat)))
 
 scr_conditional_results = {'local_zip': 'ADDM is in DEV mode - not need to point to local zip file.',
                            'addm_working_dir': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem',
@@ -147,28 +152,28 @@ if conditional_functions['imports_f']:
             import_patterns()
 
 # Executing preprocessor:
-if conditional_functions['preproc_f']:
-    preproc_f = conditional_functions['preproc_f']
-    if preproc_f:
-        preproc_f()
+# if conditional_functions['preproc_f']:
+#     preproc_f = conditional_functions['preproc_f']
+#     if preproc_f:
+#         preproc_f()
 
 # Executing syntax checker:
-if conditional_functions['syntax_check_f']:
-    syntax_check_f = conditional_functions['syntax_check_f']
-    if syntax_check_f:
-        syntax_check_f()
+# if conditional_functions['syntax_check_f']:
+#     syntax_check_f = conditional_functions['syntax_check_f']
+#     if syntax_check_f:
+#         syntax_check_f()
 
 # Executing zipping files (and upload maybe?)
-if conditional_functions['zip_files_f']:
-    zip_files_f = conditional_functions['zip_files_f']
-    if zip_files_f:
-        zip_files_f()
+# if conditional_functions['zip_files_f']:
+#     zip_files_f = conditional_functions['zip_files_f']
+#     if zip_files_f:
+#         zip_files_f()
 
 # Executing pattern activation:
-if conditional_functions['addm_activate_f']:
-    addm_activate_f = conditional_functions['addm_activate_f']
-    if addm_activate_f:
-        addm_activate_f()
+# if conditional_functions['addm_activate_f']:
+#     addm_activate_f = conditional_functions['addm_activate_f']
+#     if addm_activate_f:
+#         addm_activate_f()
 
 # Executing start scan
 # Working in current condition. Disable to save time

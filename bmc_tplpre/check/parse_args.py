@@ -356,7 +356,9 @@ class ArgsParse:
                                       pattern_lib   + os.sep + \
                                       pattern_folder
 
-                        args_dict = {'workspace'               : workspace,
+                        args_dict = {
+                                    'enviroment_condititon'    : 'developer_tplpre',
+                                    'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
                                     # 'tku_patterns'           : tku_patterns,
@@ -397,7 +399,9 @@ class ArgsParse:
                         file_ext       = path_parse.group('file_ext')
                         tpl_folder     = path_parse.group('tpl_folder')
 
-                        args_dict = {'workspace'               : workspace,
+                        args_dict = {
+                                    'enviroment_condititon'    : 'developer_tpl',
+                                    'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
                                     # 'tku_patterns'           : tku_patterns,
@@ -433,7 +437,8 @@ class ArgsParse:
                         # TODO: Add pattern folder based on regex path to dml
                         # TODO: Later move it to local logic from each occurence!
                         log.debug("This is DML file.")
-                        args_dict = {'workspace'               : workspace,
+                        args_dict = {'enviroment_condititon'   : 'developer_dml',
+                                    'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
                                     # 'tku_patterns'           : tku_patterns,
@@ -469,7 +474,8 @@ class ArgsParse:
                         # TODO: Add pattern folder based on regex path to model
                         # TODO: Later move it to local logic from each occurence!
                         log.debug("This is model file.")
-                        args_dict = {'workspace'               : workspace,
+                        args_dict = {'enviroment_condititon'   : 'developer_model',
+                                    'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
                                     # 'tku_patterns'           : tku_patterns,
@@ -504,7 +510,8 @@ class ArgsParse:
                         # TODO: Add pattern folder based on regex path to model
                         # TODO: Later move it to local logic from each occurence!
                         log.debug("This is py file. Will check if this is a 'test.py'")
-                        args_dict = {'workspace'               : workspace,
+                        args_dict = {'enviroment_condititon'   : 'developer_py',
+                                    'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
                                     # 'tku_patterns'           : tku_patterns,
@@ -674,6 +681,7 @@ class ArgsParse:
                                 tku_dict.update(tku_solo_package_dict)
 
                 args_dict = {
+                            'enviroment_condititon'    : 'customer_tku',
                             'workspace'                : workspace,
                             'pattern_folder'           : pattern_folder,
                             'file_name'                : file_name,

@@ -107,6 +107,32 @@ class TPLimports:
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import\s+\S+\s+\d+')
         self.pattern_module_name_r = re.compile('tpl\s+\$\$TPLVERSION\$\$\s+module\s+(\S+);')
 
+    def import_modules_customer(self, **conditions):
+        """
+        Separate way to imports when customer condition confirmed and files are tpl.
+        :param extra_patterns:
+        :return:
+        """
+        log = self.logging
+        local_cond = conditions['local_conditions']
+        # TODO: Add here list of cond. paths to patterns.
+        # TODO: Read current pattern for imports, search this modules in current folder,
+        # then if something left - in other.
+        # TODO: Try to implement this new workflow to tplre imports instead of just walking in list of folder strings.
+
+        current_modules_name = []  # Modules from KNOWN and FOUND and CURRENT.
+        find_importing_modules = []  # Modules which I should found.
+
+        find_importing_modules, current_modules_name = self.read_pattern([local_cond['full_path']],
+                                                                         find_importing_modules,
+                                                                         current_modules_name)
+
+        print(find_importing_modules)
+        # ['module SupportingFiles.CDM_Mapping', 'module DiscoveryFunctions', 'module SearchFunctions', 'module SupportingFiles.Cluster.Support']
+        print(current_modules_name)
+
+        return
+
     def import_modules(self, extra_patterns=None):
         """
             Run to import:
@@ -144,10 +170,14 @@ class TPLimports:
 
         log.debug("Step 1.1. Finding modules for: "+str(pattern_path_list))
         # Step 2 - Read patterns from current folder and get [find_importing_modules] AND [current_modules_name]
-        find_importing_modules, current_modules_name = self.read_pattern(pattern_path_list,
-                                                                         find_importing_modules,
-                                                                         current_modules_name)
-        log.debug("Step 1.3. Searching modules from current pattern: "+str(find_importing_modules))
+        if pattern_path_list:
+            find_importing_modules, current_modules_name = self.read_pattern(pattern_path_list,
+                                                                             find_importing_modules,
+                                                                             current_modules_name)
+            log.debug("Step 1.3. Searching modules from current pattern: "+str(find_importing_modules))
+        else:
+            log.warn("No pattern modules were find in imports block. "
+                     "This pattern could have not imports or args was set incorrectly.")
 
         iteration_count = 0
         while iteration_count < 3:
@@ -173,9 +203,10 @@ class TPLimports:
 
                             if os.path.isdir(directory):
                                 # Step 4. - Find modules which left in list - in other folders including CORE:
-                                find_importing_modules_2, current_modules_name_2 = self.search_in_path(search_path=directory,
-                                                                                                       find_importing_modules=find_importing_modules,
-                                                                                                       current_modules_name=current_modules_name)
+                                find_importing_modules_2, \
+                                current_modules_name_2 = self.search_in_path(search_path=directory,
+                                                                             find_importing_modules=find_importing_modules,
+                                                                             current_modules_name=current_modules_name)
                                 find_importing_modules = find_importing_modules_2
                                 current_modules_name = current_modules_name_2
 
@@ -188,6 +219,8 @@ class TPLimports:
                         log.warn("Round: "+str(iteration_count)+" - Cannot proceed because path is not exist: "+str(extra_folder))
             else:
                 log.debug("Round: "+str(iteration_count)+" - Found everything already, no reason to continue loop.")
+                # TODO: Why do I remove this? Check twice when run "full run"!
+                break
 
         if find_importing_modules:
             log.warn("Step 3. These modules cannot be found anywhere in 'tku_patterns' please check manually: "+str(find_importing_modules))
@@ -222,34 +255,37 @@ class TPLimports:
         """
         log = self.logging
 
-        log.debug('Step 1.2. List of patterns to read: '+str(pattern_path_list))
+        if pattern_path_list:
+            log.debug('Step 1.2. List of patterns to read: '+str(pattern_path_list))
 
-        for pattern in pattern_path_list:
+            for pattern in pattern_path_list:
 
-            open_file = open(pattern)
-            read_file = open_file.read(2024)  # About 60+ lines from the beginning of pattern
-            open_file.close()
+                open_file = open(pattern)
+                read_file = open_file.read(2024)  # About 60+ lines from the beginning of pattern
+                open_file.close()
 
-            pattern_import = self.pattern_import_all_r.findall(read_file)
-            current_pattern_module = self.pattern_module_name_r.findall(read_file)
+                pattern_import = self.pattern_import_all_r.findall(read_file)
+                current_pattern_module = self.pattern_module_name_r.findall(read_file)
 
-            # When any imports were found in pattern file add each to list and later find them:
-            if pattern_import:
-                for pattern_module in pattern_import:
-                    imports_line = "module " + pattern_module
-                    if imports_line not in find_importing_modules:
-                        find_importing_modules.append(imports_line)
+                # When any imports were found in pattern file add each to list and later find them:
+                if pattern_import:
+                    for pattern_module in pattern_import:
+                        imports_line = "module " + pattern_module
+                        if imports_line not in find_importing_modules:
+                            find_importing_modules.append(imports_line)
 
-            # Module name of currently read pattern is adding to list also to compare with already imported:
-            if current_pattern_module:
-                current_module = "module " + current_pattern_module[0]
-                current_pattern_dict = {'module': current_module, 'path': pattern}
-                if current_pattern_dict not in current_modules_name:
-                    current_modules_name.append(current_pattern_dict)
-            else:
-                log.critical("I cannot read pattern module for: "+str(pattern))
+                # Module name of currently read pattern is adding to list also to compare with already imported:
+                if current_pattern_module:
+                    current_module = "module " + current_pattern_module[0]
+                    current_pattern_dict = {'module': current_module, 'path': pattern}
+                    if current_pattern_dict not in current_modules_name:
+                        current_modules_name.append(current_pattern_dict)
+                else:
+                    log.critical("I cannot read pattern module for: "+str(pattern))
 
-        return find_importing_modules, current_modules_name
+            return find_importing_modules, current_modules_name
+        else:
+            log.warn("Nothing to read for read_pattern module. No imports will be found.")
 
     def search_in_path(self, search_path, find_importing_modules, current_modules_name):
         """
@@ -267,6 +303,7 @@ class TPLimports:
         """
 
         folder_content = os.listdir(search_path)
+
         for file in folder_content:
             # TODO: Add case for Customer with tpl
             if file.endswith(".tplpre"):
@@ -359,16 +396,21 @@ class TPLimports:
         tplpre_path = []
 
         folder_content = os.listdir(folder_path)
-        for file in folder_content:
+        if folder_content:
+            for file in folder_content:
 
-            if file.endswith(".tplpre"):
-                all_tplre.append(file)
-                tplpre_path.append(folder_path + os.sep + file)
-                # break
+                # This is not the best solution for customer mode, because it will parse whole patterns,
+                # leave tplpre check here:
+                if file.endswith(".tplpre"):
+                    all_tplre.append(file)
+                    tplpre_path.append(folder_path + os.sep + file)
+                    # break
 
-        log.debug("Step 1. List of patterns in current active folder: "+str(tplpre_path))
+            log.debug("Step 1. List of patterns in current active folder: "+str(tplpre_path))
 
-        return tplpre_path
+            return tplpre_path
+        else:
+            log.warn("Current folder is empty or does not exist. Please check arguments and path to current file.")
 
     def _del_old_imports(self, path):
         """

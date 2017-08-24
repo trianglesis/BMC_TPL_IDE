@@ -32,8 +32,13 @@ from check.syntax_checker import SyntaxCheck
 from check.local_logic import LocalLogic
 from check.scan import AddmScan
 
+# DEBUG
+import json
+from pprint import pformat
+
 
 class GlobalLogic:
+    # TODO: Globally - hide log messages from conditional functions because they are shown before this function executed, or maybe think about stepping.
 
     def __init__(self, **kwargs):
 
@@ -67,7 +72,7 @@ class GlobalLogic:
 
             '''
 
-            print("PATH ARGS: "+str(self.full_path_args))
+            # print("PATH ARGS: "+str(json.dumps(self.full_path_args, indent=4, ensure_ascii=False, default=pformat)))
             self.tku_patterns_t = self.full_path_args['tku_patterns_t']
             self.workspace      = self.full_path_args['workspace']
             self.full_path      = self.full_path_args['full_path']
@@ -221,6 +226,11 @@ class GlobalLogic:
         local_conditions = conditional_args_set['full_path_args']
         operational_conditions = conditional_args_set['operational_args']
 
+        # print(json.dumps(local_conditions, indent=4, ensure_ascii=False, default=pformat))
+        # Set operational option for dev or customer:
+        enviroment_condititon = local_conditions['enviroment_condititon']
+        log.info("Programm's global logic module operating in: '"+str(enviroment_condititon)+"' mode.")
+
         # This will be re-write if success:
         imports_f = False
         preproc_f = False
@@ -264,14 +274,17 @@ class GlobalLogic:
             log.info("ADDM Scan args are present, current files will be uploaded to ADDM and Scan will be started.")
 
             # Import patterns if needed on mode set in operational_conditions
-            imports_f = self.imports_cond(operational_conditions)
+            imports_f = self.imports_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run preproc on patterns based on conditional arguments:
-            preproc_f = self.preproc_cond(operational_conditions)
+            preproc_f = self.preproc_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run syntax check based on cond args:
             syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
-                                              tpl_version=addm_conditions['addm_ver'])
+                                              tpl_version=addm_conditions['addm_ver'],
+                                              local_conditions=local_conditions)
 
             # Genarate addm working dir based on DEV condition:
             addm_working_dir = self.addm_dev_cond(addm_conditions['dev_vm_check'])
@@ -305,10 +318,12 @@ class GlobalLogic:
             log.info("No ADDM Scan and discovery args are present. Local processing with tpl version gathered from live ADDM.")
 
             # Import patterns if needed on mode set in operational_conditions
-            imports_f = self.imports_cond(operational_conditions)
+            imports_f = self.imports_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run preproc on patterns based on conditional arguments:
-            preproc_f = self.preproc_cond(operational_conditions)
+            preproc_f = self.preproc_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run syntax check based on cond args:
             syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
@@ -333,14 +348,17 @@ class GlobalLogic:
             log.info("ADDM Upload args are present, current files will be uploaded to ADDM. No scan.")
 
             # Import patterns if needed on mode set in operational_conditions
-            imports_f = self.imports_cond(operational_conditions)
+            imports_f = self.imports_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run preproc on patterns based on conditional arguments:
-            preproc_f = self.preproc_cond(operational_conditions)
+            preproc_f = self.preproc_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run syntax check based on cond args:
             syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
-                                              tpl_version=addm_conditions['addm_ver'])
+                                              tpl_version=addm_conditions['addm_ver'],
+                                              local_conditions=local_conditions)
 
             # Genarate addm working dir based on DEV condition:
             addm_working_dir = self.addm_dev_cond(addm_conditions['dev_vm_check'])
@@ -369,15 +387,18 @@ class GlobalLogic:
             log.info("No ADDM connections args are present. Local processing.")
 
             # Import patterns if needed on mode set in operational_conditions
-            imports_f = self.imports_cond(operational_conditions)
+            imports_f = self.imports_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run preproc on patterns based on conditional arguments:
-            preproc_f = self.preproc_cond(operational_conditions)
+            preproc_f = self.preproc_cond(operational_conditions=operational_conditions,
+                                          local_conditions=local_conditions)
 
             # Run syntax check based on cond args:
             # Maybe I can add tpl_version for offline checks but what for?
             syntax_check_f = self.syntax_cond(operational_conditions=operational_conditions,
-                                              tpl_version='')
+                                              tpl_version='',
+                                              local_conditions=local_conditions)
 
             addm_zip = 'There is no ADDM connection, programm is running in local mode.'
             local_zip = 'There is no ADDM connection, programm is running in local mode.'
@@ -419,7 +440,7 @@ class GlobalLogic:
 
         return conditional_functions, conditional_results
 
-    def imports_cond(self, operational_conditions):
+    def imports_cond(self, **logical_conditions):
         """
         Based on condition argumets use different scenarios of importing patterns:
         usual_imports - When you don't want to import whole set of modules but only ones are used in current pattern.
@@ -432,79 +453,101 @@ class GlobalLogic:
             I will import anything from active pattern + all I found in test.py and included.
 
 
-        :param local_conditions:
+        :param enviroment_condititon: mode to operate with - dev or customer.
         :param operational_conditions:
         :return:
         """
         log = self.logging
+        operational_conditions = logical_conditions['operational_conditions']
+        enviroment_condititon = logical_conditions['local_conditions']['enviroment_condititon']
+        local_conditions = logical_conditions['local_conditions']
+
+        if enviroment_condititon == 'developer_tplpre':
+            # NORMAL IMPORTS
+            if operational_conditions['usual_imports']:
+                log.debug("No extra imports will be run. Tplpreprocessor will import as is.")
+
+                import_cond_dict = {
+                                    'parse_tests_patterns':  False,
+                                    'parse_tests_queries':   False,
+                                    'import_patterns':       False
+                                   }
+
+            # RECURSIVE MODE:
+            elif operational_conditions['recursive_imports'] and not operational_conditions['read_test']:
+                log.debug("Run recursive imports mode.")
+
+                # Import tplpre's in recursive mode:
+                imports_f = self.make_imports(extra_patterns=None)
+
+                import_cond_dict = {
+                                    'parse_tests_patterns': False,
+                                    'parse_tests_queries': False,
+                                    'import_patterns': imports_f
+                                   }
+
+            # TESTs + RECURSIVE MODE:
+            elif operational_conditions['read_test'] and operational_conditions['recursive_imports']:
+                log.debug("Run test+recursive imports mode.")
+
+                # Read test.py and extract query for future validation after addm scan and save model:
+                # Later if -T in arg - use this, if no - just ignore.
+                query_t = self.make_test_read_query()
+
+                # Read test.py and extract list of patterns from self.setupPatterns
+                # This is list of patterns I need to import from test.py.
+                imports_t = TestRead(log).import_pattern_tests(self.working_dir, self.tku_patterns_t)
+
+                # Import tplpre's in recursive mode with extras from test.py:
+                imports_f = self.make_imports(imports_t)
+
+                import_cond_dict = {
+                                    'parse_tests_queries': query_t,
+                                    'parse_tests_patterns': False,
+                                    'import_patterns': imports_f
+                                   }
+
+            # SOLO MODE:
+            elif not operational_conditions['read_test'] and not operational_conditions['recursive_imports'] and not operational_conditions['usual_imports']:
+                log.info("There are no dev arguments found for Test read, or imports, or recursive imports. "
+                         "Using as standalone tplpre.")
+
+                import_cond_dict = {
+                                    'parse_tests_patterns': False,
+                                    'parse_tests_queries': False,
+                                    'import_patterns': False
+                                   }
+
+            return import_cond_dict
+
+        elif enviroment_condititon == 'customer_tku':
+            if operational_conditions['recursive_imports']:
+                log.info("Imports logic working in customer mode.")
+                # Import tplpre's in recursive mode:
+                imports_f = self.make_imports_customer(local_conditions)
+
+                import_cond_dict = {
+                    'parse_tests_patterns': False,
+                    'parse_tests_queries': False,
+                    'import_patterns': imports_f
+                }
+                return import_cond_dict
+            else:
+                log.info("Working in customer mode, all other importing option will be ignored.")
 
 
-        # NORMAL IMPORTS
-        if operational_conditions['usual_imports']:
-            log.debug("No extra imports will be run. Tplpreprocessor will import as is.")
-
-            import_cond_dict = {
-                                'parse_tests_patterns':  False,
-                                'parse_tests_queries':   False,
-                                'import_patterns':       False
-                               }
-
-        # RECURSIVE MODE:
-        elif operational_conditions['recursive_imports'] and not operational_conditions['read_test']:
-            log.debug("Run recursive imports mode.")
-
-            # Import tplpre's in recursive mode:
-            imports_f = self.make_imports(extra_patterns=None)
-
-            import_cond_dict = {
-                                'parse_tests_patterns': False,
-                                'parse_tests_queries': False,
-                                'import_patterns': imports_f
-                               }
-
-        # TESTs + RECURSIVE MODE:
-        elif operational_conditions['read_test'] and operational_conditions['recursive_imports']:
-            log.debug("Run test+recursive imports mode.")
-
-            # Read test.py and extract query for future validation after addm scan and save model:
-            # Later if -T in arg - use this, if no - just ignore.
-            query_t = self.make_test_read_query()
-
-            # Read test.py and extract list of patterns from self.setupPatterns
-            # This is list of patterns I need to import from test.py.
-            imports_t = TestRead(log).import_pattern_tests(self.working_dir, self.tku_patterns_t)
-
-            # Import tplpre's in recursive mode with extras from test.py:
-            imports_f = self.make_imports(imports_t)
-
-            import_cond_dict = {
-                                'parse_tests_queries': query_t,
-                                'parse_tests_patterns': False,
-                                'import_patterns': imports_f
-                               }
-
-        # SOLO MODE:
-        elif not operational_conditions['read_test'] and not operational_conditions['recursive_imports'] and not operational_conditions['usual_imports']:
-            log.info("There are no dev arguments found for Test read, or imports, or recursive imports. "
-                     "Using as standalone tplpre.")
-
-            import_cond_dict = {
-                                'parse_tests_patterns': False,
-                                'parse_tests_queries': False,
-                                'import_patterns': False
-                               }
-
-        return import_cond_dict
-
-    def preproc_cond(self, operational_conditions):
+    def preproc_cond(self, **logical_conditions):
         """
         Based on conditional args - run Preproc with import folder
         after my own method, or usual preproc method or even solo pattern preproc.
 
+        :param enviroment_condititon: mode to operate with - dev or customer.
         :param operational_conditions: What type of imports dict
         :return:
         """
         log = self.logging
+        operational_conditions = logical_conditions['operational_conditions']
+        enviroment_condititon = logical_conditions['local_conditions']['enviroment_condititon']
 
         # Preproc on NORMAL IMPORTS
         if operational_conditions['usual_imports'] and not operational_conditions['recursive_imports'] and not operational_conditions['read_test']:
@@ -534,15 +577,21 @@ class GlobalLogic:
 
         return preproc_f
 
-    def syntax_cond(self, operational_conditions, tpl_version):
+    def syntax_cond(self, **logical_conditions):
         """
         Run syntax with options based on conditional arguments.
 
         If ADDM did not return any version - syntax check will run for all available versions.
         Optional: arg set of tpl version can be used here.
+
+        :param enviroment_condititon: mode to operate with - dev or customer.
+
         :return:
         """
         log = self.logging
+        operational_conditions = logical_conditions['operational_conditions']
+        enviroment_condititon = logical_conditions['local_conditions']['enviroment_condititon']
+        tpl_version = logical_conditions['tpl_version']
 
         # Preproc on NORMAL IMPORTS
         if operational_conditions['usual_imports']:
@@ -796,6 +845,23 @@ class GlobalLogic:
             tpl_imports = TPLimports(log, self.full_path_args)
             # Now I don't need args because class was initialized with args above:
             tpl_imports.import_modules(extra_patterns)
+        return importer
+
+    def make_imports_customer(self, local_conditions):
+        """
+        Closure for imports function.
+        Version for customer run.
+        Based or arguments - decide which import will run.
+        Or nothing to run at all.
+
+        :return: func with imports
+        """
+        log = self.logging
+
+        def importer():
+            tpl_imports = TPLimports(log, self.full_path_args)
+            # Now I don't need args because class was initialized with args above:
+            tpl_imports.import_modules_customer(local_conditions=local_conditions)
         return importer
 
     def make_preproc(self, workspace, input_path, output_path, mode):

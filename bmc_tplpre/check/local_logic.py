@@ -102,16 +102,19 @@ class LocalLogic:
 
         zip_path = path + zip_filename
 
-        patterns_zip = zipfile.ZipFile(zip_path, 'w')
-        log.debug("ZIP: zip_filename:" + zip_filename)
+        try:
+            patterns_zip = zipfile.ZipFile(zip_path, 'w')
+            log.debug("ZIP: zip_filename:" + zip_filename)
 
-        for foldername, subfolders, filenames in os.walk(norm_path):
-            for filename in filenames:
-                if filename != zip_filename:
-                    patterns_zip.write(os.path.join(norm_path, filename), arcname=filename)
-                    log.debug("ZIP: Adding pattern:" + filename)
-        patterns_zip.close()
+            for foldername, subfolders, filenames in os.walk(norm_path):
+                for filename in filenames:
+                    if filename != zip_filename:
+                        patterns_zip.write(os.path.join(norm_path, filename), arcname=filename)
+                        log.debug("ZIP: Adding pattern:" + filename)
+            patterns_zip.close()
+            log.debug("ZIP: zip_path: " + zip_path)
+            return zip_path
 
-        log.debug("ZIP: zip_path: " + zip_path)
-
-        return zip_path
+        except FileNotFoundError as e:
+            log.error("Patterns cannot be zipped because file path does not exist: "+str(e))
+            return False
