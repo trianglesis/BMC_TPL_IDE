@@ -57,6 +57,7 @@ class SyntaxCheck:
 
         Until tplint updated - it can check syntax only for max version 10.2.
 
+        :param disco_ver: str
         :param tpl_mod_dir: Place where tplint is situated. By default it should be place where TPL language module lies.
         :param working_dir:
         :return:

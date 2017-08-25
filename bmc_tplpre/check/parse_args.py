@@ -212,6 +212,8 @@ class ArgsParse:
         :type known_args: set of args from argsparse
         :return: addm_args_set
         """
+        # TODO: Add REST support. Using known args - decide which auth to use REST or SSH.
+
         log = self.logging
 
         addm_host = known_args.addm_host
@@ -292,6 +294,11 @@ class ArgsParse:
         :param full_path:
         :return:
         """
+
+        # TODO: Run p4 to obtain path: p4 -F %clientRoot% -ztag info
+        # C:\>p4 -F %clientRoot% -ztag info
+        # D:\perforce
+
         log = self.logging
 
         if os.path.exists(full_path):
@@ -329,15 +336,13 @@ class ArgsParse:
                     BLADE_ENCLOSURE_t        = tkn_main_t + os.sep + tku_patterns + os.sep + 'BLADE_ENCLOSURE'
                     CLOUD_t                  = tkn_main_t + os.sep + tku_patterns + os.sep + 'CLOUD'
                     CORE_t                   = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE'
-                    # DBDETAILS_t              = tkn_main_t + os.sep + tku_patterns + os.sep + 'DBDETAILS' + os.sep + 'Database_Structure_Patterns'
                     DBDETAILS_t              = tkn_main_t + os.sep + tku_patterns + os.sep + 'DBDETAILS'
                     LOAD_BALANCER_t          = tkn_main_t + os.sep + tku_patterns + os.sep + 'LOAD_BALANCER'
                     MANAGEMENT_CONTROLLERS_t = tkn_main_t + os.sep + tku_patterns + os.sep + 'MANAGEMENT_CONTROLLERS'
                     MIDDLEWAREDETAILS_t      = tkn_main_t + os.sep + tku_patterns + os.sep + 'MIDDLEWAREDETAILS'
                     STORAGE_t                = tkn_main_t + os.sep + tku_patterns + os.sep + 'STORAGE'
                     SYSTEM_t                 = tkn_main_t + os.sep + tku_patterns + os.sep + 'SYSTEM'
-                    # SupportingFiles_t   = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE' + os.sep + 'SupportingFiles'
-                    tkn_sandbox_t       = workspace  + os.sep + addm + os.sep + 'tkn_sandbox'
+                    tkn_sandbox_t            = workspace  + os.sep + addm         + os.sep + 'tkn_sandbox'
 
                     # Check if this is a tplpre file from: PatternFolder\PatternName.tplpre
                     if re.match('tplpre', file_ext):
@@ -714,7 +719,6 @@ class ArgsParse:
                     # Sort tplpre:
                     if alone_tplpre_check:
 
-                        # TODO: Make OS PATH check:
                         """
                         # Setting TKN_CORE from system variable or parse working directory for it
                         if self.tkn_core:
@@ -728,9 +732,6 @@ class ArgsParse:
                             tku_patterns = os.path.abspath(os.path.join(tkn_core, os.pardir))
                             core = tku_patterns + os.sep + "CORE"
                         """
-                        # TODO: Run p4 to obtain path: p4 -F %clientRoot% -ztag info
-                        # C:\>p4 -F %clientRoot% -ztag info
-                        # D:\perforce
 
                         pattern_folder = alone_tplpre_check.group('pattern_folder')
                         file_name      = alone_tplpre_check.group('file_name')
@@ -790,6 +791,8 @@ class ArgsParse:
         :param user: str
         :param addm_host: str
         """
+        # TODO: Ability to use addm hostname.
+        # TODO: Add pass for system user.
 
         log = self.logging
         # user = ''
