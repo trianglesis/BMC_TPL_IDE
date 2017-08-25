@@ -228,8 +228,8 @@ class GlobalLogic:
 
         # print(json.dumps(local_conditions, indent=4, ensure_ascii=False, default=pformat))
         # Set operational option for dev or customer:
-        enviroment_condititon = local_conditions['enviroment_condititon']
-        log.info("Programm's global logic module operating in: '"+str(enviroment_condititon)+"' mode.")
+        environment_condition = local_conditions['environment_condition']
+        log.info("Programm's global logic module operating in: '"+str(environment_condition)+"' mode.")
 
         # This will be re-write if success:
         imports_f = False
@@ -453,16 +453,16 @@ class GlobalLogic:
             I will import anything from active pattern + all I found in test.py and included.
 
 
-        :param enviroment_condititon: mode to operate with - dev or customer.
+        :param environment_condition: mode to operate with - dev or customer.
         :param operational_conditions:
         :return:
         """
         log = self.logging
         operational_conditions = logical_conditions['operational_conditions']
-        enviroment_condititon = logical_conditions['local_conditions']['enviroment_condititon']
+        environment_condition = logical_conditions['local_conditions']['environment_condition']
         local_conditions = logical_conditions['local_conditions']
 
-        if enviroment_condititon == 'developer_tplpre':
+        if environment_condition == 'developer_tplpre':
             # NORMAL IMPORTS
             if operational_conditions['usual_imports']:
                 log.debug("No extra imports will be run. Tplpreprocessor will import as is.")
@@ -478,7 +478,8 @@ class GlobalLogic:
                 log.debug("Run recursive imports mode.")
 
                 # Import tplpre's in recursive mode:
-                imports_f = self.make_imports(extra_patterns=None)
+                imports_f = self.make_imports(local_conditions=local_conditions,
+                                              extra_patterns=None)
 
                 import_cond_dict = {
                                     'parse_tests_patterns': False,
@@ -496,10 +497,12 @@ class GlobalLogic:
 
                 # Read test.py and extract list of patterns from self.setupPatterns
                 # This is list of patterns I need to import from test.py.
-                imports_t = TestRead(log).import_pattern_tests(self.working_dir, self.tku_patterns_t)
+                imports_t = TestRead(log).import_pattern_tests(self.working_dir,
+                                                               self.tku_patterns_t)
 
                 # Import tplpre's in recursive mode with extras from test.py:
-                imports_f = self.make_imports(imports_t)
+                imports_f = self.make_imports(local_conditions=local_conditions,
+                                              extra_patterns=imports_t)
 
                 import_cond_dict = {
                                     'parse_tests_queries': query_t,
@@ -520,11 +523,12 @@ class GlobalLogic:
 
             return import_cond_dict
 
-        elif enviroment_condititon == 'customer_tku':
+        elif environment_condition == 'customer_tku':
             if operational_conditions['recursive_imports']:
                 log.info("Imports logic working in customer mode.")
                 # Import tplpre's in recursive mode:
-                imports_f = self.make_imports_customer(local_conditions)
+                imports_f = self.make_imports(local_conditions=local_conditions,
+                                              extra_patterns=None)
 
                 import_cond_dict = {
                     'parse_tests_patterns': False,
@@ -541,13 +545,13 @@ class GlobalLogic:
         Based on conditional args - run Preproc with import folder
         after my own method, or usual preproc method or even solo pattern preproc.
 
-        :param enviroment_condititon: mode to operate with - dev or customer.
+        :param environment_condition: mode to operate with - dev or customer.
         :param operational_conditions: What type of imports dict
         :return:
         """
         log = self.logging
         operational_conditions = logical_conditions['operational_conditions']
-        enviroment_condititon = logical_conditions['local_conditions']['enviroment_condititon']
+        environment_condition = logical_conditions['local_conditions']['environment_condition']
 
         # Preproc on NORMAL IMPORTS
         if operational_conditions['usual_imports'] and not operational_conditions['recursive_imports'] and not operational_conditions['read_test']:
@@ -584,13 +588,13 @@ class GlobalLogic:
         If ADDM did not return any version - syntax check will run for all available versions.
         Optional: arg set of tpl version can be used here.
 
-        :param enviroment_condititon: mode to operate with - dev or customer.
+        :param environment_condition: mode to operate with - dev or customer.
 
         :return:
         """
         log = self.logging
         operational_conditions = logical_conditions['operational_conditions']
-        enviroment_condititon = logical_conditions['local_conditions']['enviroment_condititon']
+        environment_condition = logical_conditions['local_conditions']['environment_condition']
         tpl_version = logical_conditions['tpl_version']
 
         # Preproc on NORMAL IMPORTS
@@ -831,7 +835,7 @@ class GlobalLogic:
 
         return test_queries
 
-    def make_imports(self, extra_patterns):
+    def make_imports_old(self, extra_patterns):
         """
         Closure for imports function.
         Based or arguments - decide which import will run.
@@ -847,7 +851,7 @@ class GlobalLogic:
             tpl_imports.import_modules(extra_patterns)
         return importer
 
-    def make_imports_customer(self, local_conditions):
+    def make_imports(self, **condition_kwargs):
         """
         Closure for imports function.
         Version for customer run.
@@ -858,10 +862,11 @@ class GlobalLogic:
         """
         log = self.logging
 
+
         def importer():
             tpl_imports = TPLimports(log, self.full_path_args)
             # Now I don't need args because class was initialized with args above:
-            tpl_imports.import_modules_customer(local_conditions=local_conditions)
+            tpl_imports.import_modules(conditions=condition_kwargs)
         return importer
 
     def make_preproc(self, workspace, input_path, output_path, mode):

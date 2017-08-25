@@ -108,7 +108,7 @@ log.critical("CRITICAL TEST")
 funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
 conditional_functions, conditional_results = funcs_run.make_function_set()
 
-print("conditional_functions: "+str(json.dumps(conditional_functions, indent=4, ensure_ascii=False, default=pformat)))
+# print("conditional_functions: "+str(json.dumps(conditional_functions, indent=4, ensure_ascii=False, default=pformat)))
 
 scr_conditional_functions = {'upload_f': False,
                              'syntax_check_f': '<function GlobalLogic.make_syntax_check.<locals>.syntax_check at 0x0000000004328488>',
@@ -122,7 +122,7 @@ scr_conditional_functions = {'upload_f': False,
                              'preproc_f': '<function GlobalLogic.make_preproc.<locals>.pre_processing at 0x0000000004328268>'
                              }
 
-print("conditional_results: "+str(json.dumps(conditional_results, indent=4, ensure_ascii=False, default=pformat)))
+# print("conditional_results: "+str(json.dumps(conditional_results, indent=4, ensure_ascii=False, default=pformat)))
 
 scr_conditional_results = {'local_zip': 'ADDM is in DEV mode - not need to point to local zip file.',
                            'addm_working_dir': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem',

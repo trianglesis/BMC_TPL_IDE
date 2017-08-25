@@ -335,13 +335,14 @@ class ArgsParse:
                     BLADE_ENCLOSURE_t        = tkn_main_t + os.sep + tku_patterns + os.sep + 'BLADE_ENCLOSURE'
                     CLOUD_t                  = tkn_main_t + os.sep + tku_patterns + os.sep + 'CLOUD'
                     CORE_t                   = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE'
-                    DBDETAILS_t              = tkn_main_t + os.sep + tku_patterns + os.sep + 'DBDETAILS' + os.sep + 'Database_Structure_Patterns'
+                    # DBDETAILS_t              = tkn_main_t + os.sep + tku_patterns + os.sep + 'DBDETAILS' + os.sep + 'Database_Structure_Patterns'
+                    DBDETAILS_t              = tkn_main_t + os.sep + tku_patterns + os.sep + 'DBDETAILS'
                     LOAD_BALANCER_t          = tkn_main_t + os.sep + tku_patterns + os.sep + 'LOAD_BALANCER'
                     MANAGEMENT_CONTROLLERS_t = tkn_main_t + os.sep + tku_patterns + os.sep + 'MANAGEMENT_CONTROLLERS'
                     MIDDLEWAREDETAILS_t      = tkn_main_t + os.sep + tku_patterns + os.sep + 'MIDDLEWAREDETAILS'
                     STORAGE_t                = tkn_main_t + os.sep + tku_patterns + os.sep + 'STORAGE'
                     SYSTEM_t                 = tkn_main_t + os.sep + tku_patterns + os.sep + 'SYSTEM'
-                    SupportingFiles_t   = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE' + os.sep + 'SupportingFiles'
+                    # SupportingFiles_t   = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE' + os.sep + 'SupportingFiles'
                     tkn_sandbox_t       = workspace  + os.sep + addm + os.sep + 'tkn_sandbox'
 
                     # Check if this is a tplpre file from: PatternFolder\PatternName.tplpre
@@ -357,7 +358,7 @@ class ArgsParse:
                                       pattern_folder
 
                         args_dict = {
-                                    'enviroment_condititon'    : 'developer_tplpre',
+                                    'environment_condition'    : 'developer_tplpre',
                                     'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
@@ -380,7 +381,7 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    'SupportingFiles_t'        : SupportingFiles_t,
+                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                                      }
                         # log.info("Arguments from file path: " + str(args_dict))
@@ -400,7 +401,7 @@ class ArgsParse:
                         tpl_folder     = path_parse.group('tpl_folder')
 
                         args_dict = {
-                                    'enviroment_condititon'    : 'developer_tpl',
+                                    'environment_condition'    : 'developer_tpl',
                                     'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
@@ -423,7 +424,7 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    'SupportingFiles_t'        : SupportingFiles_t,
+                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -437,7 +438,7 @@ class ArgsParse:
                         # TODO: Add pattern folder based on regex path to dml
                         # TODO: Later move it to local logic from each occurence!
                         log.debug("This is DML file.")
-                        args_dict = {'enviroment_condititon'   : 'developer_dml',
+                        args_dict = {'environment_condition'   : 'developer_dml',
                                     'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
@@ -460,7 +461,7 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    'SupportingFiles_t'        : SupportingFiles_t,
+                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -474,7 +475,7 @@ class ArgsParse:
                         # TODO: Add pattern folder based on regex path to model
                         # TODO: Later move it to local logic from each occurence!
                         log.debug("This is model file.")
-                        args_dict = {'enviroment_condititon'   : 'developer_model',
+                        args_dict = {'environment_condition'   : 'developer_model',
                                     'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
@@ -497,7 +498,7 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    'SupportingFiles_t'        : SupportingFiles_t,
+                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -510,7 +511,7 @@ class ArgsParse:
                         # TODO: Add pattern folder based on regex path to model
                         # TODO: Later move it to local logic from each occurence!
                         log.debug("This is py file. Will check if this is a 'test.py'")
-                        args_dict = {'enviroment_condititon'   : 'developer_py',
+                        args_dict = {'environment_condition'   : 'developer_py',
                                     'workspace'                : workspace,
                                     # 'addm'                   : addm,
                                     # 'tkn_main'               : tkn_main,
@@ -533,7 +534,7 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    'SupportingFiles_t'        : SupportingFiles_t,
+                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -681,7 +682,7 @@ class ArgsParse:
                                 tku_dict.update(tku_solo_package_dict)
 
                 args_dict = {
-                            'enviroment_condititon'    : 'customer_tku',
+                            'environment_condition'    : 'customer_tku',
                             'workspace'                : workspace,
                             'pattern_folder'           : pattern_folder,
                             'file_name'                : file_name,
@@ -700,7 +701,7 @@ class ArgsParse:
                             'MIDDLEWAREDETAILS_t'      : tku_dict['extended-middleware-discovery']['tku_package_path'],
                             'STORAGE_t'                : '',
                             'SYSTEM_t'                 : tku_dict['system']['tku_package_path'],
-                            'SupportingFiles_t'        : tku_dict['core']['tku_package_path'],
+                            # 'SupportingFiles_t'        : tku_dict['core']['tku_package_path'],
                             'tkn_sandbox_t'            : ''
                              }
 
