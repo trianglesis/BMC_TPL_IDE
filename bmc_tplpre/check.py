@@ -152,28 +152,28 @@ if conditional_functions['imports_f']:
             import_patterns()
 
 # Executing preprocessor:
-# if conditional_functions['preproc_f']:
-#     preproc_f = conditional_functions['preproc_f']
-#     if preproc_f:
-#         preproc_f()
+if conditional_functions['preproc_f']:
+    preproc_f = conditional_functions['preproc_f']
+    if preproc_f:
+        preproc_f()
 
 # Executing syntax checker:
-# if conditional_functions['syntax_check_f']:
-#     syntax_check_f = conditional_functions['syntax_check_f']
-#     if syntax_check_f:
-#         syntax_check_f()
+if conditional_functions['syntax_check_f']:
+    syntax_check_f = conditional_functions['syntax_check_f']
+    if syntax_check_f:
+        syntax_check_f()
 
 # Executing zipping files (and upload maybe?)
-# if conditional_functions['zip_files_f']:
-#     zip_files_f = conditional_functions['zip_files_f']
-#     if zip_files_f:
-#         zip_files_f()
+if conditional_functions['zip_files_f']:
+    zip_files_f = conditional_functions['zip_files_f']
+    if zip_files_f:
+        zip_files_f()
 
 # Executing pattern activation:
-# if conditional_functions['addm_activate_f']:
-#     addm_activate_f = conditional_functions['addm_activate_f']
-#     if addm_activate_f:
-#         addm_activate_f()
+if conditional_functions['addm_activate_f']:
+    addm_activate_f = conditional_functions['addm_activate_f']
+    if addm_activate_f:
+        addm_activate_f()
 
 # Executing start scan
 # Working in current condition. Disable to save time

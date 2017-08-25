@@ -22,19 +22,24 @@ class TPLimports:
     """
     New logic of imports will be used:
 
+    DEV:
+
         Step 1: List patterns in current folder of active pattern.
         Step 1.1 - Step 1.2: Read patterns from current folders and extract import modules and pattern modules.
                   Add import modules to list which will be used for finding in extra places.
                   Add pattern modules to list which will be used to compare if we found and know this module already.
         Step 1.3: Use list of found import modules from read pattern (Step 1.2) and start searching in extra places.
 
+
         Round: 1 - of recursive searching patterns.
-            Step 2: Searching modules from each found pattern from Step 1.
-                    Search in each sub folder of list of extra folders:
-                    Add import modules to list which will be used for finding in extra places in next round.
-                    Add pattern modules to list which will be used to compare if we found and know this module already.
-            Step 2: in while execution:
-                    Compare found module items with list of pattern modules which was already found and remove it match.
+
+            Step 2:   Searching modules from each found pattern from Step 1.
+            Step 2.1: Before execute search in read_pattern - make list of patterns from all folders from extra_folders.
+                      Search in each pattern from list of patterns.
+            Step 2.2: Add import modules to list which will be used for finding in extra places in next round.
+                      Add pattern modules to list which will be used to compare if we found and know this module already.
+            Step 2:   in while execution:
+                      Compare found module items with list of pattern modules which was already found and remove it match.
 
         Round: 2 - of recursive searching patterns.
             Repeat execution with vars from Round 1
@@ -52,30 +57,16 @@ class TPLimports:
         Step 5: Create 'imports' folder if isn't exist.
         Step 5.1: Copy pattern to imports folder and show debug log with path to copied pattern.
 
+    Customer:
+
 
     """
 
     def __init__(self, logging, full_path_args):
-        # TODO: Enhance imports logic to add places where to find different patterns.
-        # TODO: Add list to import from test.py if args.
-        # TODO: Check OS path and some settings to find TKN_CORE
-        # First search in Supporting Files!
 
         """
-        PATH ARGS: {'workspace': 'd:\\perforce',
-                    'file_ext': 'tplpre',
-                    'file_name': 'BMCRemedyARSystem',
-                    'pattern_folder': 'BMCRemedyARSystem',
-                    'tkn_main_t': 'd:\\perforce\\addm\\tkn_main\\',
-                    'tkn_sandbox_t': 'd:\\perforce\\addm\\tkn_sandbox',
-                    'buildscripts_t': 'd:\\perforce\\addm\\tkn_main\\\\buildscripts',
-                    'tku_patterns_t': 'd:\\perforce\\addm\\tkn_main\\\\tku_patterns\\',
-                    'CORE_t': 'd:\\perforce\\addm\\tkn_main\\\\tku_patterns\\CORE',
-                    # 'SupportingFiles_t': 'd:\\perforce\\addm\\tkn_main\\\\tku_patterns\\CORE\\SupportingFiles',
-                    'MIDDLEWAREDETAILS_t': 'd:\\perforce\\addm\\tkn_main\\\\tku_patterns\\MIDDLEWAREDETAILS',
-                    'DBDETAILS_t': 'd:\\perforce\\addm\\tkn_main\\\\tku_patterns\\DBDETAILS\\Database_Structure_Patterns',
-                    'working_dir': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem',
-                    'full_path': 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\BMCRemedyARSystem.tplpre'}
+        Initialize with startup set of arguments.
+
 
         :param logging: inherited log class
         :param full_path_args: args parsed and composed
@@ -86,22 +77,11 @@ class TPLimports:
 
         self.full_path_args = full_path_args
 
-        # TODO: Update paths to state when TKU path on Customer
         if self.full_path_args:
-
-            # log.debug("PATH ARGS: "+str(self.full_path_args))
-
             self.workspace   = self.full_path_args['workspace']
             self.full_path   = self.full_path_args['full_path']
             self.working_dir = self.full_path_args['working_dir']
             self.file_ext    = self.full_path_args['file_ext']
-
-            # TODO: This to remove:
-            self.tku_patterns_t    = self.full_path_args['tku_patterns_t']
-            self.CORE_t    = self.full_path_args['CORE_t']
-            # self.SupportingFiles_t    = self.full_path_args['SupportingFiles_t']
-            self.MIDDLEWAREDETAILS_t    = self.full_path_args['MIDDLEWAREDETAILS_t']
-            self.DBDETAILS_t    = self.full_path_args['DBDETAILS_t']
 
             log.debug("Arguments from -full_path are obtained and program will make decisions.")
         else:
@@ -163,7 +143,6 @@ class TPLimports:
                               'MANAGEMENT_CONTROLLERS_t',
                               'MIDDLEWAREDETAILS_t',
                               'SYSTEM_t',
-                              # 'SupportingFiles_t',
                               'STORAGE_t']
 
         # Extracting matched folders from 'local_conditions':
@@ -179,7 +158,7 @@ class TPLimports:
                         log.warn("Step 1.1 This extra path is not exist - nothing will be imported from there: "+str(extra_folder))
             else:
                 log.info("Be aware that this folder key is not exist and "
-                         "I can't to extract patterns from corresponded path: "+str(folder_key))
+                         "I can't extract patterns from corresponded path: "+str(folder_key))
 
         current_modules_name = []  # Modules from KNOWN and FOUND and CURRENT.
         find_importing_modules = []  # Modules which I should found.
@@ -271,7 +250,10 @@ class TPLimports:
         find_importing_modules      = importing_set_options['find_importing_modules']
         env_mode                    = importing_set_options['env_mode']
 
-        # TODO: Probably now this loop is not needed because I searching in all paths at the same time, but will see.
+        # Make pattern list to found in each:
+        all_patterns_list = self.patterns_to_read(env_mode=env_mode,
+                                                  search_path=extra_folders)
+
         iteration_count = 0
         while iteration_count < 3:
             # Recursive search for imports and imports for found patterns for 3 times.
@@ -283,8 +265,7 @@ class TPLimports:
                           "Step 1 : "+str(find_importing_modules))
 
                 # Step 4. - Find modules which left in list - in other folders including CORE:
-                find_2, current_2 = self.search_in_path(env_mode=env_mode,
-                                                        search_path=extra_folders,
+                find_2, current_2 = self.search_in_path(file_candidates=all_patterns_list,
                                                         find_importing_modules=find_importing_modules,
                                                         current_modules_name=current_modules_name)
                 find_importing_modules = find_2
@@ -366,22 +347,15 @@ class TPLimports:
             log.warn("Nothing to read for read_pattern module. No imports will be found.")
             return False, False
 
-    def search_in_path(self, env_mode, search_path, find_importing_modules, current_modules_name):
+    def patterns_to_read(self, env_mode, search_path):
         """
-        Search import modules by parsing each pattern in selected folder to find it.s module name.
-        Add found patterns to [current_modules_name]
+        Composing path to each pattern file in working directories or workspace.
+        Then I will search modules to import through this list.
 
-        current_modules_name = [{'module': 'module BMC.RemedyARSystem',
-                                 'path': 'D:\\..\\..\\..\\..\\..\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
-        find_importing_modules = ['module Something.Some', 'module Doooooodidoo']
-
-        :param env_mode: str
-        :param current_modules_name: list of module:pattern dicts I found
-        :param find_importing_modules: list input with modules which I need to find
-        :type search_path: path to folder where to search imports
+        :param search_path: list
+        :type env_mode: str
         :return: list
         """
-
         log = self.logging
 
         exclude_dirs = ['imports'
@@ -392,9 +366,11 @@ class TPLimports:
                         'actuals',
                         'HarnessFiles'
                         ]
+
         file_candidates = []
 
         if env_mode == 'developer_tplpre':
+            log.debug("Step 2.1. - Making list of all available patterns from extra folders to further search.")
             # Sort only tplpre files
             file_ext = ".tplpre"
             for path in search_path:
@@ -413,9 +389,14 @@ class TPLimports:
                                 if file_candidate not in file_candidates:
                                     # List with all available pattern files is ready to search with:
                                     file_candidates.append(file_candidate)
+
                     # Stop on first level, no need to jump deeper.
                     break
+
+            return file_candidates
+
         elif env_mode == 'customer_tku':
+            log.debug("Step 2.1. - Making list of all available patterns from extra folders to further search.")
             # Sort only tpl files
             file_ext = ".tpl"
             # Walk in each pattern module dir and get files in it:
@@ -428,11 +409,32 @@ class TPLimports:
                                 file_candidate = os.path.join(root, file)
                                 # List with all available pattern files is ready to search with:
                                 file_candidates.append(file_candidate)
+
+            return file_candidates
         else:
             log.warn("I can import only pattern files tplre or tpl.")
 
+    def search_in_path(self, file_candidates, find_importing_modules, current_modules_name):
+        """
+        Search import modules by parsing each pattern in selected folder to find it.s module name.
+        Add found patterns to [current_modules_name]
+
+        current_modules_name = [{'module': 'module BMC.RemedyARSystem',
+                                 'path': 'D:\\..\\..\\..\\..\\..\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
+        find_importing_modules = ['module Something.Some', 'module Doooooodidoo']
+
+        :param file_candidates:
+        :param env_mode: str
+        :param current_modules_name: list of module:pattern dicts I found
+        :param find_importing_modules: list input with modules which I need to find
+        :type search_path: path to folder where to search imports
+        :return: list
+        """
+
+        log = self.logging
         # In list of all available pattern files in searched tree -
         # search all we need to import by reading header of each file.
+        # Step 2.1.- search in patterns list.
         for file in file_candidates:
             with open(file, "r") as f:
                 read_file = f.read(2024)  # About 60+ lines from the beginning of pattern
@@ -468,6 +470,7 @@ class TPLimports:
                             if imports_line not in find_importing_modules:
                                 find_importing_modules.append(imports_line)
 
+        log.debug("Step 2.2. - Returning list of found modules and list of modules to find in next iteration.")
         return find_importing_modules, current_modules_name
 
     def import_tkn(self, patterns_path, working_dir):
@@ -566,8 +569,6 @@ class TPLimports:
             Run to import:
         :return: will be returned as function obj in global_logic
         """
-
-        # TODO: Extra folders should come from full_path_arg parse in dict like in environment_condition
 
         extra_folders = [
                          'BLADE_ENCLOSURE',
