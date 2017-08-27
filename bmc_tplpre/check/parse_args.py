@@ -310,13 +310,14 @@ class ArgsParse:
             # Check path as typical DEV tree:
             # Should match 'd:\perforce\addm\tkn_main\tku_patterns'
             if dev_path_check:
-                log.debug("This is dev path.")
+                log.debug("This is dev path. Will parse it to get args.")
 
                 # Check full arguments:
                 path_parse = self.path_parse_re.match(full_path)
                 if path_parse:
                     log.debug("Parsing path for options.")
 
+                    # TODO: Check workspace BEFORE file extension and with p4
                     workspace      = path_parse.group('workspace')
                     addm           = path_parse.group('addm')
                     tkn_main       = path_parse.group('tkn_main')
@@ -332,7 +333,7 @@ class ArgsParse:
                     buildscripts_t      = tkn_main_t + os.sep + 'buildscripts'
                     tku_patterns_t      = tkn_main_t + os.sep + tku_patterns
 
-                    # pep8: disable=
+                    # TODO: make func in local logic
                     BLADE_ENCLOSURE_t        = tkn_main_t + os.sep + tku_patterns + os.sep + 'BLADE_ENCLOSURE'
                     CLOUD_t                  = tkn_main_t + os.sep + tku_patterns + os.sep + 'CLOUD'
                     CORE_t                   = tkn_main_t + os.sep + tku_patterns + os.sep + 'CORE'
@@ -344,11 +345,13 @@ class ArgsParse:
                     SYSTEM_t                 = tkn_main_t + os.sep + tku_patterns + os.sep + 'SYSTEM'
                     tkn_sandbox_t            = workspace  + os.sep + addm         + os.sep + 'tkn_sandbox'
 
+                    # TODO: Below steps is better to check in sep func() and declare needed args with some regex extr.
                     # Check if this is a tplpre file from: PatternFolder\PatternName.tplpre
                     if re.match('tplpre', file_ext):
 
                         # Composing working dir to allow syntax check for all content in folder.
                         # More obvious to use values from regex rather then just strings.
+                        # TODO: Simplify:
                         working_dir = workspace     + os.sep + \
                                       addm          + os.sep + \
                                       tkn_main      + os.sep + \
@@ -359,10 +362,6 @@ class ArgsParse:
                         args_dict = {
                                     'environment_condition'    : 'developer_tplpre',
                                     'workspace'                : workspace,
-                                    # 'addm'                   : addm,
-                                    # 'tkn_main'               : tkn_main,
-                                    # 'tku_patterns'           : tku_patterns,
-                                    # 'pattern_lib'            : pattern_lib,
                                     'pattern_folder'           : pattern_folder,
                                     'file_name'                : file_name,
                                     'file_ext'                 : file_ext,
@@ -380,7 +379,6 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                                      }
                         # log.info("Arguments from file path: " + str(args_dict))
@@ -401,10 +399,6 @@ class ArgsParse:
                         args_dict = {
                                     'environment_condition'    : 'developer_tpl',
                                     'workspace'                : workspace,
-                                    # 'addm'                   : addm,
-                                    # 'tkn_main'               : tkn_main,
-                                    # 'tku_patterns'           : tku_patterns,
-                                    # 'pattern_lib'            : pattern_lib,
                                     'pattern_folder'           : pattern_folder,
                                     'file_name'                : file_name,
                                     'file_ext'                 : file_ext,
@@ -422,7 +416,6 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -437,10 +430,6 @@ class ArgsParse:
                         log.debug("This is DML file.")
                         args_dict = {'environment_condition'   : 'developer_dml',
                                     'workspace'                : workspace,
-                                    # 'addm'                   : addm,
-                                    # 'tkn_main'               : tkn_main,
-                                    # 'tku_patterns'           : tku_patterns,
-                                    # 'pattern_lib'            : pattern_lib,
                                     'pattern_folder'           : pattern_folder,
                                     'file_name'                : file_name,
                                     'file_ext'                 : file_ext,
@@ -458,7 +447,6 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -473,10 +461,6 @@ class ArgsParse:
                         log.debug("This is model file.")
                         args_dict = {'environment_condition'   : 'developer_model',
                                     'workspace'                : workspace,
-                                    # 'addm'                   : addm,
-                                    # 'tkn_main'               : tkn_main,
-                                    # 'tku_patterns'           : tku_patterns,
-                                    # 'pattern_lib'            : pattern_lib,
                                     'pattern_folder'           : pattern_folder,
                                     'file_name'                : file_name,
                                     'file_ext'                 : file_ext,
@@ -494,7 +478,6 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -508,10 +491,6 @@ class ArgsParse:
                         log.debug("This is py file. Will check if this is a 'test.py'")
                         args_dict = {'environment_condition'   : 'developer_py',
                                     'workspace'                : workspace,
-                                    # 'addm'                   : addm,
-                                    # 'tkn_main'               : tkn_main,
-                                    # 'tku_patterns'           : tku_patterns,
-                                    # 'pattern_lib'            : pattern_lib,
                                     'pattern_folder'           : pattern_folder,
                                     'file_name'                : file_name,
                                     'file_ext'                 : file_ext,
@@ -529,7 +508,6 @@ class ArgsParse:
                                     'MIDDLEWAREDETAILS_t'      : MIDDLEWAREDETAILS_t,
                                     'STORAGE_t'                : STORAGE_t,
                                     'SYSTEM_t'                 : SYSTEM_t,
-                                    # 'SupportingFiles_t'        : SupportingFiles_t,
                                     'tkn_sandbox_t'            : tkn_sandbox_t
                         }
                         log.info("Arguments from file path: " + str(args_dict))
@@ -560,31 +538,7 @@ class ArgsParse:
                       "core": {
                         "tku_package_name": "core",
                         "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+"
-                      },
-                      "extended-db-discovery": {
-                        "tku_package_name": "extended-db-discovery",
-                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+"
-                      },
-                      "extended-middleware-discovery": {
-                        "tku_package_name": "extended-middleware-discovery",
-                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+"
-                      },
-                      "loadbalancer": {
-                        "tku_package_name": "loadbalancer",
-                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-LoadBalancer-2017-07-1-ADDM-11.1+"
-                      },
-                      "managementcontrollers": {
-                        "tku_package_name": "managementcontrollers",
-                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+"
-                      },
-                      "system": {
-                        "tku_package_name": "system",
-                        "tku_package_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-System-2017-07-1-ADDM-11.1+"
-                      },
-                      "tku_package_ADDM_ver": "11.1",
-                      "tku_update": "Technology-Knowledge-Update",
-                      "tku_update_path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+"
-                    }
+                      }
                 '''
 
                 tku_packages = []
@@ -676,33 +630,34 @@ class ArgsParse:
                                 # List of packades dicts. Further will nested in tku_dict
                                 tku_dict.update(tku_solo_package_dict)
 
-                args_dict = {
-                            'environment_condition'    : 'customer_tku',
-                            'workspace'                : workspace,
-                            'pattern_folder'           : pattern_folder,
-                            'file_name'                : file_name,
-                            'file_ext'                 : file_ext,
-                            'working_dir'              : working_dir,
-                            'full_path'                : full_path,
-                            'tkn_main_t'               : '',
-                            'tku_patterns_t'           : '',
-                            'buildscripts_t'           : '',
-                            'BLADE_ENCLOSURE_t'        : tku_dict['bladeenclosure']['tku_package_path'],
-                            'CLOUD_t'                  : '',
-                            'CORE_t'                   : tku_dict['core']['tku_package_path'],
-                            'DBDETAILS_t'              : tku_dict['extended-db-discovery']['tku_package_path'],
-                            'LOAD_BALANCER_t'          : tku_dict['loadbalancer']['tku_package_path'],
-                            'MANAGEMENT_CONTROLLERS_t' : tku_dict['managementcontrollers']['tku_package_path'],
-                            'MIDDLEWAREDETAILS_t'      : tku_dict['extended-middleware-discovery']['tku_package_path'],
-                            'STORAGE_t'                : '',
-                            'SYSTEM_t'                 : tku_dict['system']['tku_package_path'],
-                            # 'SupportingFiles_t'        : tku_dict['core']['tku_package_path'],
-                            'tkn_sandbox_t'            : ''
-                             }
+                    # TODO: Simplify
+                    tku_customer_tree = tku_dict
+                    args_dict = {
+                                'environment_condition'    : 'customer_tku',
+                                'workspace'                : workspace,
+                                'pattern_folder'           : pattern_folder,
+                                'file_name'                : file_name,
+                                'file_ext'                 : file_ext,
+                                'working_dir'              : working_dir,
+                                'full_path'                : full_path,
+                                'tkn_main_t'               : '',
+                                'tku_patterns_t'           : '',
+                                'buildscripts_t'           : '',
+                                'BLADE_ENCLOSURE_t'        : tku_customer_tree['bladeenclosure']['tku_package_path'],
+                                'CLOUD_t'                  : '',
+                                'CORE_t'                   : tku_customer_tree['core']['tku_package_path'],
+                                'DBDETAILS_t'              : tku_customer_tree['extended-db-discovery']['tku_package_path'],
+                                'LOAD_BALANCER_t'          : tku_customer_tree['loadbalancer']['tku_package_path'],
+                                'MANAGEMENT_CONTROLLERS_t' : tku_customer_tree['managementcontrollers']['tku_package_path'],
+                                'MIDDLEWAREDETAILS_t'      : tku_customer_tree['extended-middleware-discovery']['tku_package_path'],
+                                'STORAGE_t'                : '',
+                                'SYSTEM_t'                 : tku_customer_tree['system']['tku_package_path'],
+                                'tkn_sandbox_t'            : ''
+                                 }
 
-                # args_ord = json.dumps(args_dict, indent=4, ensure_ascii=False, default=pformat)
-                # print(args_ord)
-                return args_dict
+                    # args_ord = json.dumps(args_dict, indent=4, ensure_ascii=False, default=pformat)
+                    # print(args_ord)
+                    return args_dict
 
 
             # When path to file has no tku_tree in. This is probably standalone file from anywhere.
@@ -863,6 +818,7 @@ class ArgsParse:
         Should run only if SSH session established!
         :param host_list:
         """
+        # TODO: add Ability to use hostnames.
         log = self.logging
         # HOSTs ip check:NoneNone
         # host_list = ''
@@ -892,6 +848,7 @@ class ArgsParse:
         """
         log = self.logging
 
+        # TODO: Args rename:
         recursive_imports = False
         usual_imports = False
         read_test = False
@@ -1045,6 +1002,8 @@ class ArgsParse:
         :param path: path to check
         """
         # TODO: Check if tideway user can run this.
+        # TODO: Create all needed dev folders here.
+        # TODO: MOve it from here or not?
 
         log = self.logging
 

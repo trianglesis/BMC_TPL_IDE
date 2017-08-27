@@ -8,15 +8,15 @@ Allows you to automate usual routine in pattern development.
 import os
 import zipfile
 
-"""
-Here I will compose some settings and paths based on args and settings I can obtain or found.
-
-"""
-
 
 class LocalLogic:
 
     def __init__(self, logging):
+        """
+        Gathering local options based on filesystem arguments and cmd results got on working machine.
+
+        :param logging: func
+        """
 
         self.logging = logging
 

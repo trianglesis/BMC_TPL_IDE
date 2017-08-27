@@ -18,16 +18,7 @@ parser = argparse.ArgumentParser(add_help=True)
 common = parser.add_argument_group("Common options")
 developer = parser.add_argument_group("Developer options")
 
-developer.add_argument("-tpl",
-                       type=str,
-                       action='store',
-                       dest="version_tpl",
-                       default="",
-                       help="Ignored option. In progress..."
-                            "Set this to correspond tpl version to upload folder of TPLPreprocessor output result "
-                            "ignoring ADDM tpl version check procedure. "
-                            "Use when you want upload older or newer tpl on ADDM"
-                            "If file is not a .tplpre - this option will be ignored.")
+
 developer.add_argument("-imp",
                        action="store_true",
                        help="Set if you want to import patterns only imported in current opened pattern "
@@ -45,6 +36,32 @@ developer.add_argument("-T",
                             "This will use set of queries to grab everything from scan and build SI models."
                             "si_type will be gathered from pattern blocks and used to compose search query."
                             "model file will be saved into developers folder: /usr/tideway/TKU/models")
+developer.add_argument("-usual_import",
+                       action="store_true",
+                       help="Option imports patterns which only imported in currently opened pattern "
+                            "from -full_path. "
+                            "No recursive imports will run. "
+                            "If file is not a (tplpre|tpl) - this option will be ignored.")
+developer.add_argument("-recursive_import",
+                       action="store_true",
+                       help="Options imports all patterns in recursive mode including each 'imports' from "
+                            "each found pattern."
+                            "If file is not a (tplpre|tpl) - this option will be ignored.")
+developer.add_argument("-read_test",
+                       action="store_true",
+                       help="Read test.py file and get all patterns which used for test and import in recurvise mode."
+                            "Also retrieve queries and use to generate model files."
+                            "In progress...")
+developer.add_argument("-tpl",
+                       type=str,
+                       action='store',
+                       dest="version_tpl",
+                       default="",
+                       help="Ignored option. In progress..."
+                            "Set this to correspond tpl version to upload folder of TPLPreprocessor output result "
+                            "ignoring ADDM tpl version check procedure. "
+                            "Use when you want upload older or newer tpl on ADDM"
+                            "If file is not a .tplpre - this option will be ignored.")
 common.add_argument("-full_path",
                     type=str,
                     action='store',
@@ -61,6 +78,18 @@ common.add_argument("-p",
                     type=str,
                     action='store',
                     dest="password",
+                    default="",
+                    help="Password for ADDM user")
+common.add_argument("-system_user",
+                    type=str,
+                    action='store',
+                    dest="system_user",
+                    default="",
+                    help="Your ADDM user - root or tideway")
+common.add_argument("-system_password",
+                    type=str,
+                    action='store',
+                    dest="system_password",
                     default="",
                     help="Password for ADDM user")
 common.add_argument("-addm",
@@ -101,12 +130,10 @@ def log_constructor():
     return log_init.log_define()
 log = log_constructor()
 
-log.info("-=== INITIALISING Check script from here:")
-log.warn("WARN TEST")
-log.critical("CRITICAL TEST")
-
 funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
 conditional_functions, conditional_results = funcs_run.make_function_set()
+
+
 
 # print("conditional_functions: "+str(json.dumps(conditional_functions, indent=4, ensure_ascii=False, default=pformat)))
 
@@ -184,9 +211,4 @@ if conditional_functions['addm_activate_f']:
 
 
 log.info("-=== FINISHING Check script.")
-
-
-
-
-
 
