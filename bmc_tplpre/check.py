@@ -6,36 +6,17 @@ Allows you to automate usual routine in pattern development.
 """
 
 import argparse
-import os
-
 from check.global_logic import GlobalLogic
 
-# DEBUG
-import json
-from pprint import pformat
+# # DEBUG
+# import json
+# from pprint import pformat
 
 parser = argparse.ArgumentParser(add_help=True)
 common = parser.add_argument_group("Common options")
 developer = parser.add_argument_group("Developer options")
 
 
-developer.add_argument("-imp",
-                       action="store_true",
-                       help="Set if you want to import patterns only imported in current opened pattern "
-                            "from -full_path. "
-                            "No recursive imports will run. "
-                            "If file is not a .tplpre - this option will be ignored.")
-developer.add_argument("-r_imp",
-                       action="store_true",
-                       help="Set if you want to import all patterns in recursive mode and upload this package on ADDM."
-                            "Better use on clear TKN."
-                            "If file is not a .tplpre - this option will be ignored.")
-developer.add_argument("-T",
-                       action="store_true",
-                       help="Run validation process after scan is finished."
-                            "This will use set of queries to grab everything from scan and build SI models."
-                            "si_type will be gathered from pattern blocks and used to compose search query."
-                            "model file will be saved into developers folder: /usr/tideway/TKU/models")
 developer.add_argument("-usual_import",
                        action="store_true",
                        help="Option imports patterns which only imported in currently opened pattern "
@@ -49,7 +30,7 @@ developer.add_argument("-recursive_import",
                             "If file is not a (tplpre|tpl) - this option will be ignored.")
 developer.add_argument("-read_test",
                        action="store_true",
-                       help="Read test.py file and get all patterns which used for test and import in recurvise mode."
+                       help="Read test.py file and get all patterns which used for test and import in recursive mode."
                             "Also retrieve queries and use to generate model files."
                             "In progress...")
 developer.add_argument("-tpl",
@@ -133,29 +114,6 @@ log = log_constructor()
 funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
 conditional_functions, conditional_results = funcs_run.make_function_set()
 
-
-
-# print("conditional_functions: "+str(json.dumps(conditional_functions, indent=4, ensure_ascii=False, default=pformat)))
-
-scr_conditional_functions = {'upload_f': False,
-                             'syntax_check_f': '<function GlobalLogic.make_syntax_check.<locals>.syntax_check at 0x0000000004328488>',
-                             'addm_activate_f': '<function GlobalLogic.make_activate_zip.<locals>.activate at 0x0000000004328620>',
-                             'imports_f': {'parse_tests_queries': '<function GlobalLogic.make_test_read_query.<locals>.test_queries at 0x00000000036386A8>',
-                                           'parse_tests_patterns': False,
-                                           'import_patterns': '<function GlobalLogic.make_imports.<locals>.importer at 0x00000000043282F0>'
-                                           },
-                             'scan_f': '<function GlobalLogic.make_scan.<locals>.scan at 0x0000000004328730>',
-                             'zip_files_f': '<function GlobalLogic.make_zip.<locals>.zipper at 0x00000000043286A8>',
-                             'preproc_f': '<function GlobalLogic.make_preproc.<locals>.pre_processing at 0x0000000004328268>'
-                             }
-
-# print("conditional_results: "+str(json.dumps(conditional_results, indent=4, ensure_ascii=False, default=pformat)))
-
-scr_conditional_results = {'local_zip': 'ADDM is in DEV mode - not need to point to local zip file.',
-                           'addm_working_dir': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem',
-                           'addm_zip': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/imports/tpl113/BMCRemedyARSystem.zip'}
-
-
 # Manual functions execution:
 if conditional_functions['imports_f']:
     imports_f = conditional_functions['imports_f']
@@ -197,17 +155,17 @@ if conditional_functions['zip_files_f']:
         zip_files_f()
 
 # Executing pattern activation:
-# if conditional_functions['addm_activate_f']:
-#     addm_activate_f = conditional_functions['addm_activate_f']
-#     if addm_activate_f:
-#         addm_activate_f()
+if conditional_functions['addm_activate_f']:
+    addm_activate_f = conditional_functions['addm_activate_f']
+    if addm_activate_f:
+        addm_activate_f()
 
 # Executing start scan
 # Working in current condition. Disable to save time
-# if conditional_functions['scan_f']:
-#     scan_f = conditional_functions['scan_f']
-#     if scan_f:
-#         scan_f()
+if conditional_functions['scan_f']:
+    scan_f = conditional_functions['scan_f']
+    if scan_f:
+        scan_f()
 
 
 log.info("-=== FINISHING Check script.")

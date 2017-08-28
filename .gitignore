@@ -1,11 +1,4 @@
-D:\perforce\addm\tkn_sandbox\o.danylchenko\projects\Notepad_IDE\Sublime\BMC_TPL_IDE\bmc_tplpre\.idea
-D:\perforce\addm\tkn_sandbox\o.danylchenko\projects\Notepad_IDE\Sublime\BMC_TPL_IDE\bmc_tplpre\DEV_TEST
-D:\perforce\addm\tkn_sandbox\o.danylchenko\projects\Notepad_IDE\Sublime\BMC_TPL_IDE\bmc_tplpre\taxonomy
-D:\perforce\addm\tkn_sandbox\o.danylchenko\projects\Notepad_IDE\Sublime\BMC_TPL_IDE\bmc_tplpre\tplint
-D:\perforce\addm\tkn_sandbox\o.danylchenko\projects\Notepad_IDE\Sublime\BMC_TPL_IDE\bmc_tplpre\step.log
-D:\perforce\addm\tkn_sandbox\o.danylchenko\projects\Notepad_IDE\Sublime\BMC_TPL_IDE\bmc_tplpre\check.log
 step.log
-check.log
 *.log
 *.pyc
 */__pycache__
@@ -29,7 +22,4 @@ bmc_tplpre/check/__pycache__/syntax_checker.cpython-34.pyc
 bmc_tplpre/check/__pycache__/preproc.cpython-34.pyc
 bmc_tplpre/check/__pycache__/parse_args.cpython-34.pyc
 bmc_tplpre/check/__pycache__/__init__.cpython-34.pyc
-*.pyc
-*.pyc
-*.pyc
 bmc_tplpre/DEV_TEST/old_global_logic.py

@@ -23,10 +23,10 @@ import os
 class SyntaxCheck:
     """
         Verify if tplint is present on current system.
-        If not - use something another to check common errors and typos in tpl\tplpre files.
+        If not - use something another to check common errors and typos in tpl\\tplpre files.
         to be continued...
 
-        If tplpint is present - use arg from ask_addm to compare the version of tpl which addm support.
+        If tplint is present - use arg from ask_addm to compare the version of tpl which addm support.
         Run check.
     """
 
@@ -58,8 +58,7 @@ class SyntaxCheck:
         Until tplint updated - it can check syntax only for max version 10.2.
 
         :param disco_ver: str
-        :param tpl_mod_dir: Place where tplint is situated. By default it should be place where TPL language module lies.
-        :param working_dir:
+        :param working_dir: str
         :return:
         """
         log = self.logging
@@ -75,7 +74,7 @@ class SyntaxCheck:
         log.debug("Syntax: Will check all files in path: " + str(working_dir))
 
         if disco_ver not in self.SYNTAX_SUPPORTED:
-            log.warn("NOTE: tplint was updated in 2016 last time, "
+            log.info("NOTE: tplint was updated in 2016 last time, "
                      "so we can use only version which is not greater then 11.0")
             disco_ver = 11.0
 
@@ -84,7 +83,7 @@ class SyntaxCheck:
                       " --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
 
             open_path = subprocess.Popen('"' + tpl_mod_dir + '\\tplint\\tplint.exe"'
-                                                             ' --discovery-versions='+str(disco_ver)+
+                                                             ' --discovery-versions='+str(disco_ver) +
                                                              ' --loglevel=WARN'
                                                              ' -t "'+tpl_mod_dir+'\\taxonomy\\00taxonomy.xml"',
                                          cwd=working_dir, stdout=subprocess.PIPE)
@@ -101,19 +100,21 @@ class SyntaxCheck:
 
         except:
             log.error("Syntax: Tplint cannot run, check if working dir is present!")
-            log.error("Syntax: Tplint use path: " +tpl_mod_dir)
+            log.error("Syntax: Tplint use path: " + tpl_mod_dir)
 
         return syntax_passed
 
-    def parse_syntax_result(self, result):
+    @staticmethod
+    def parse_syntax_result(result):
         """
         This will output errors in STDERR for tplint only.
 
         :param result:
         :return:
         """
-        log = self.logging
-        match_result = re.compile("(?P<error>\w+\s\w+) at or near '(?P<near>\S+)', line (?P<line>\d+), in (?P<module>\S+)")
+        # log = self.logging
+        match_result = re.compile("(?P<error>\w+\s\w+) at or near"
+                                  " '(?P<near>\S+)', line (?P<line>\d+), in (?P<module>\S+)")
         used_mod_re = re.compile("Module:\s(\S+)\s\s+Errors:")
         error_re = re.compile("Errors:\s+(.*)\sat\sor\snear ")
 

@@ -12,60 +12,93 @@ import shutil
 import stat
 
 
-# DEBUG
-import json
-from pprint import pformat
-
-
 class TPLimports:
-
-    """
-    New logic of imports will be used:
-
-    DEV:
-
-        Step 1: List patterns in current folder of active pattern.
-        Step 1.1 - Step 1.2: Read patterns from current folders and extract import modules and pattern modules.
-                  Add import modules to list which will be used for finding in extra places.
-                  Add pattern modules to list which will be used to compare if we found and know this module already.
-        Step 1.3: Use list of found import modules from read pattern (Step 1.2) and start searching in extra places.
-
-
-        Round: 1 - of recursive searching patterns.
-
-            Step 2:   Searching modules from each found pattern from Step 1.
-            Step 2.1: Before execute search in read_pattern - make list of patterns from all folders from extra_folders.
-                      Search in each pattern from list of patterns.
-            Step 2.2: Add import modules to list which will be used for finding in extra places in next round.
-                      Add pattern modules to list which will be used to compare if we found and know this module already.
-            Step 2:   in while execution:
-                      Compare found module items with list of pattern modules which was already found and remove it match.
-
-        Round: 2 - of recursive searching patterns.
-            Repeat execution with vars from Round 1
-
-        Round: 3 - of recursive searching patterns.
-            Repeat execution with vars from Round 2
-            Break the loop 'while < 3'
-
-        Step 3: Show list of modules which wasn't found anywhere during 3 rounds in log warn.
-        Step 3.1: Show list of found modules and path to patterns in log debug.
-
-        Step 4: Wiping 'imports' folder before add new imports in it.
-            Step 4.1 If folder cannot be wiped - show warning log.
-
-        Step 5: Create 'imports' folder if isn't exist.
-        Step 5.1: Copy pattern to imports folder and show debug log with path to copied pattern.
-
-    Customer:
-
-
-    """
 
     def __init__(self, logging, full_path_args):
 
         """
         Initialize with startup set of arguments.
+
+
+        DEV:
+
+            Step 1: List patterns in current folder of active pattern.
+            Step 1.1 - Step 1.2: Read patterns from current folders and extract import modules and pattern modules.
+                      Add import modules to list which will be used for finding in extra places.
+                      Add pattern modules to list which will be used to
+                      compare if we found and know this module already.
+            Step 1.3: Use list of found import modules from read pattern (Step 1.2) and start searching in extra places.
+
+
+            Round: 1 - of recursive searching patterns.
+
+                Step 2:   Searching modules from each found pattern from Step 1.
+                Step 2.1: Before execute search in read_pattern - make list of patterns
+                from all folders from extra_folders.
+                          Search in each pattern from list of patterns.
+                Step 2.2: Add import modules to list which will be used for finding in extra places in next round.
+                          Add pattern modules to list which will be used to compare if we found and
+                          know this module already.
+                Step 2:   in while execution:
+                          Compare found module items with list of pattern modules which was already
+                          found and remove it match.
+
+            Round: 2 - of recursive searching patterns.
+                Repeat execution with vars from Round 1
+
+            Round: 3 - of recursive searching patterns.
+                Repeat execution with vars from Round 2
+                Break the loop 'while < 3'
+
+            Step 3: Show list of modules which wasn't found anywhere during 3 rounds in log warn.
+            Step 3.1: Show list of found modules and path to patterns in log debug.
+
+            Step 4: Wiping 'imports' folder before add new imports in it.
+                Step 4.1 If folder cannot be wiped - show warning log.
+
+            Step 5: Create 'imports' folder if isn't exist.
+            Step 5.1: Copy pattern to imports folder and show debug log with path to copied pattern.
+
+        Customer:
+            Same steps but with paths in TKU Update and tpl files.
+
+            Example:
+                conditions: {
+                    "local_conditions": {
+                        "BLADE_ENCLOSURE_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
+                        "buildscripts_t": "",
+                        "DBDETAILS_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+",
+                        "tkn_sandbox_t": "",
+                        "working_dir": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-Core-2017-07-1-ADDM-11.1+",
+                        "LOAD_BALANCER_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-LoadBalancer-2017-07-1-ADDM-11.1+",
+                        "CLOUD_t": "",
+                        "STORAGE_t": "",
+                        "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
+                        "environment_condition": "customer_tku",
+                        "SYSTEM_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-System-2017-07-1-ADDM-11.1+",
+                        # "SupportingFiles_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-Core-2017-07-1-ADDM-11.1+",
+                        "file_name": "BMCRemedyARSystem",
+                        "MIDDLEWAREDETAILS_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+",
+                        "file_ext": "tpl",
+                        "tkn_main_t": "",
+                        "full_path": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-Core-2017-07-1-ADDM-11.1+\\BMCRemedyARSystem.tpl",
+                        "CORE_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                        TKU-Core-2017-07-1-ADDM-11.1+",
+                        "MANAGEMENT_CONTROLLERS_t": "D:\\custom_path\\TKU\\
+                        Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+",
+                        "tku_patterns_t": "",
+                        "workspace": "D:\\custom_path\\TKU"
+                    }
+                }
+
 
 
         :param logging: inherited log class
@@ -95,44 +128,17 @@ class TPLimports:
 
     def import_modules(self, **conditions):
         """
-        Separate way to imports when customer condition confirmed and files are tpl.
-
-        Example:
-            conditions: {
-                "local_conditions": {
-                    "BLADE_ENCLOSURE_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
-                    "buildscripts_t": "",
-                    "DBDETAILS_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+",
-                    "tkn_sandbox_t": "",
-                    "working_dir": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+",
-                    "LOAD_BALANCER_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-LoadBalancer-2017-07-1-ADDM-11.1+",
-                    "CLOUD_t": "",
-                    "STORAGE_t": "",
-                    "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
-                    "environment_condition": "customer_tku",
-                    "SYSTEM_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-System-2017-07-1-ADDM-11.1+",
-                    # "SupportingFiles_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+",
-                    "file_name": "BMCRemedyARSystem",
-                    "MIDDLEWAREDETAILS_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+",
-                    "file_ext": "tpl",
-                    "tkn_main_t": "",
-                    "full_path": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+\\BMCRemedyARSystem.tpl",
-                    "CORE_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+",
-                    "MANAGEMENT_CONTROLLERS_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+",
-                    "tku_patterns_t": "",
-                    "workspace": "D:\\custom_path\\TKU"
-                }
-            }
+        Import modules.
+        Based on conditional args it can import tpl for customer or tplre for dev.
+        Get full paths to each extra folders from args.
 
         :param conditions: set - this is set of options from full_paths parse. Example above.
         :return: nothing - just execute imports.
         """
         log = self.logging
 
-        # print(""+str(json.dumps(conditions, indent=4, ensure_ascii=False, default=pformat)))
-
         local_cond = conditions['conditions']['local_conditions']
-        env_mode = conditions['conditions']['local_conditions']['environment_condition']
+        env_mode   = conditions['conditions']['local_conditions']['environment_condition']
 
         log.debug("Step 1. Starting import functions. Read pattern: "+str(local_cond['file_name']))
 
@@ -149,6 +155,7 @@ class TPLimports:
                               'STORAGE_t']
 
         # Extracting matched folders from 'local_conditions':
+        # Making list of all possible pattern paths and then search through them all for imports.
         for folder_key in extra_folders_keys:
             if local_cond[folder_key]:
                 extra_folder = local_cond[folder_key]
@@ -158,14 +165,15 @@ class TPLimports:
                     if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
                         extra_folders.append(extra_folder)
                     else:
-                        log.warn("Step 1.1 This extra path is not exist - nothing will be imported from there: "+str(extra_folder))
+                        log.warn("Step 1.1 This extra path is not exist - "
+                                 "nothing will be imported from there: "+str(extra_folder))
             else:
                 log.info("Be aware that this folder key is not exist and "
                          "I can't extract patterns from corresponded path: "+str(folder_key))
 
         current_modules_name = []  # Modules from KNOWN and FOUND and CURRENT.
         find_importing_modules = []  # Modules which I should found.
-        # Include current active pattern in search in rev mode will add also tplre files from pattern folder.
+        # Include current active pattern in search in DEV mode will add also tplre files from pattern folder.
         pattern_path_list = [local_cond['full_path']]
 
         # This mode executes only when I working in tplre development paths:
@@ -192,10 +200,10 @@ class TPLimports:
         log.debug("Step 2. Modules from current active pattern are: "+str(find_importing_modules))
 
         # After first read of modules - start recoursive search and read for all modules until found each:
-        self.recursive_imports(current_modules_name=current_modules_name,
-                               find_importing_modules=find_importing_modules,
-                               extra_folders=extra_folders,
-                               env_mode=env_mode)
+        self.recursive_imports(current_modules_name   = current_modules_name,
+                               find_importing_modules = find_importing_modules,
+                               extra_folders          = extra_folders,
+                               env_mode               = env_mode)
 
     def recursive_imports(self, **importing_set_options):
         """
@@ -236,7 +244,8 @@ class TPLimports:
                 ],
                 "current_modules_name": [
                     {
-                        "path": "D:\\customer_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+\\BMCRemedyARSystem.tpl",
+                        "path": "D:\\customer_path\\TKU\\
+                        Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+\\BMCRemedyARSystem.tpl",
                         "module": "module BMC.RemedyARSystem"
                     }
                 ]
@@ -268,9 +277,9 @@ class TPLimports:
                           "Step 1 : "+str(find_importing_modules))
 
                 # Step 4. - Find modules which left in list - in other folders including CORE:
-                find_2, current_2 = self.search_in_path(file_candidates=all_patterns_list,
-                                                        find_importing_modules=find_importing_modules,
-                                                        current_modules_name=current_modules_name)
+                find_2, current_2 = self.search_in_path(file_candidates        = all_patterns_list,
+                                                        find_importing_modules = find_importing_modules,
+                                                        current_modules_name   = current_modules_name)
                 find_importing_modules = find_2
                 current_modules_name = current_2
 
@@ -307,9 +316,7 @@ class TPLimports:
                     from list of [current_modules_name]
 
         current_pattern_dict = {'module': 'module BMC.RemedyARSystem',
-                                'path': 'D:\\..\\..\\..\\..\\..\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'}
-
-
+                                'path': 'D:\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'}
 
         :param pattern_path_list: list of patterns to read in.
         :param find_importing_modules: incoming list of modules I need to find
@@ -320,26 +327,26 @@ class TPLimports:
 
         if pattern_path_list:
             log.debug('Step 1.2. List of patterns to read: '+str(pattern_path_list))
-
             for pattern in pattern_path_list:
-
                 with open(pattern) as f:
                     read_file = f.read(2024)  # About 60+ lines from the beginning of pattern
 
                 pattern_import = self.pattern_import_all_r.findall(read_file)
                 current_pattern_module = self.pattern_module_name_r.findall(read_file)
 
-                # When any imports were found in pattern file add each to list and later find them:
+                # When any imports were found in pattern file - add each to list and later find them:
                 if pattern_import:
                     for pattern_module in pattern_import:
                         imports_line = "module " + pattern_module
                         if imports_line not in find_importing_modules:
                             find_importing_modules.append(imports_line)
 
-                # Module name of currently read pattern is adding to list also to compare with already imported:
+                # Module name of currently read pattern was added to list also, to compare with already imported:
                 if current_pattern_module:
                     current_module = "module " + current_pattern_module[0]
-                    current_pattern_dict = {'module': current_module, 'path': pattern}
+                    current_pattern_dict = dict(module = current_module,
+                                                path   = pattern)
+
                     if current_pattern_dict not in current_modules_name:
                         current_modules_name.append(current_pattern_dict)
                 else:
@@ -354,6 +361,9 @@ class TPLimports:
         """
         Composing path to each pattern file in working directories or workspace.
         Then I will search modules to import through this list.
+
+        This function looks odd, but I need to be sure I can walk each 1st level folders for each in tkn tree
+        And the same variant should be used for customer - so I can have one module for both scenarios.
 
         :param search_path: list
         :type env_mode: str
@@ -423,14 +433,12 @@ class TPLimports:
         Add found patterns to [current_modules_name]
 
         current_modules_name = [{'module': 'module BMC.RemedyARSystem',
-                                 'path': 'D:\\..\\..\\..\\..\\..\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
+                                 'path': 'D:\\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
         find_importing_modules = ['module Something.Some', 'module Doooooodidoo']
 
-        :param file_candidates:
-        :param env_mode: str
+        :param file_candidates: list
         :param current_modules_name: list of module:pattern dicts I found
         :param find_importing_modules: list input with modules which I need to find
-        :type search_path: path to folder where to search imports
         :return: list
         """
 
@@ -451,7 +459,8 @@ class TPLimports:
                 # When module name were found in opened file add each to list and later find them:
                 if check_modules:
                     # Make dict as  current_modules_name
-                    current_pattern_dict = {'module': pattern_module, 'path': file}
+                    current_pattern_dict = dict(module = pattern_module,
+                                                path   = file)
                     if current_pattern_dict not in current_modules_name:
 
                         # Clear Readonly flag before copying:
@@ -487,7 +496,7 @@ class TPLimports:
             :param working_dir: string pattern folder
             :param patterns_path:
                     [{'module': 'module BMC.RemedyARSystem',
-                    'path': 'D:\\..\\..\\..\\..\\..\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
+                    'path': 'D:\\\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
             :return:
         """
 
@@ -507,7 +516,8 @@ class TPLimports:
                 os.chmod(pattern_path, stat.S_IWRITE)
                 shutil.copy2(pattern_path, imports_folder)
 
-                log.debug("Step 5.1 Copy to imports folder and clear read-only flag for pattern: " + str(pattern['path']))
+                log.debug("Step 5.1 Copy to imports folder and "
+                          "clear read-only flag for pattern: " + str(pattern['path']))
 
     # Service functions:
     def list_folder(self, folder_path):
@@ -515,7 +525,7 @@ class TPLimports:
         Get working_dir content to find all
         Only for DEV scenario - because we have cases with two patterns in one folder.
 
-        ['D:\\..\\..\\..\\..\\..\\FakePattern_folder\\FAKEPatternFileLiesHere.tplpre']
+        ['D:\\FakePattern_folder\\FAKEPatternFileLiesHere.tplpre']
         :param folder_path: str
         :return: list
         """

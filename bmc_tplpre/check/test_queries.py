@@ -8,7 +8,6 @@ Allows you to automate usual routine in pattern development.
 import os
 import ast
 import re
-import sys
 
 
 class TestRead:
@@ -41,10 +40,10 @@ class TestRead:
             try:
                 raw_test_content = raw_test_py.read()
                 test_tree = ast.parse(raw_test_content)
+                return test_tree
             except UnicodeDecodeError as unicode_err:
                 log.critical("Error: Unable to parse {!r}".format(str(unicode_err)))
 
-            return test_tree
         else:
             log.warn("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
 
@@ -75,9 +74,10 @@ class TestRead:
             if pattern_import_test:
                 full_test_patterns_path = self.test_patterns_list(pattern_import_test, working_dir, tku_patterns)
 
-            return full_test_patterns_path
+                return full_test_patterns_path
         else:
-            log.warn("Cannot get test patterns. File test.py is not found or not readable in this path: "+str(working_dir))
+            log.warn("Cannot get test patterns. "
+                     "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def query_pattern_tests(self, working_dir):
         """
@@ -117,7 +117,8 @@ class TestRead:
                                 When query has two or more binary options:
                                 MEGA_QUERY = NULL_QUERY_2 + GENERAL_QUERY + SMART_QUERY + NULL_QUERY_1
     
-                                Will try to parse it later, after making some kind of construction to get all vars on right order.
+                                Will try to parse it later, after making 
+                                some kind of construction to get all vars on right order.
                                 https://ruslanspivak.com/lsbasi-part7/
                             '''
                             # if isinstance(item.value, ast.BinOp):
@@ -125,12 +126,14 @@ class TestRead:
                             #     log.debug("This is Binary Options. I do not parse it now, sorry. " + str(operators))
             return query_list
         else:
-            log.warn("Cannot get test queries. File test.py is not found or not readable in this path: "+str(working_dir))
+            log.warn("Cannot get test queries. "
+                     "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def test_patterns_list(self, setup_patterns, working_dir, tku_patterns):
         """
         Get raw list 'self.setupPatterns' from test.py and make it full path to each pattern
 
+        :param tku_patterns: list
         :param setup_patterns: raw list of pattern items from test.py
         :param working_dir: working dir of current pattern
         :return:

@@ -8,7 +8,6 @@ Allows you to automate usual routine in pattern development.
 
 import os
 import re
-import sys
 import subprocess
 import datetime
 
@@ -63,6 +62,7 @@ class Preproc:
         2. If NOT - run only on current file.
 
 
+        :param workspace: str
         :param input_path:  What to preproc file\folder
         :param output_path: Where to output pattern folder or imports folder
         :param mode: imports \ recursise imports
@@ -78,7 +78,7 @@ class Preproc:
 
         tpl_preproc = False
         python_v = "C:\\Python27\\python.exe"
-        log.debug("Using TPLPreprocessor from: " + str(t_pre))
+        # log.debug("Using TPLPreprocessor from: " + str(t_pre))
 
         if mode == "usual_imports":
             log.info("python2.7 : TPLPreprocessor run on one file: " + input_path)
@@ -97,33 +97,38 @@ class Preproc:
                             for file in tpl_result_files:
                                 file_time = os.path.getmtime(output_path+os.sep+folder+os.sep+file)
                                 now = datetime.datetime.now()
-                                ago = now - datetime.timedelta(minutes=15)
+                                ago = now - datetime.timedelta(minutes=5)
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
                                 if file_time_stamp < ago:
-                                    log.warn("TPLPreprocessor result files looks like older that 15 min. Please check: + "
-                                             + str(file_time_stamp))
+                                    log.warn("TPLPreprocessor result files looks like older that 5 min. "
+                                             "Please check: " + str(file_time_stamp))
                                 if file_time_stamp > ago:
                                     log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True
-                                    break  # Probably no need to check each folder, if one is recent, then Preproc was run.
+                                # Probably no need to check each folder, if one is recent, then Preproc was run.
+                                break
+                            break
                     if tpl_preproc:
                         log.debug("TPLPreprocessor success: " + output_path)
                 except:
-                    log.error("TPL_Preprocessor won't run! Check paths, user rights and logs. Try to execute preproc from cmd.")
+                    log.error("TPL_Preprocessor won't run! "
+                              "Check paths, user rights and logs. Try to execute preproc from cmd.")
             else:
                 log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
 
         elif mode == "recursive_imports":
-        # NO IMPORTS - run on folder
+            # NO IMPORTS - run on folder
             log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + input_path)
-            log.debug("Running in recursive_imports mode! Which means - it will process all files found in working folder.")
+            log.debug("Running in recursive_imports mode! "
+                      "It means - will process all files found in working folder.")
             if os.path.exists(input_path):
                 try:
                     run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -d "' + input_path + '"',
                                                    stdout=subprocess.PIPE)
                     run_preproc.wait()  # wait until command finished
-                    result = run_preproc.stdout.read().decode()
-                    # print(result)
+
+                    # result = run_preproc.stdout.read().decode()
+
                     folder_content = os.listdir(output_path)
                     for folder in folder_content:
                         if re.match("tpl\d+", folder) is not None:
@@ -134,17 +139,24 @@ class Preproc:
                                 now = datetime.datetime.now()
                                 ago = now - datetime.timedelta(minutes=15)
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
+
                                 if file_time_stamp < ago:
-                                    log.warn("TPLPreprocessor result files looks like older that 15 min. Please check: + "
-                                             + str(file_time_stamp))
+
+                                    log.warn("TPLPreprocessor result files looks like older that 15 min. "
+                                             "Please check: " + str(file_time_stamp))
+
                                 if file_time_stamp > ago:
+
                                     log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True
-                                    break  # Probably no need to check each folder, if one is recent, then Preproc was run.
+                                # Probably no need to check each folder, if one is recent, then Preproc was run.
+                                break
+                            break
                     if tpl_preproc:
                         log.debug("TPLPreprocessor success: " + output_path)
                 except:
-                    log.error("TPL_Preprocessor won't run! Check paths, user rights and logs. Try to execute preproc from cmd.")
+                    log.error("TPL_Preprocessor won't run! "
+                              "Check paths, user rights and logs. Try to execute preproc from cmd.")
             else:
                 log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
 
@@ -157,7 +169,9 @@ class Preproc:
                     run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -f "' + input_path + '"',
                                                    stdout=subprocess.PIPE)
                     run_preproc.wait()  # wait until command finished
-                    result = run_preproc.stdout.read().decode()
+
+                    # result = run_preproc.stdout.read().decode()
+
                     folder_content = os.listdir(output_path)
                     for folder in folder_content:
                         if re.match("tpl\d+", folder) is not None:
@@ -169,135 +183,20 @@ class Preproc:
                                 ago = now - datetime.timedelta(minutes=15)
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
                                 if file_time_stamp < ago:
-                                    log.warn("TPLPreprocessor result files looks like older that 15 min. Please check: + "
-                                             + str(file_time_stamp))
+                                    log.warn("TPLPreprocessor result files looks like older that 15 min. "
+                                             "Please check: " + str(file_time_stamp))
                                 if file_time_stamp > ago:
                                     log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True
-                                    break  # Probably no need to check each folder, if one is recent, then Preproc was run.
+                                # Probably no need to check each folder, if one is recent, then Preproc was run.
+                                break
+                            break
                     if tpl_preproc:
                         log.debug("TPLPreprocessor success: " + output_path)
                 except:
-                    log.error("TPL_Preprocessor won't run! Check paths, user rights and logs. Try to execute preproc from cmd.")
+                    log.error("TPL_Preprocessor won't run! "
+                              "Check paths, user rights and logs. Try to execute preproc from cmd.")
             else:
                 log.error("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
 
         return tpl_preproc
-
-# DEPRECATED:
-    def read_tplpreprocessor(self, tpl_preproc_dir):
-        """
-
-        Will try to import class TPLPreprocessor and use it as normal py module;
-         - https://stackoverflow.com/questions/42171786/import-class-from-another-directory
-        Get from it some args;
-
-        Some args:
-
-            knownADDMVersions
-            knownTPLVersions
-            previouslySupportedTPLVersions
-            supportedTPLVersions
-            supportedADDMVersions
-
-        :return:
-        """
-
-        log = self.logging
-
-        if tpl_preproc_dir:
-            log.debug("TPLPreprocessor.py is on place - continue..." + str(tpl_preproc_dir))
-
-            import sys
-            sys.path.insert(1, os.path.join(sys.path[0], tpl_preproc_dir))
-
-            from TPLPreprocessor import TPLPreprocessor
-            from TPLPreprocessor import main
-
-            # TPLPreprocessor()
-            tpl_preprocessor_class = TPLPreprocessor()
-            tpl_preprocessor_main = main
-
-            known_addm_ver = tpl_preprocessor_class.knownADDMVersions
-            known_tpl_ver = tpl_preprocessor_class.knownTPLVersions
-
-            supported_addm_ver = tpl_preprocessor_class.supportedTPLVersions
-            supported_tpl_ver = tpl_preprocessor_class.supportedADDMVersions
-
-            log.info("TPLPreprocessor knownADDMVersions: " + str(known_addm_ver))
-            log.info("TPLPreprocessor knownTPLVersions: " + str(known_tpl_ver))
-
-            log.info("TPLPreprocessor supportedTPLVersions: " + str(supported_addm_ver))
-            log.info("TPLPreprocessor supportedADDMVersions: " + str(supported_tpl_ver))
-
-            return tpl_preprocessor_class, tpl_preprocessor_main, supported_addm_ver, supported_tpl_ver
-
-        else:
-            log.warn("There is no TPLPreprocessor.py file found. Please check it in path: " + tpl_preproc_dir)
-
-    def tpl_preprocessor_new(self, tpl_preproc_py, tpl_preprocessor_obj, full_path_args_dict):
-        """
-        :param tpl_preproc_py: TPLPreprocessor.py
-        :param tpl_preprocessor_obj: imported TPLPreprocessor instance.
-        :type full_path_args_dict: dict of previously parsed settings from full pattern path.
-        """
-
-        log = self.logging
-
-        args = full_path_args_dict
-        tpl_preprocessor_work_path = args['working_dir']
-        tpl_preprocessor_output_path = args['working_dir']
-        single_pattern_path = args['working_dir'] + os.sep + args['file_name'] + "." + args['file_ext']
-
-        log.debug("single_pattern_path: " + single_pattern_path)
-
-        args_string = "-d " + tpl_preprocessor_work_path + "-o " + tpl_preprocessor_output_path
-
-        # g = {'preproc_py': tpl_preproc_py, 'proposedHomeDirectory': tpl_preprocessor_work_path}
-        g = {'TEST': tpl_preprocessor_work_path,
-             'self.tplpreFileFullPaths': tpl_preprocessor_work_path,
-             '__name__': '__main__',
-             'sys': sys,
-             'os': os}
-        l = {'TEST': tpl_preprocessor_work_path, 'self.tplpreFileFullPaths': tpl_preprocessor_work_path, '__name__':'__main__'}
-
-        # g = {'preproc_py': tpl_preproc_py, 'argv': args_string}
-        # l = {'preproc_py': tpl_preproc_py, 'proposedHomeDirectory': tpl_preprocessor_work_path}
-
-        preproc_read = open(tpl_preproc_py).read()
-        exec(preproc_read, g, {})
-
-        # if tpl_preprocessor_obj:
-        #
-        #     log.debug("TPLPreprocessor is ready to run.")
-        #     log.debug("TPLPreprocessor is imported as: " + str(type(tpl_preprocessor_obj)))
-        #
-        #     if tpl_preprocessor_work_path:
-        #
-        #         log.debug("tpl_preprocessor_work_path: " + tpl_preprocessor_work_path)
-        #
-        #         if tpl_preprocessor_output_path:
-        #
-        #             log.info("TPLPreprocessor output directory is set. Will see tpl files in there.")
-        #             log.debug("tpl_preprocessor_output_path: " + tpl_preprocessor_output_path)
-        #
-        #             import sys
-        #             # tpl_preprocessor_obj.initialise(sys.argv["-d" + tpl_preprocessor_work_path])
-        #             # tpl_preprocessor_obj.initialise(sys.argv[1])
-        #             # tpl_preprocessor_obj.initialise("-h")
-        #             # tpl_preprocessor_obj.main(arg1, arg2)
-        #             sys.argv = []
-        #             # sys.argv.append("-h")
-        #             # sys.argv.append(tpl_preproc_dir+"TPLPreprocessor.py")
-        #             # sys.argv.append('-d '+tpl_preprocessor_work_path)
-        #             # sys.argv.append('-o '+tpl_preprocessor_work_path)
-        #             tpl_preprocessor_obj.tplpreFileFullPaths = [single_pattern_path]
-        #             log.debug("tpl_preprocessor_obj.tplpreFileFullPaths: " + str(tpl_preprocessor_obj.tplpreFileFullPaths))
-        #             tpl_preprocessor_obj()
-        #
-        #         else:
-        #             log.info("TPLPreprocessor output directory is not set. WIll output in current file path.")
-        #     else:
-        #         log.warn("TPLPreprocessor wouldn't run without path to file or folder with .tplpre file(s)")
-        # else:
-        #     log.warn("TPLPreprocessor is probably was not imported correctly.")

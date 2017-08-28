@@ -9,36 +9,37 @@ import hashlib
 import re
 
 
-'''
-1. If syntax_passed = True AND tpl_preproc = True AND addm_host ip in args - start this (input)
-2. If there is no pattern file situated BUT working dir - make zip of dir content *.tpl
-    with correspond tpl ver from Tplpreproc folders
-3. Open SSH session \ Save opened
-
-IF not 'dev_vm_check': True:
-    Programm will try to upload package via SFTP
-
-    3.1 Check upload folder \ Create if no folder found \ Wipe if any old file found
-    3.2 Check pattern or zip in filesystem AND start upload to ADDM
-    3.1 Check upload completed (pattern or zip) and run --install-activate
-
-IF 'dev_vm_check': True:
-    Nothing will be uploaded via SFTP because there is a local share found.
-
-    3.1 Compose path from local pattern to same remote in dev.
-    3.1 Execute ssh command with path as remote share to pattern package and activate 
-    
-Idea:
-    3.1.1 Try to deactivate unused modules - IDEA
-
-4 When activate finished - return result (pass \ fail) - (output)
-
-'''
-
-
 class AddmOperations:
 
     def __init__(self, logging, ssh):
+        """
+
+        1. If syntax_passed = True AND tpl_preproc = True AND addm_host ip in args - start this (input)
+        2. If there is no pattern file situated BUT working dir - make zip of dir content *.tpl
+            with correspond tpl ver from Tplpreproc folders
+        3. Open SSH session \ Save opened
+
+        IF not 'dev_vm_check': True:
+            Programm will try to upload package via SFTP
+
+            3.1 Check upload folder \ Create if no folder found \ Wipe if any old file found
+            3.2 Check pattern or zip in filesystem AND start upload to ADDM
+            3.1 Check upload completed (pattern or zip) and run --install-activate
+
+        IF 'dev_vm_check': True:
+            Nothing will be uploaded via SFTP because there is a local share found.
+
+            3.1 Compose path from local pattern to same remote in dev.
+            3.1 Execute ssh command with path as remote share to pattern package and activate
+
+        Idea:
+            3.1.1 Try to deactivate unused modules - IDEA
+
+        4 When activate finished - return result (pass \ fail) - (output)
+
+        :param logging: func
+        :param ssh: func
+        """
         # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
 
         self.logging = logging
@@ -78,7 +79,7 @@ class AddmOperations:
 
         return file_check
 
-    def activate_knowledge(self, zip_path, module_name):
+    def activate_knowledge(self, zip_path, module_name, system_user, system_password):
         """
         Give it path where zip folder can be:
             - for dev_vm - mirror FS
@@ -87,7 +88,8 @@ class AddmOperations:
         Nothing to delete REMOTELY.
         Wipe only old zip LOCALLY!
 
-        ['Uploaded /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/BMCRemedyARSystem/imports/tpl113/BMCRemedyARSystem.zip as "BMCRemedyARSystem upload 10"\n',
+        ['Uploaded /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/
+                    PatternFolder/imports/tpl113/PatternFile.zip as "PatternFile upload 10"\n',
          'Failed to activate 1 knowledge upload\n',
          'Pattern module BMC.RemedyARSystem\n',
          '\tErrors:\n',
@@ -98,6 +100,8 @@ class AddmOperations:
          '\n']
 
 
+        :param system_password: str
+        :param system_user: str
         :param zip_path: Path to zip with patterns uploaded or mirrored
         :param module_name: Name of pattern folder
         """
@@ -110,8 +114,10 @@ class AddmOperations:
         self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
         log.info("Installing and activating pattern modules.")
 
-        _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management -p system "
-                                                       "--install-activate "+str(zip_path))
+        _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management"
+                                                       " -u " + system_user +
+                                                       " -p " + system_password +
+                                                       " --install-activate "+str(zip_path))
 
         # TODO: Is there a way to draw a progress bar until it activating?
         if stdout:
@@ -141,11 +147,11 @@ class AddmOperations:
         Check the file sum to ensure it was downloaded successfully.
 
         Pattern:
-        output_ok = ['be890ee8bee5f136ca10c03095e8ad60  /usr/tideway/TKU/Tpl_DEV/BMCRemedyARSystem.tpl\n']
+        output_ok = ['be890ee8bee5f136ca10c03095e8ad60  /usr/tideway/TKU/Tpl_DEV/PatternFile.tpl\n']
         local_hash5 = be890ee8bee5f136ca10c03095e8ad60
 
         zip:
-        output_ok = ['cc625d0ae7ea33885b6c1e7f67bcbf84  /usr/tideway/TKU/Tpl_DEV/BMCRemedyARSystem.zip\n']
+        output_ok = ['cc625d0ae7ea33885b6c1e7f67bcbf84  /usr/tideway/TKU/Tpl_DEV/PatternFile.zip\n']
         local_hash5 = cc625d0ae7ea33885b6c1e7f67bcbf84
 
         :param remote_file: file on ADDM

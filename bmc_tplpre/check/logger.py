@@ -21,31 +21,30 @@ class Logger:
         Used for python standard logging module.
         Check for typos and handle them.
 
-        :param log_lvl: Input from args  # info, quiet, warn, debug, output, error
         :return: proper level for use in logger
         """
 
         if self.log_lvl:
             if "info" in self.log_lvl:
-                return Logger.i_log(self, level='INFO')
+                return Logger.i_log(level='INFO')
             elif "warn" in self.log_lvl:
-                return Logger.i_log(self, level='WARN')
+                return Logger.i_log(level='WARN')
             elif "error" in self.log_lvl:
-                return Logger.i_log(self, level='ERROR')
+                return Logger.i_log(level='ERROR')
             elif "critical" in self.log_lvl:
-                return Logger.i_log(self, level='CRITICAL')
+                return Logger.i_log(level='CRITICAL')
             elif "debug" in self.log_lvl:
-                return Logger.i_log(self, level='DEBUG')
+                return Logger.i_log(level='DEBUG')
             else:
-                return Logger.i_log(self, level='INFO')
+                return Logger.i_log(level='INFO')
         else:
-            return Logger.i_log(self, level='DEBUG')
+            return Logger.i_log(level='DEBUG')
 
-    def i_log(self, level):
+    @staticmethod
+    def i_log(level):
         """
 
         :param level: logging level
-        :param name: Name of working in class\function
         :return:
         """
 
@@ -69,26 +68,26 @@ class Logger:
         con_extra_handler.setLevel(logging.DEBUG)
 
         file_formatter = logging.Formatter('%(asctime)-24s'
-                                                '%(levelname)-8s '
-                                                ' - %(message)-8s')
+                                           '%(levelname)-8s '
+                                           ' - %(message)-8s')
 
         console_formatter = logging.Formatter('%(asctime)-24s'
-                                                   '%(levelname)-9s'
-                                                   '%(message)8s')
+                                              '%(levelname)-9s'
+                                              '%(message)8s')
 
         file_extra_formatter = logging.Formatter('%(asctime)-24s'
-                                                      '%(levelname)-8s '
-                                                      '%(name)-21s'
-                                                      '%(filename)-18s'
-                                                      '%(funcName)-28s'
-                                                      'Line:%(lineno)-6s'
-                                                      ' - %(message)-8s')
+                                                 '%(levelname)-8s '
+                                                 '%(name)-21s'
+                                                 '%(filename)-18s'
+                                                 '%(funcName)-28s'
+                                                 'Line:%(lineno)-6s'
+                                                 ' - %(message)-8s')
 
         con_extra_formatter = logging.Formatter('%(asctime)-24s'
-                                                     '%(levelname)-9s'
-                                                     '%(funcName)-28s'
-                                                     'Line:%(lineno)-6s'
-                                                     '%(message)8s')
+                                                '%(levelname)-9s'
+                                                '%(funcName)-28s'
+                                                'Line:%(lineno)-6s'
+                                                '%(message)8s')
 
         file_handler.setFormatter(file_formatter)
         console_handler.setFormatter(console_formatter)
