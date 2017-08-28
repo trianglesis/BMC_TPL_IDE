@@ -293,6 +293,7 @@ class ArgsParse:
 
         if known_args.read_test and known_args.recursive_import:
             read_test = True
+            recursive_imports = True
             oper_args_set = {
                 'recursive_imports': recursive_imports,
                 'usual_imports': usual_imports,
@@ -316,6 +317,13 @@ class ArgsParse:
             }
 
         elif known_args.usual_import and known_args.recursive_import:
-            log.warn("You cannot add two import scenarios in one run. Please choose only one.")
+            log.warn("You cannot add two import scenarios in one run. Please choose only one. "
+                     "But I will run usual_imports by default.")
+            usual_imports = True
+            oper_args_set = {
+                'recursive_imports': recursive_imports,
+                'usual_imports': usual_imports,
+                'read_test': read_test,
+            }
 
         return oper_args_set

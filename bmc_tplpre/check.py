@@ -102,8 +102,7 @@ common.add_argument('--version',
                     version='%(prog)s 1.0')
 
 known_args, extra_args = parser.parse_known_args()
-print("Known args: "+str(known_args))
-
+# print("Known args: "+str(known_args))
 
 def log_constructor():
     from check.logger import Logger

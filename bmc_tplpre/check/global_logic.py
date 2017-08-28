@@ -532,6 +532,10 @@ class GlobalLogic:
         environment_condition  = logical_conditions['local_conditions']['environment_condition']
         local_conditions       = logical_conditions['local_conditions']
 
+        import_cond_dict = dict(parse_tests_patterns=False,
+                                parse_tests_queries=False,
+                                import_patterns=False)
+
         if environment_condition == 'developer_tplpre':
             # NORMAL IMPORTS
             if operational_conditions['usual_imports']:
@@ -540,6 +544,8 @@ class GlobalLogic:
                 import_cond_dict = dict(parse_tests_patterns=False,
                                         parse_tests_queries=False,
                                         import_patterns=False)
+
+                return import_cond_dict
 
             # RECURSIVE MODE:
             elif operational_conditions['recursive_imports'] and \
@@ -553,6 +559,8 @@ class GlobalLogic:
                 import_cond_dict = dict(parse_tests_patterns = False,
                                         parse_tests_queries  = False,
                                         import_patterns      = imports_f)
+
+                return import_cond_dict
 
             # TESTs + RECURSIVE MODE:
             elif operational_conditions['read_test'] and operational_conditions['recursive_imports']:
@@ -575,6 +583,8 @@ class GlobalLogic:
                                         parse_tests_queries  = query_t,
                                         import_patterns      = imports_f)
 
+                return import_cond_dict
+
             # SOLO MODE:
             elif not operational_conditions['read_test'] and \
                     not operational_conditions['recursive_imports'] and \
@@ -587,7 +597,7 @@ class GlobalLogic:
                                         parse_tests_queries  = False,
                                         import_patterns      = False)
 
-            return import_cond_dict
+                return import_cond_dict
 
         elif environment_condition == 'customer_tku':
 
@@ -604,6 +614,7 @@ class GlobalLogic:
                 return import_cond_dict
             else:
                 log.info("Working in customer mode, all other importing option will be ignored.")
+        return import_cond_dict
 
     def preproc_cond(self, **logical_conditions):
         """
