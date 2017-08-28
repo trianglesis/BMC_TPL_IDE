@@ -6,7 +6,7 @@
     I plan to release normal working version for Customers and Developers 
     and the end of summer.
 
-This is IDE and automation programm for [BMC Discovery (ADDM)](https://discovery.bmc.com/) language - TPL [tideway pattern language](http://www.bmc.com/it-solutions/discovery-dependency-mapping.html)
+This is IDE and automation program for [BMC Discovery (ADDM)](https://discovery.bmc.com/) language - TPL [tideway pattern language](http://www.bmc.com/it-solutions/discovery-dependency-mapping.html)
 
 ##### For tpl syntax highlighting follow:
 
@@ -54,8 +54,8 @@ Now in progress:
 
 - [X] Pattern upload without checks;
 - [X] root or not-root user;
-- [X] folder autocreation;
-- [ ] automatic record and dml data gathering (can be usefull for support);
+- [X] folder auto creation;
+- [ ] automatic record and dml data gathering (can be useful for support);
 - [ ] automatic verifying discovered data;
 - [X] better console output;
 - [ ] tests;

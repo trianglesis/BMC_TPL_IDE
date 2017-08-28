@@ -47,13 +47,11 @@ class TestRead:
         else:
             log.warn("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
 
-    def import_pattern_tests(self, working_dir, tku_patterns):
+    def import_pattern_tests(self, working_dir):
         """
         Get test.py tree with args from self.setupPatterns()
         Send list of patterns to import logic of imports.py
 
-
-        :param tku_patterns: list of patterns to include.
         :param working_dir: str: path to patterns folder.
         :return: list of pattern to import for test
         """
@@ -72,7 +70,8 @@ class TestRead:
             # make list of self.setupPatterns() to abs path to each pattern:
 
             if pattern_import_test:
-                full_test_patterns_path = self.test_patterns_list(pattern_import_test, working_dir, tku_patterns)
+                # full_test_patterns_path = self.test_patterns_list(pattern_import_test, working_dir, tku_patterns)
+                full_test_patterns_path = self.test_patterns_list(pattern_import_test, working_dir)
 
                 return full_test_patterns_path
         else:
@@ -129,11 +128,10 @@ class TestRead:
             log.warn("Cannot get test queries. "
                      "File test.py is not found or not readable in this path: "+str(working_dir))
 
-    def test_patterns_list(self, setup_patterns, working_dir, tku_patterns):
+    def test_patterns_list(self, setup_patterns, working_dir):
         """
         Get raw list 'self.setupPatterns' from test.py and make it full path to each pattern
 
-        :param tku_patterns: list
         :param setup_patterns: raw list of pattern items from test.py
         :param working_dir: working dir of current pattern
         :return:

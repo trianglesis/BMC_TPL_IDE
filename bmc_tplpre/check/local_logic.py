@@ -11,6 +11,7 @@ import zipfile
 import subprocess
 
 
+# noinspection PyPep8Naming
 class LocalLogic:
 
     def __init__(self, logging):
@@ -663,10 +664,11 @@ class LocalLogic:
                             tku_solo_package_dict = {tku_package_name: {'tku_package_name': tku_package_name,
                                                                         'tku_package_path': folder}}
 
+                            # noinspection PyTypeChecker
                             tku_dict.update(tku_solo_package_dict)
 
                     # Compose arguments based on previous extractions:
-                    ''':type tku_dict: dict'''
+                    # noinspection PyTypeChecker
                     args_dict = dict(
                              environment_condition    = 'customer_tku',
                              workspace                = workspace,
@@ -832,6 +834,7 @@ class LocalLogic:
         workspace_re = re.compile("(\S+)")
         log.info("Workspace was not found in path args, will try p4 cmd or PATH methods.")
 
+        # noinspection PyBroadException
         try:
             run_p4 = subprocess.Popen('p4 -F %clientRoot% -ztag info', stdout=subprocess.PIPE)
             run_p4.wait()

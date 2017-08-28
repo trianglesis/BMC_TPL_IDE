@@ -65,8 +65,8 @@ class SyntaxCheck:
         tpl_mod_dir = os.getcwd()
         syntax_passed = False
 
-        errors_re = re.compile("\s+Errors:\s+(.+)")
-        mod_re = re.compile("Module:\s+(.+)")
+        # errors_re = re.compile("\s+Errors:\s+(.+)")
+        # mod_re = re.compile("Module:\s+(.+)")
 
         match_result = re.compile("(?P<error>\w+\s\w+) at or near '(?P<near>\S+)', "
                                   "line (?P<line>\d+), in (?P<module>\S+)")
@@ -78,6 +78,7 @@ class SyntaxCheck:
                      "so we can use only version which is not greater then 11.0")
             disco_ver = 11.0
 
+        # noinspection PyBroadException
         try:
             log.debug("Syntax: Checking syntax. Options: --discovery-versions="+str(disco_ver) +
                       " --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
@@ -97,7 +98,6 @@ class SyntaxCheck:
                 log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
             else:
                 log.debug("Syntax: Something is not OK \n" + str(result))
-
         except:
             log.error("Syntax: Tplint cannot run, check if working dir is present!")
             log.error("Syntax: Tplint use path: " + tpl_mod_dir)
@@ -116,6 +116,7 @@ class SyntaxCheck:
         match_result = re.compile("(?P<error>\w+\s\w+) at or near"
                                   " '(?P<near>\S+)', line (?P<line>\d+), in (?P<module>\S+)")
         used_mod_re = re.compile("Module:\s(\S+)\s\s+Errors:")
+        # noinspection SpellCheckingInspection
         error_re = re.compile("Errors:\s+(.*)\sat\sor\snear ")
 
         if "No issues found!" in result:

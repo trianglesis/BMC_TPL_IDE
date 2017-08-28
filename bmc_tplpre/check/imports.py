@@ -165,11 +165,9 @@ class TPLimports:
                     if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
                         extra_folders.append(extra_folder)
                     else:
-                        log.warn("Step 1.1 This extra path is not exist - "
-                                 "nothing will be imported from there: "+str(extra_folder))
+                        log.warn("Step 1.1 This path is not exist: "+str(extra_folder))
             else:
-                log.info("Be aware that this folder key is not exist and "
-                         "I can't extract patterns from corresponded path: "+str(folder_key))
+                log.info("Be aware that this folder key is not exist: "+str(folder_key))
 
         current_modules_name = []  # Modules from KNOWN and FOUND and CURRENT.
         find_importing_modules = []  # Modules which I should found.
@@ -190,16 +188,16 @@ class TPLimports:
                 for p in extra_patterns:
                     if p not in pattern_path_list:
                         pattern_path_list.append(p)
-            log.debug("Step 1.1. Finding modules for: "+str(pattern_path_list))
+            log.debug("Step 1.1. Find modules for: "+str(pattern_path_list))
 
         # Start initial read of pattern files I have already and compose first search list of modules.
         find_importing_modules, current_modules_name = self.read_pattern(pattern_path_list,
                                                                          find_importing_modules,
                                                                          current_modules_name)
 
-        log.debug("Step 2. Modules from current active pattern are: "+str(find_importing_modules))
+        log.debug("Step 2. Modules to find: "+str(find_importing_modules))
 
-        # After first read of modules - start recoursive search and read for all modules until found each:
+        # After first read of modules - start recursive search and read for all modules until found each:
         self.recursive_imports(current_modules_name   = current_modules_name,
                                find_importing_modules = find_importing_modules,
                                extra_folders          = extra_folders,
@@ -269,12 +267,11 @@ class TPLimports:
         iteration_count = 0
         while iteration_count < 3:
             # Recursive search for imports and imports for found patterns for 3 times.
-            # If something was not found on 3rd iteration - print warn message with theese items.
+            # If something was not found on 3rd iteration - print warn message with these items.
             iteration_count = iteration_count + 1
             if find_importing_modules:
-                log.debug("Round: "+str(iteration_count)+" - of recursive searching patterns.")
-                log.debug("Step 2. Searching modules from each found pattern from "
-                          "Step 1 : "+str(find_importing_modules))
+                log.debug("Round: "+str(iteration_count)+" - of recursive search.")
+                log.debug("Step 2.2. Searching modules from step 2")
 
                 # Step 4. - Find modules which left in list - in other folders including CORE:
                 find_2, current_2 = self.search_in_path(file_candidates        = all_patterns_list,
@@ -289,7 +286,7 @@ class TPLimports:
                         if found['module'] in find_importing_modules:
                             find_importing_modules.remove(found['module'])
             else:
-                log.debug("Round: "+str(iteration_count)+" - Found everything already, no reason to continue loop.")
+                log.debug("Round: "+str(iteration_count)+" - Found everything already, breaking the loop.")
                 break
 
         if find_importing_modules:
@@ -326,7 +323,7 @@ class TPLimports:
         log = self.logging
 
         if pattern_path_list:
-            log.debug('Step 1.2. List of patterns to read: '+str(pattern_path_list))
+            log.debug('Step 1.2. Reading patterns from the list.')
             for pattern in pattern_path_list:
                 with open(pattern) as f:
                     read_file = f.read(2024)  # About 60+ lines from the beginning of pattern
@@ -383,7 +380,7 @@ class TPLimports:
         file_candidates = []
 
         if env_mode == 'developer_tplpre':
-            log.debug("Step 2.1. - Making list of all available patterns from extra folders to further search.")
+            log.debug("Step 2.1. - Composing list of all patterns in tkn path.")
             # Sort only tplpre files
             file_ext = ".tplpre"
             for path in search_path:
@@ -393,7 +390,7 @@ class TPLimports:
                     # Make path to each folder:
                     for folder in dirs:
                         folder_to_find = os.path.join(root, folder)
-                        # List content of each folder in paath and save if there is any file end with tplpre.
+                        # List content of each folder in path and save if there is any file end with tplpre.
                         files_in = os.listdir(folder_to_find)
                         for file_p in files_in:
                             if file_p.endswith(file_ext):
@@ -428,6 +425,7 @@ class TPLimports:
             log.warn("I can import only pattern files tplre or tpl.")
 
     def search_in_path(self, file_candidates, find_importing_modules, current_modules_name):
+        # noinspection SpellCheckingInspection
         """
         Search import modules by parsing each pattern in selected folder to find it.s module name.
         Add found patterns to [current_modules_name]
@@ -482,7 +480,7 @@ class TPLimports:
                             if imports_line not in find_importing_modules:
                                 find_importing_modules.append(imports_line)
 
-        log.debug("Step 2.2. - Returning list of found modules and list of modules to find in next iteration.")
+        log.debug("Step 2.2. - List of modules found and list of modules to find for next iteration.")
         return find_importing_modules, current_modules_name
 
     def import_tkn(self, patterns_path, working_dir):
@@ -508,7 +506,7 @@ class TPLimports:
         if not os.path.exists(imports_folder):
             os.mkdir(imports_folder)
 
-            log.debug("Step 5. Creating folder 'imports' and add imported patterns.")
+            log.debug("Step 5. Creating folder 'imports'.")
             for pattern in patterns_path:
 
                 pattern_path = pattern['path']
@@ -516,8 +514,7 @@ class TPLimports:
                 os.chmod(pattern_path, stat.S_IWRITE)
                 shutil.copy2(pattern_path, imports_folder)
 
-                log.debug("Step 5.1 Copy to imports folder and "
-                          "clear read-only flag for pattern: " + str(pattern['path']))
+                log.debug("Step 5.1 Copy to 'imports' pattern: " + str(pattern['path']))
 
     # Service functions:
     def list_folder(self, folder_path):
@@ -565,7 +562,7 @@ class TPLimports:
                 shutil.rmtree(path, onerror=self._del_rw)
                 # shutil.rmtree(path)
             except:
-                log.warn("Step 4.1 This folder exist but programm have no permission to remove it. "
+                log.warn("Step 4.1 This folder exist but program have no permission to remove it. "
                          "Please check path and permissions and 'AR' attribute in file.")
                 raise
 

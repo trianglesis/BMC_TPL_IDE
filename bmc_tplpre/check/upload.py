@@ -20,7 +20,7 @@ class AddmOperations:
         3. Open SSH session \ Save opened
 
         IF not 'dev_vm_check': True:
-            Programm will try to upload package via SFTP
+            Program will try to upload package via SFTP
 
             3.1 Check upload folder \ Create if no folder found \ Wipe if any old file found
             3.2 Check pattern or zip in filesystem AND start upload to ADDM
@@ -45,9 +45,11 @@ class AddmOperations:
         self.logging = logging
         self.ssh_cons = ssh
 
+        # noinspection SpellCheckingInspection
         self.upload_activated_check = re.compile('(\d+\sknowledge\supload\sactivated)')
         self.upload_num_item = re.compile('Uploaded\s+\S+\s+as\s\"([^"]+)\"')
 
+    # noinspection PyBroadException
     def upload_knowledge(self, zip_on_local, zip_on_remote):
         """
         Use local path to zip file and remote path where to download.
@@ -141,6 +143,7 @@ class AddmOperations:
         :return:
         """
         log = self.logging
+        log.debug("Func to deactivate previous or old TKU updates.")
 
     def check_file_pattern(self, local_file, remote_file):
         """

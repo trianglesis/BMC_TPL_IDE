@@ -6,9 +6,9 @@ Allows you to automate usual routine in pattern development.
 """
 
 import re
-import os
 import paramiko
 from check.local_logic import LocalLogic
+
 
 class ArgsParse:
 
@@ -124,7 +124,7 @@ class ArgsParse:
             if not dev_vm_check:
                 '''
                    This path should be the same for all DEV VMs to be sure the logic will find it on expected place.
-                   If this path is changing - it should be changed everywhere for all users who use this programm.
+                   If this path is changing - it should be changed everywhere for all users who use this program.
                 '''
                 folders = addm_env_check.check_folders(ssh, tku_dev_path)
                 for folder in folders:
@@ -178,7 +178,7 @@ class ArgsParse:
         Check ADDM host IP where to upload and scan
         Should checked at first - before upload, scan, disco
 
-        Disabling to allow use hostnames:
+        Disabling to allow use host names:
         check = self.ip_addr_check.match(addm_host)
         if check:
             addm_host = addm_host  # ADDM ip is:                192.168.5.6
@@ -249,10 +249,8 @@ class ArgsParse:
         Will add hostname support maybe
         Should run only if SSH session established!
 
-
-        :param host_list:
+        :param host_list_arg: str
         """
-        # TODO: add Ability to use hostnames.
         log = self.logging
         host_list = False
 

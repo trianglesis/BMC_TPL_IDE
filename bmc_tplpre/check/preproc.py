@@ -20,10 +20,10 @@ import datetime
 '''
 
 
+# noinspection PyBroadException
 class Preproc:
 
     def __init__(self, logging):
-        # TODO: Clear out fake code, make simpler, logic is almost done.
 
         self.logging = logging
         self.sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
@@ -39,7 +39,7 @@ class Preproc:
         log = self.logging
 
         if workspace:
-            log.debug("Got the p4 workspase path from 'full_path_parse()' "
+            log.debug("Got the p4 workspace path from 'full_path_parse()' "
                       "and will try to locate TPLPreprocessor: " + workspace)
 
             # tpl_preproc_location = workspace + "\\addm\\tkn_main\\buildscripts\\TPLPreprocessor.py"
@@ -65,11 +65,9 @@ class Preproc:
         :param workspace: str
         :param input_path:  What to preproc file\folder
         :param output_path: Where to output pattern folder or imports folder
-        :param mode: imports \ recursise imports
+        :param mode: imports \ recursive imports
         :return: True\False
         """
-        # TODO: What if I add tpl version to generate - can it be faster?
-
         _, t_pre = self.find_tplpreprocessor(workspace)
         # print(t_pre)
 
