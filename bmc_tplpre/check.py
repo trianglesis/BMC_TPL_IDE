@@ -197,10 +197,10 @@ if conditional_functions['zip_files_f']:
         zip_files_f()
 
 # Executing pattern activation:
-if conditional_functions['addm_activate_f']:
-    addm_activate_f = conditional_functions['addm_activate_f']
-    if addm_activate_f:
-        addm_activate_f()
+# if conditional_functions['addm_activate_f']:
+#     addm_activate_f = conditional_functions['addm_activate_f']
+#     if addm_activate_f:
+#         addm_activate_f()
 
 # Executing start scan
 # Working in current condition. Disable to save time

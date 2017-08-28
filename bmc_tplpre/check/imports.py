@@ -83,6 +83,9 @@ class TPLimports:
             self.working_dir = self.full_path_args['working_dir']
             self.file_ext    = self.full_path_args['file_ext']
 
+            if not self.working_dir:
+                log.error("File working dir is not extracted - I cannot proceed any function.")
+
             log.debug("Arguments from -full_path are obtained and program will make decisions.")
         else:
             log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")

@@ -77,6 +77,9 @@ class GlobalLogic:
             self.full_path      = self.full_path_args['full_path']
             self.working_dir    = self.full_path_args['working_dir']
 
+            if not self.working_dir:
+                log.error("File working dir is not extracted - I cannot proceed any function.")
+
             log.debug("Full path arguments are set. It will be used to choose programm working scenario.")
         else:
             log.debug("No full path arguments are set. I can do nothing with this.")
