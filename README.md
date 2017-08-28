@@ -35,10 +35,10 @@ Some of them is still in progress:
     - [X] on imported pattern files;
 - [X] SSH to ADDM for options:
     - [X] check tpl version; 
-    - [ ] check DEV paths; 
-    - [ ] pattern uploading;
-    - [ ] auto scan start;
-- [ ] Start scan
+    - [X] check DEV paths;
+    - [X] pattern uploading;
+    - [X] auto scan start;
+- [X] Start scan
 - [ ] Validate results:
     - [ ] si query;  
     - [ ] si models;  
@@ -52,12 +52,12 @@ Some of them is still in progress:
 
 Now in progress:
 
-- [ ] Pattern upload without checks;
-- [ ] root or not-root user;
-- [ ] folder autocreation;
+- [X] Pattern upload without checks;
+- [X] root or not-root user;
+- [X] folder autocreation;
 - [ ] automatic record and dml data gathering (can be usefull for support);
 - [ ] automatic verifying discovered data;
-- [ ] better console output;
+- [X] better console output;
 - [ ] tests;
 - [ ] REST API usage for BMC Discovery;
 - [ ] Credentials update;
@@ -76,7 +76,8 @@ This is dev example. Args can change soon. Please subscribe for recent changes.
 
 usage: check.py
 
-    [-h] [-tpl VERSION_TPL] [-imp] [-r_imp] [-T] [-full_path FULL_PATH] [-u USER] [-p PASSWORD] [-addm ADDM_HOST] [-host_list SCAN_HOST_LIST] [-disco_mode DISCO_MODE] [-l LOG_LVL] [--version]
+        [-h] [-tpl VERSION_TPL] [-imp] [-r_imp] [-T] [-full_path FULL_PATH] [-u USER] [-p PASSWORD] [-addm ADDM_HOST] [-host_list SCAN_HOST_LIST] [-disco_mode DISCO_MODE] [-l LOG_LVL] [--version]
+
 
 - optional arguments:
     - *-h, --help* Show this help message and exit.
@@ -88,6 +89,10 @@ usage: check.py
         - Your ADDM user - root or tideway
     - *-p PASSWORD*
         - Password for ADDM user
+    - *-system_user*
+        - Your ADDM system user used to start scan
+    - *-system_password*
+        - Your ADDM system user password used to start scan
     - *-addm ADDM_HOST*
         - ADDM ip address.
     - *-host_list SCAN_HOST_LIST*
@@ -101,31 +106,16 @@ usage: check.py
 
 - Developer options:
     - *-tpl VERSION_TPL*
-      - Set this to correspond tpl version to upload folder of TPLPreprocessor output result ignoring ADDM tpl version check procedure. Use when you want upload older or newer tpl on ADDMIf file is not a .tplpre - this option will be ignored.
+      - Ignored option. In progress...
     - *-imp*
       - Set if you want to import patterns only imported in current opened pattern from -full_path. No recursive imports will run. If file is not a .tplpre - this option will be ignored.
-    - *-r_imp*
-      - Set if you want to import all patterns in recursive mode and upload this package on ADDM.Better use on clear TKN.If file is not a .tplpre - this option will be ignored.
-    - *-T* 
-      - Run validation process after scan is finished.This will use set of queries to grab everything from scan and build SI models.si_type will be gathered from pattern blocks and used to compose search query.model file will be saved into developers folder: /usr/tideway/TKU/models
+    - *-recursive_import*
+      - Options imports all patterns in recursive mode including each 'imports' from each found pattern.
+    - *-usual_import*
+      - Option imports patterns which only imported in currently opened pattern
+    - *-read_test*
+      - Read test.py file and get all patterns which used for test and import in recursive mode.
 
-
-
-### Set your settings or use preconfigured ones.
-
-- How to use Pattern upload:
-
-        This is not recommended now - I working on new 
-        logic which should'n use root for any operation.
-
-- How to allow ADDM root so SSH?
-
-Go to vi /etc/ssh/sshd_config and change the options: 
-
-    PermitRootLogin yes
-    uncomment port 22
-    comment line ‘AllowUsers’
-    restart ‘service sshd restart’
 
 
 ## Issues and requests:
@@ -133,6 +123,6 @@ Please add issues and requests here: [issues](https://github.com/triaglesis/BMC_
 
 
 # NOTE:
-Some features are not working, will update them for public use and add soon!
+Mow working all of usual dev functions.
 
-Last validation: 2017-08-17
+Last validation: 2017-08-28
