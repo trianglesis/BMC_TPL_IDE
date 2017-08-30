@@ -62,7 +62,7 @@ class SyntaxCheck:
         :return:
         """
         log = self.logging
-        tpl_mod_dir = os.getcwd()
+        tpl_mod_dir = os.path.abspath(os.path.join(__file__ , "../.."))
         syntax_passed = False
 
         # errors_re = re.compile("\s+Errors:\s+(.+)")
@@ -90,14 +90,14 @@ class SyntaxCheck:
                                          cwd=working_dir, stdout=subprocess.PIPE)
             result = open_path.stdout.read().decode()
             if "No issues found!" in result:
+                log.info("\t\tBuild OK: Syntax: PASSED!")
                 syntax_passed = True
-                log.info("Syntax: PASSED!")
             elif match_result.findall(result):
                 # error_modules = mod_re.findall(result)
                 # errors = errors_re.findall(result)
                 log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
             else:
-                log.debug("Syntax: Something is not OK \n" + str(result))
+                log.error("Syntax: Something is not OK \n" + str(result))
         except:
             log.error("Syntax: Tplint cannot run, check if working dir is present!")
             log.error("Syntax: Tplint use path: " + tpl_mod_dir)

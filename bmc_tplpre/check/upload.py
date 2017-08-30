@@ -63,14 +63,14 @@ class AddmOperations:
 
         log = self.logging
 
-        log.info("zip file local: " + zip_on_local)
-        log.info("zip file remote: " + zip_on_remote)
+        log.debug("zip file local: " + zip_on_local)
+        log.debug("zip file remote: " + zip_on_remote)
 
         ftp = self.ssh_cons.open_sftp()
         try:
             ftp.put(zip_on_local, zip_on_remote)
             ftp.close()
-            log.info("Patterns zip to ADDM upload:" + "PASSED!")
+            log.info("Patterns upload:" + "PASSED!")
         except:
             log.error("Something goes wrong with ftp connection or zip file! Check if file path or folder exists")
 
@@ -114,7 +114,7 @@ class AddmOperations:
         log.debug("Activate local zip: ensure we have rights of 777 on this file: "+str(zip_path))
 
         self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
-        log.info("Installing and activating pattern modules.")
+        log.info("Installing and activating modules.")
 
         _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management"
                                                        " -u " + system_user +
@@ -129,7 +129,7 @@ class AddmOperations:
             if self.upload_activated_check.findall(raw_out):
                 uploaded_activated = True
                 log.info("Upload activating: " + "PASSED!")
-                log.info("Pattern uploaded successfully. Module: " + str(module_name)+" as "+str(item[0]))
+                log.info("Upload successfully. Module: " + str(module_name)+" as "+str(item[0]))
             else:
                 log.critical("Pattern activation failed! Scan will not start.")
                 log.critical("Detailed description from ADDM: \n"+raw_out)

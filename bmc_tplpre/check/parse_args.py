@@ -134,7 +134,7 @@ class ArgsParse:
                                   "will be used for upload patterns and tests.")
 
         else:
-            log.info("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
+            log.debug("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
 
         addm_args_set = dict(ssh_connection  = ssh,
                              disco_mode      = disco,
@@ -221,7 +221,7 @@ class ArgsParse:
             else:
                 log.error("There is no ADDM user and password found in args! I cannot connect ADDM.")
         else:
-            log.info("There is no ADDM IP or host found in args!")
+            log.debug("There is no ADDM IP in args!")
 
         return ssh
 
@@ -239,7 +239,7 @@ class ArgsParse:
                 disco_mode = disco_mode  # Discovery mode is:         standard
                 log.info("Discovery mode is: " + str(disco_mode))
         else:
-            log.info("Discovery mode not set or not used.")
+            log.debug("Discovery mode not set or not used.")
 
         return disco_mode
 
@@ -263,9 +263,9 @@ class ArgsParse:
                 log.warn("Host list for scan should consist of IPs.")
         else:
             if host_list != 'None':
-                log.info("Please specify some hosts to scan for ADDM!")
+                log.debug("Please specify some hosts to scan for ADDM!")
             else:
-                log.info("Pattern upload only. No host added for Discovery run!")
+                log.info("Pattern upload only.")
 
         return host_list
 

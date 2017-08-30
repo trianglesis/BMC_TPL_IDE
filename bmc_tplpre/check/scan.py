@@ -112,7 +112,7 @@ class AddmScan:
             log.info("Discovery started")
 
         log.info("Host(s) to scan: " + host_list)
-        log.info("Scan will be named as: " + dir_label)
+        log.info("Scan named as: " + dir_label)
 
         self.ssh_cons.exec_command("/usr/tideway/bin/tw_scan_control"
                                    " -u " + system_user +
@@ -128,11 +128,11 @@ class AddmScan:
         if stdout:
             result = stdout.read().decode()
             if result:
-                log.info("Scan has been added to the Currently Processing Runs: \n"+result)
+                log.info("Scan been added:\n"+result)
         if stderr:
             result = stdout.read().decode()
             if result:
-                log.error("Scan has not added to the Currently Processing Runs: \n"+result)
+                log.error("Scan has not been added:\n"+result)
 
     def addm_scan_check(self, ssh, scan_id):
         """

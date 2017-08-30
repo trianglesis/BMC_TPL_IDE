@@ -104,6 +104,7 @@ common.add_argument('--version',
 known_args, extra_args = parser.parse_known_args()
 # print("Known args: "+str(known_args))
 
+
 def log_constructor():
     from check.logger import Logger
     log_init = Logger(known_args.log_lvl)
@@ -167,5 +168,5 @@ if conditional_functions['scan_f']:
         scan_f()
 
 
-log.info("-=== FINISHING Check script.")
+log.info("-=== END of Check script. ===-")
 

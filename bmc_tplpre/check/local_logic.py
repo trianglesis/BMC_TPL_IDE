@@ -237,7 +237,7 @@ class LocalLogic:
         norm_path = os.path.normpath(path+os.sep)
         path = norm_path+os.sep
 
-        log.info("ZIP: Making zip of all .tpl in folder:"  + norm_path)
+        log.debug("ZIP: Making zip of all .tpl in folder:"  + norm_path)
 
         zip_filename = module_name + '.zip'
 
@@ -292,7 +292,7 @@ class LocalLogic:
         tkn_sandbox_t            = ''
 
         if os.path.exists(full_file_path):
-            log.info("-full_file_path is: " + full_file_path)
+            log.debug("-full_file_path is: " + full_file_path)
 
             # Checking for different paths logic
             dev_path_check = self.dev_path_re.match(full_file_path)
@@ -397,7 +397,7 @@ class LocalLogic:
                                          SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
                                         )
-                        log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("TPL: File extension mach .tpl and dev_path_check is found, "
                                   "options will be set based on it's path.")
                         return args_dict
@@ -430,7 +430,7 @@ class LocalLogic:
                                          SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
                                         )
-                        log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("DML: File extension mach .dml and dev_path_check is found, "
                                   "options will be set based on it's path.")
                         return args_dict
@@ -463,7 +463,7 @@ class LocalLogic:
                                          SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
                                         )
-                        log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("MODEL: File extension mach .model and dev_path_check is found, "
                                   "options will be set based on it's path.")
                         return args_dict
@@ -495,7 +495,7 @@ class LocalLogic:
                                          SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
                                         )
-                        log.info("Arguments from file path: " + str(args_dict))
+                        log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("PY: File extension mach .py and dev_path_check is found, "
                                   "options will be set based on it's path.")
                         return args_dict
@@ -814,7 +814,7 @@ class LocalLogic:
                               "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
 
         else:
-            log.warn("No '-full_path' argument was set. Or this path is not exist!")
+            log.critical("No '-full_path' argument was set. Or this path is not exist!")
 
     def workspace_find_p4_env(self):
         """
@@ -832,7 +832,7 @@ class LocalLogic:
         """
         log = self.logging
         workspace_re = re.compile("(\S+)")
-        log.info("Workspace was not found in path args, will try p4 cmd or PATH methods.")
+        log.info("Workspace was not found, trying p4 or PATH.")
 
         # noinspection PyBroadException
         try:
