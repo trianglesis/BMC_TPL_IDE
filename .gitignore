@@ -25,3 +25,4 @@ bmc_tplpre/check/__pycache__/__init__.cpython-34.pyc
 bmc_tplpre/DEV_TEST/old_global_logic.py
 bmc_tplpre/DEV_TEST/IIS_ast_dump_test_py.txt
 bmc_tplpre/DEV_TEST/REMEDY_ast_dump_test_py.txt
+bmc_tplpre/DEV_TEST/related_test_parse.py
