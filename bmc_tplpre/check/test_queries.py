@@ -63,10 +63,34 @@ class TestRead:
         if test_tree:
             # Walk in test.py file and get function arguments where import patterns lies:
             for node in ast.walk(test_tree):
-                if isinstance(node, ast.Expr):
-                    if node.value.func.attr == "setupPatterns":
-                        for arg in node.value.args:
-                            pattern_import_test.append(arg.s)
+                '''
+                This is to extract list of patterns from test.py file.
+                In first case in modern test.py it will be a tuple which can be appended as it is.
+                In second case in older version of test.py this is a list, so we adding each from it. 
+                '''
+                if isinstance(node, ast.Call):
+                    node_func = node.func
+                    if isinstance(node_func, ast.Attribute):
+                        if node_func.attr == "setupPatterns":
+                            node_args = node.args
+                            # DEBUG: Iter all nodes
+                            # node_iter = ast.iter_fields(node)
+                            # for i in node_iter:
+                            #     print(i)
+                            for arg in node_args:
+                                patterns = ast.literal_eval(arg)
+                                pattern_import_test.append(patterns)
+                                # pattern_import_test.append(arg.s)
+                        if node_func.attr == "preProcessTpl":
+                            node_args = node.args
+                            # DEBUG: Iter all nodes
+                            # node_iter = ast.iter_fields(node)
+                            # for i in node_iter:
+                            #     print(i)
+                            for arg in node_args:
+                                patterns = ast.literal_eval(arg)
+                                for pattern in patterns:
+                                    pattern_import_test.append(pattern)
             # make list of self.setupPatterns() to abs path to each pattern:
 
             if pattern_import_test:
