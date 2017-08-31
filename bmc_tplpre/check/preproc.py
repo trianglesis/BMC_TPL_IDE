@@ -93,13 +93,16 @@ class Preproc:
 
                             tpl_result_files = os.listdir(output_path+os.sep+folder)
                             for file in tpl_result_files:
+
                                 file_time = os.path.getmtime(output_path+os.sep+folder+os.sep+file)
                                 now = datetime.datetime.now()
                                 ago = now - datetime.timedelta(minutes=5)
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
+
                                 if file_time_stamp < ago:
                                     log.warn("TPLPreprocessor result files looks like older that 5 min. "
-                                             "Please check: " + str(file_time_stamp))
+                                             "Please check: " + str(file) + " time: " + str(file_time_stamp))
+
                                 if file_time_stamp > ago:
                                     log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True
@@ -133,15 +136,16 @@ class Preproc:
 
                             tpl_result_files = os.listdir(output_path+os.sep+folder)
                             for file in tpl_result_files:
+
                                 file_time = os.path.getmtime(output_path+os.sep+folder+os.sep+file)
                                 now = datetime.datetime.now()
-                                ago = now - datetime.timedelta(minutes=15)
+                                ago = now - datetime.timedelta(minutes=5)
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
 
                                 if file_time_stamp < ago:
 
-                                    log.warn("TPLPreprocessor result files looks like older that 15 min. "
-                                             "Please check: " + str(file_time_stamp))
+                                    log.warn("TPLPreprocessor result files looks like older that 5 min. "
+                                             "Please check: " + str(file) + " time: " + str(file_time_stamp))
 
                                 if file_time_stamp > ago:
 
@@ -176,13 +180,16 @@ class Preproc:
 
                             tpl_result_files = os.listdir(output_path+os.sep+folder)
                             for file in tpl_result_files:
+
                                 file_time = os.path.getmtime(output_path+os.sep+folder+os.sep+file)
                                 now = datetime.datetime.now()
-                                ago = now - datetime.timedelta(minutes=15)
+                                ago = now - datetime.timedelta(minutes=5)
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
+
                                 if file_time_stamp < ago:
-                                    log.warn("TPLPreprocessor result files looks like older that 15 min. "
-                                             "Please check: " + str(file_time_stamp))
+                                    log.info("TPLPreprocessor result files looks like older that 5 min. "
+                                             "Please check: " + str(file) + " time: " + str(file_time_stamp))
+
                                 if file_time_stamp > ago:
                                     log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                                     tpl_preproc = os.path.exists(output_path)  # True

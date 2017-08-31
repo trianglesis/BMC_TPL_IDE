@@ -9,6 +9,7 @@ import os
 import re
 import zipfile
 import subprocess
+import datetime
 
 
 # noinspection PyPep8Naming
@@ -250,6 +251,23 @@ class LocalLogic:
             for foldername, subfolders, filenames in os.walk(norm_path):
                 for filename in filenames:
                     if filename != zip_filename:
+                        # check if file mod date is recent:
+
+                        # TODO: Check current file or folder mod time?
+                        # file_time = os.path.getmtime(path+module_name)
+                        # now = datetime.datetime.now()
+                        # ago = now - datetime.timedelta(minutes=15)
+                        # file_time_stamp = datetime.datetime.fromtimestamp(file_time)
+                        #
+                        # if file_time_stamp < ago:
+                        #
+                        #     log.warn("ZIP: TPLPreprocessor result files looks like older that 15 min. "
+                        #              "Please check: " + str(file_time_stamp))
+                        #
+                        # if file_time_stamp > ago:
+                        #
+                        #     log.debug("ZIP: TPLPreprocessor result files are recent: " + str(file_time_stamp))
+
                         patterns_zip.write(os.path.join(norm_path, filename), arcname=filename)
                         log.debug("ZIP: Adding pattern:" + filename)
             patterns_zip.close()
