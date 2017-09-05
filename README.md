@@ -2,16 +2,16 @@
 
 # DEV version currently
 
-    This programm is now in DEV and not working as expected. 
-    I plan to release normal working version for Customers and Developers 
+    This programm is now in DEV and not working as expected.
+    I plan to release normal working version for Customers and Developers
     and the end of summer.
 
 This is IDE and automation program for [BMC Discovery (ADDM)](https://discovery.bmc.com/) language - TPL [tideway pattern language](http://www.bmc.com/it-solutions/discovery-dependency-mapping.html)
 
 ##### For tpl syntax highlighting follow:
 
-- Syntax for [Sublime text](https://github.com/triaglesis/bmc_tpl)
-- Syntax for [Atom](https://github.com/triaglesis/language-tplpre)
+- Syntax for [Sublime text](https://github.com/trianglesis/bmc_tpl)
+- Syntax for [Atom](https://github.com/trianglesis/language-tplpre)
 
 
 ### Designed for Python 3
@@ -27,25 +27,25 @@ Just run it from CMD:
 Some of them is still in progress:
 - [X] syntax tests (require 3rd party [module tplint](https://communities.bmc.com/docs/DOC-42313) by Ladkau, Matthias)
 - [X] importing linked patterns (working only if dev environment found):
-    - [X] from current pattern;  
-    - [X] from current pattern and each imported;  
+    - [X] from current pattern;
+    - [X] from current pattern and each imported;
     - [X] from current pattern and each imported and from test.py;
 - [X] Run TPLPreprocessor:
     - [X] on current pattern file;
     - [X] on imported pattern files;
 - [X] SSH to ADDM for options:
-    - [X] check tpl version; 
+    - [X] check tpl version;
     - [X] check DEV paths;
     - [X] pattern uploading;
     - [X] auto scan start;
 - [X] Start scan
 - [ ] Validate results:
-    - [ ] si query;  
-    - [ ] si models;  
-    - [ ] gather record data;  
+    - [ ] si query;
+    - [ ] si models;
+    - [ ] gather record data;
     - [ ] generate DML data;
     - [ ] generate test data;
-      
+
 
 
 ## Can be added soon:
@@ -119,7 +119,7 @@ usage: check.py
 
 
 ## Issues and requests:
-Please add issues and requests here: [issues](https://github.com/triaglesis/BMC_TPL_IDE/issues)
+Please add issues and requests here: [issues](https://github.com/trianglesis/BMC_TPL_IDE/issues)
 
 
 # NOTE:
