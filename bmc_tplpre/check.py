@@ -31,7 +31,17 @@ developer.add_argument("-recursive_import",
 developer.add_argument("-read_test",
                        action="store_true",
                        help="Read test.py file and get all patterns which used for test and import in recursive mode."
-                            "Also retrieve queries and use to generate model files."
+                            "Also retrieve queries and use to generate model files.")
+developer.add_argument("-run_test",
+                       action="store_true",
+                       help="Run test which is related to current patten if test.py exist."
+                            "Save result in log and in current working directory."
+                            "In progress...")
+developer.add_argument("-related_tests",
+                       action="store_true",
+                       help="Read each test.py file in tku_patterns and compose set of pattern:tests where active"
+                            "pattern is used. Execute each test starting from main pattern's test one by one"
+                            "and save result log in current pattern folder."
                             "In progress...")
 developer.add_argument("-tpl",
                        type=str,

@@ -283,12 +283,18 @@ class ArgsParse:
         recursive_imports = False
         usual_imports = False
         read_test = False
+        related_tests = False
+        run_test = False
         oper_args_set = {
             'recursive_imports': recursive_imports,
             'usual_imports': usual_imports,
             'read_test': read_test,
+            'related_tests': related_tests,
+            'run_test': run_test,
         }
 
+        # TODO: Add dict.update
+        # TODO: Use dict()
         if known_args.read_test and known_args.recursive_import:
             read_test = True
             recursive_imports = True
@@ -318,6 +324,32 @@ class ArgsParse:
             log.warn("You cannot add two import scenarios in one run. Please choose only one. "
                      "But I will run usual_imports by default.")
             usual_imports = True
+            oper_args_set = {
+                'recursive_imports': recursive_imports,
+                'usual_imports': usual_imports,
+                'read_test': read_test,
+            }
+
+        elif known_args.related_tests and not known_args.run_test:
+            log.warn("You .")
+            recursive_imports = False
+            usual_imports = False
+            read_test = False
+            related_tests = False
+            run_test = False
+            oper_args_set = {
+                'recursive_imports': recursive_imports,
+                'usual_imports': usual_imports,
+                'read_test': read_test,
+            }
+
+        elif known_args.run_test and not known_args.related_tests:
+            log.warn("You ")
+            recursive_imports = False
+            usual_imports = False
+            read_test = False
+            related_tests = False
+            run_test = False
             oper_args_set = {
                 'recursive_imports': recursive_imports,
                 'usual_imports': usual_imports,

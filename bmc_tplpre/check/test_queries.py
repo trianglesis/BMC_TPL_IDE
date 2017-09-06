@@ -186,6 +186,8 @@ class TestRead:
         then compose dict with name of patern_directory: test_path which will be used for further run to validate
         each related test.
 
+        Use same mechanism as for recursive imports BUT not copy, just make set for each result.
+
         dict example:
         {
           "curr_patt_test": {
