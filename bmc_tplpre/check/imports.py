@@ -325,7 +325,7 @@ class TPLimports:
         if pattern_path_list:
             log.debug('Step 1.2. Reading patterns from the list.')
             for pattern in pattern_path_list:
-                with open(pattern) as f:
+                with open(pattern, encoding="utf8") as f:
                     read_file = f.read(2024)  # About 60+ lines from the beginning of pattern
 
                 pattern_import = self.pattern_import_all_r.findall(read_file)
@@ -445,7 +445,7 @@ class TPLimports:
         # search all we need to import by reading header of each file.
         # Step 2.1.- search in patterns list.
         for file in file_candidates:
-            with open(file, "r") as f:
+            with open(file, "r", encoding="utf8") as f:
                 read_file = f.read(2024)  # About 60+ lines from the beginning of pattern
 
             for pattern_module in find_importing_modules:
