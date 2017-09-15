@@ -232,6 +232,7 @@ class GlobalLogic:
         return parse_args.gather_args(known_args=args_from_cmd['known_args'],
                                       extra_args=args_from_cmd['extra_args'])
 
+# Doing business based on all decisions made:
     def cond_args(self, **conditional_args_set):
         """
         This section will compose sets of functions to execute.
@@ -508,6 +509,8 @@ class GlobalLogic:
 
         return conditional_functions, conditional_results
 
+
+# Functions to make decisions based on options and create closures.
     def imports_cond(self, **logical_conditions):
         """
         Based on condition arguments use different scenarios of importing patterns:
@@ -1013,6 +1016,8 @@ class GlobalLogic:
 
             return upload_f, addm_activate_f
 
+
+# Functions to create closures for all related options:
     def make_test_read_query(self):
         """
         Closure for reading test.py queries.

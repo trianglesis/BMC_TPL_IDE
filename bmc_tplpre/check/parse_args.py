@@ -275,85 +275,45 @@ class ArgsParse:
         Further Ill check and use logic.
         Vars should be re-written of True:
 
+        {'run_test': True,
+        'related_tests': False,
+        'usual_imports': False,
+        'read_test': False,
+        'recursive_imports': False}
+
         :param known_args:
         :return: dict of Bool actions
         """
         log = self.logging
 
-        recursive_imports = False
-        usual_imports = False
-        read_test = False
-        related_tests = False
-        run_test = False
-        oper_args_set = {
-            'recursive_imports': recursive_imports,
-            'usual_imports': usual_imports,
-            'read_test': read_test,
-            'related_tests': related_tests,
-            'run_test': run_test,
-        }
+        oper_args_set = dict(recursive_imports=False,
+                             usual_imports=False,
+                             read_test=False,
+                             related_tests=False,
+                             run_test=False)
 
-        # TODO: Add dict.update
-        # TODO: Use dict()
         if known_args.read_test and known_args.recursive_import:
-            read_test = True
-            recursive_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            oper_args_set['recursive_imports'] = True
+            oper_args_set['read_test'] = True
 
         elif known_args.usual_import and not known_args.recursive_import:
-            usual_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            oper_args_set['usual_imports'] = True
 
         elif known_args.recursive_import and not known_args.usual_import:
-            recursive_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            oper_args_set['recursive_imports'] = True
 
         elif known_args.usual_import and known_args.recursive_import:
             log.warn("You cannot add two import scenarios in one run. Please choose only one. "
                      "But I will run usual_imports by default.")
-            usual_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            oper_args_set['usual_imports'] = True
 
         elif known_args.related_tests and not known_args.run_test:
-            log.warn("You .")
-            recursive_imports = False
-            usual_imports = False
-            read_test = False
-            related_tests = False
-            run_test = False
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            log.info("Related test run option. I will search for all related "
+                     "tests which use current active pattern and run them.")
+            oper_args_set['related_tests'] = True
 
         elif known_args.run_test and not known_args.related_tests:
-            log.warn("You ")
-            recursive_imports = False
-            usual_imports = False
-            read_test = False
-            related_tests = False
-            run_test = False
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            log.info("Single test run options. I will run only test for current pattern in its tests folder.")
+            oper_args_set['run_test'] = True
 
         return oper_args_set
