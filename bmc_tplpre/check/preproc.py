@@ -51,9 +51,9 @@ class Preproc:
                 log.debug("TPLPreprocessor found in folder: " + tpl_preproc_dir)
                 return tpl_preproc_dir, tpl_preproc_py
             else:
-                log.warn("TPLPreprocessor.py file is not found in path: " + str(tpl_preproc_py))
+                log.warning("TPLPreprocessor.py file is not found in path: " + str(tpl_preproc_py))
         else:
-            log.warn("Cannot run without p4 workspace path. Check args.")
+            log.warning("Cannot run without p4 workspace path. Check args.")
 
     def tpl_preprocessor(self, workspace, input_path, output_path, mode):
         """
@@ -99,7 +99,7 @@ class Preproc:
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
 
                                 if file_time_stamp < ago:
-                                    log.warn("TPLPreprocessor result files looks like older that 5 min. "
+                                    log.warning("TPLPreprocessor result files looks like older that 5 min. "
                                              "Please check: " + str(file) + " time: " + str(file_time_stamp))
 
                                 if file_time_stamp > ago:
@@ -143,7 +143,7 @@ class Preproc:
 
                                 if file_time_stamp < ago:
 
-                                    log.warn("TPLPreprocessor result files looks like older that 5 min. "
+                                    log.warning("TPLPreprocessor result files looks like older that 5 min. "
                                              "Please check: " + str(file) + " time: " + str(file_time_stamp))
 
                                 if file_time_stamp > ago:

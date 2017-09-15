@@ -44,7 +44,7 @@ class ArgsParse:
         addm_args_set = self.addm_args(known_args)
 
         if extra_args:
-            log.warn("HEY, you forgot some arguments:" + str(extra_args))
+            log.warning("HEY, you forgot some arguments:" + str(extra_args))
 
         return local_arguments_set, operational_args_set, addm_args_set
 
@@ -212,7 +212,7 @@ class ArgsParse:
                     ssh = False
                 except TimeoutError:
                     log.critical("Connection failed. Probably host or IP of ADDM is not set or incorrect!")
-                    log.warn("Will continue further check, but nothing will proceed on ADDM!")
+                    log.warning("Will continue further check, but nothing will proceed on ADDM!")
                     ssh = False
                     # raise
             else:
@@ -255,7 +255,7 @@ class ArgsParse:
                 host_list = host_list_arg  # Host(s) to scan are:       10.49.32.114
                 log.debug("Will add host(s) for discovery: " + str(host_list))
             else:
-                log.warn("Host list for scan should consist of IPs.")
+                log.warning("Host list for scan should consist of IPs.")
         else:
             if host_list != 'None':
                 log.debug("Please specify some hosts to scan for ADDM!")
@@ -269,7 +269,8 @@ class ArgsParse:
         """
         Dict should not be empty even if there is no args for that.
         Further Ill check and use logic.
-        Vars should be re-written of True:
+        If imports used - than no test run!
+        I test run used - than no imports!
 
         {'run_test': True,
         'related_tests': False,
@@ -281,35 +282,41 @@ class ArgsParse:
         :return: dict of Bool actions
         """
 
-        # TODO: move test mode to separate function or make two dicts for each?
-        oper_args_set = dict(recursive_imports=False,
-                             usual_imports=False,
-                             read_test=False,
-                             related_tests=False,
-                             run_test=False)
+        oper_args_set = dict(
+                             imports = dict(recursive_imports=False, usual_imports=False, read_test=False
+                                            ),
+                             tests = dict(related_tests=False, run_test=False
+                                          )
+                             )
 
         if known_args.read_test and known_args.recursive_import:
-            oper_args_set['recursive_imports'] = True
-            oper_args_set['read_test'] = True
+            oper_args_set['imports']['recursive_imports'] = True
+            oper_args_set['imports']['read_test'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.usual_import and not known_args.recursive_import:
-            oper_args_set['usual_imports'] = True
+            oper_args_set['imports']['usual_imports'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.recursive_import and not known_args.usual_import:
-            oper_args_set['recursive_imports'] = True
+            oper_args_set['imports']['recursive_imports'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.usual_import and known_args.recursive_import:
-            log.warn("You cannot add two import scenarios in one run. Please choose only one. "
-                     "But I will run usual_imports by default.")
-            oper_args_set['usual_imports'] = True
+            log.warning("You cannot add two import scenarios in one run. Please choose only one. "
+                        "But I will run usual_imports by default.")
+            oper_args_set['imports']['usual_imports'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.related_tests and not known_args.run_test:
             log.info("Related test run option. I will search for all related "
                      "tests which use current active pattern and run them.")
-            oper_args_set['related_tests'] = True
+            oper_args_set['tests']['related_tests'] = True
+            oper_args_set['imports'] = False
 
         elif known_args.run_test and not known_args.related_tests:
             log.info("Single test run options. I will run only test for current pattern in its tests folder.")
-            oper_args_set['run_test'] = True
+            oper_args_set['tests']['run_test'] = True
+            oper_args_set['imports'] = False
 
         return oper_args_set

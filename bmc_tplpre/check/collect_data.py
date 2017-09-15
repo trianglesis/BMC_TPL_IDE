@@ -21,7 +21,7 @@ where options can be
 
       --dip-support           Generate DIP support file
   -h, --help                  Display help on standard options
-      --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
+      --loglevel=LEVEL        Logging level: debug, info, warning, error, crit
       --lookup=ARG            Node ID to lookup (search ignored)
   -o, --output=ARG            Output file/prefix (ignored with -N)
   -p, --password=PASSWD       Password

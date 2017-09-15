@@ -53,11 +53,11 @@ class TPLimports:
                 Repeat execution with vars from Round 2
                 Break the loop 'while < 3'
 
-            Step 3: Show list of modules which wasn't found anywhere during 3 rounds in log warn.
+            Step 3: Show list of modules which wasn't found anywhere during 3 rounds in log warning.
             Step 3.1: Show list of found modules and path to patterns in log debug.
 
             Step 4: Wiping 'imports' folder before add new imports in it.
-                Step 4.1 If folder cannot be wiped - show warning log.
+                Step 4.1 If folder cannot be wiped - show warninging log.
 
             Step 5: Create 'imports' folder if isn't exist.
             Step 5.1: Copy pattern to imports folder and show debug log with path to copied pattern.
@@ -121,7 +121,7 @@ class TPLimports:
 
             log.debug("Arguments from -full_path are obtained and program will make decisions.")
         else:
-            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
+            log.warning("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import\s+\S+\s+\d+')
         self.pattern_module_name_r = re.compile('tpl\s+(?:\$\$TPLVERSION\$\$|\d+\.\d+)\s+module\s+(\S+);')
@@ -164,7 +164,7 @@ class TPLimports:
                     if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
                         extra_folders.append(extra_folder)
                     else:
-                        log.warn("Step 1.1 This path is not exist: "+str(extra_folder))
+                        log.warning("Step 1.1 This path is not exist: "+str(extra_folder))
             else:
                 log.info("Be aware that this folder key is not exist: "+str(folder_key))
 
@@ -265,7 +265,7 @@ class TPLimports:
         iteration_count = 0
         while iteration_count < 3:
             # Recursive search for imports and imports for found patterns for 3 times.
-            # If something was not found on 3rd iteration - print warn message with these items.
+            # If something was not found on 3rd iteration - print warning message with these items.
             iteration_count = iteration_count + 1
             if find_importing_modules:
                 log.debug("Round: "+str(iteration_count)+" - of recursive search.")
@@ -288,7 +288,7 @@ class TPLimports:
                 break
 
         if find_importing_modules:
-            log.warn("Step 3. These modules cannot be found anywhere in 'tku_patterns' "
+            log.warning("Step 3. These modules cannot be found anywhere in 'tku_patterns' "
                      "please check manually: "+str(find_importing_modules))
         if current_modules_name:
             log.debug("Step 3.1 Found modules list: "+str(current_modules_name))
@@ -348,7 +348,7 @@ class TPLimports:
 
             return find_importing_modules, current_modules_name
         else:
-            log.warn("Nothing to read for read_pattern module. No imports will be found.")
+            log.warning("Nothing to read for read_pattern module. No imports will be found.")
             return False, False
 
     def patterns_to_read(self, env_mode, search_path):
@@ -418,7 +418,7 @@ class TPLimports:
 
             return file_candidates
         else:
-            log.warn("I can import only pattern files tplre or tpl.")
+            log.warning("I can import only pattern files tplre or tpl.")
 
     def search_in_path(self, file_candidates, find_importing_modules, current_modules_name):
         # noinspection SpellCheckingInspection
@@ -539,7 +539,7 @@ class TPLimports:
 
             return tplpre_path
         else:
-            log.warn("Current folder is empty or does not exist. Please check arguments and path to current file.")
+            log.warning("Current folder is empty or does not exist. Please check arguments and path to current file.")
 
     def _del_old_imports(self, path):
         """
@@ -554,7 +554,7 @@ class TPLimports:
                 shutil.rmtree(path, onerror=self._del_rw)
                 # shutil.rmtree(path)
             except:
-                log.warn("Step 4.1 This folder exist but program have no permission to remove it. "
+                log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
                          "Please check path and permissions and 'AR' attribute in file.")
                 raise
 

@@ -25,7 +25,7 @@ where options can be
       --file=FILE             Output CSV file
       --filedump              Dump to files specified in first column
   -h, --help                  Display help on standard options
-      --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
+      --loglevel=LEVEL        Logging level: debug, info, warning, error, crit
       --model-loglevel=LEVEL  Model log level
       --no-headings           Plain output with no headings
   -p, --password=PASSWD       Password

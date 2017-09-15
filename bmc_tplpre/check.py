@@ -108,7 +108,7 @@ common.add_argument("-l",
                     action='store',
                     dest="log_lvl",
                     default="1",
-                    help="Please set log level")  # info, quiet, warn, debug, output, error
+                    help="Please set log level")  # info, quiet, warning, debug, output, error
 common.add_argument('--version',
                     action='version',
                     version='%(prog)s 1.0')
@@ -119,11 +119,12 @@ known_args, extra_args = parser.parse_known_args()
 log = log_define(known_args.log_lvl)
 log.debug("Start: "+__name__)
 
-# funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
 funcs_run = GlobalLogic(known_args=known_args, extra_args=extra_args)
 conditional_functions, conditional_results = funcs_run.make_function_set()
 
 # Manual functions execution:
+assert isinstance(conditional_functions, dict)
+
 if conditional_functions['imports_f']:
     imports_f = conditional_functions['imports_f']
 
@@ -145,23 +146,23 @@ if conditional_functions['imports_f']:
         if import_patterns:
             import_patterns()
 
-# # # Executing preprocessor:
-# if conditional_functions['preproc_f']:
-#     preproc_f = conditional_functions['preproc_f']
-#     if preproc_f:
-#         preproc_f()
-#
-# # Executing syntax checker:
-# if conditional_functions['syntax_check_f']:
-#     syntax_check_f = conditional_functions['syntax_check_f']
-#     if syntax_check_f:
-#         syntax_check_f()
-#
-# # Executing zipping files (and upload maybe?)
-# if conditional_functions['zip_files_f']:
-#     zip_files_f = conditional_functions['zip_files_f']
-#     if zip_files_f:
-#         zip_files_f()
+# # Executing preprocessor:
+if conditional_functions['preproc_f']:
+    preproc_f = conditional_functions['preproc_f']
+    if preproc_f:
+        preproc_f()
+
+# Executing syntax checker:
+if conditional_functions['syntax_check_f']:
+    syntax_check_f = conditional_functions['syntax_check_f']
+    if syntax_check_f:
+        syntax_check_f()
+
+# Executing zipping files (and upload maybe?)
+if conditional_functions['zip_files_f']:
+    zip_files_f = conditional_functions['zip_files_f']
+    if zip_files_f:
+        zip_files_f()
 #
 # # Executing pattern activation:
 # if conditional_functions['addm_activate_f']:

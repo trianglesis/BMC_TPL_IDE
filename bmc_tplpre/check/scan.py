@@ -46,7 +46,7 @@ class AddmScan:
                   --label=LABEL           Label for scan
                   --list                  List all scan ranges
                   --list-full             List all scan ranges with all IP addresses
-                  --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
+                  --loglevel=LEVEL        Logging level: debug, info, warning, error, crit
                   --monthly               Monthly scheduled scan
                   --monthly-end-day=DAY   Monthly scheduled scan end day (1-31)
                   --monthly-start-day=DAY Monthly scheduled scan start day (1-31)

@@ -21,7 +21,7 @@ def log_define(log_lvl):
     if log_lvl:
         if "info" in log_lvl:
             return i_log(level='INFO')
-        elif "warn" in log_lvl:
+        elif "warning" in log_lvl:
             return i_log(level='WARN')
         elif "error" in log_lvl:
             return i_log(level='ERROR')

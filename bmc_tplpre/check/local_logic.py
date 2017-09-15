@@ -9,7 +9,7 @@ import os
 import re
 import zipfile
 import subprocess
-import datetime
+# import datetime
 import logging
 
 log = logging.getLogger("check.logger")
@@ -200,7 +200,8 @@ class LocalLogic:
                                        "(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
         self.vm_tkn_path_re = re.compile("(?P<tkn_path>\S+)/addm/tkn_main/tku_patterns/")
 
-    def addm_compose_paths(self, dev_vm_path, pattern_folder):
+    @staticmethod
+    def addm_compose_paths(dev_vm_path, pattern_folder):
         """
         Local path will be used to compose same path in remote vm if HGFS shares confirmed.
         :return:
@@ -224,7 +225,8 @@ class LocalLogic:
 
         return working_dir_virt
 
-    def make_zip(self, path, module_name):
+    @staticmethod
+    def make_zip(path, module_name):
         """
         Zip pattern files in path.
         :param module_name: Name of pattern or its folder to create zip with its name.
@@ -258,7 +260,7 @@ class LocalLogic:
                         #
                         # if file_time_stamp < ago:
                         #
-                        #     log.warn("ZIP: TPLPreprocessor result files looks like older that 15 min. "
+                        #     log.warning("ZIP: TPLPreprocessor result files looks like older that 15 min. "
                         #              "Please check: " + str(file_time_stamp))
                         #
                         # if file_time_stamp > ago:
@@ -516,11 +518,11 @@ class LocalLogic:
 
                     # If this file has an extension I do not support:
                     else:
-                        log.warn("FILE: Did not match any file extension "
-                                 "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
+                        log.warning("FILE: Did not match any file extension "
+                                    "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
                     log.debug("Path matched and parsed.")
                 else:
-                    log.warn("Did not match TKU DEV pattern path tree! Will use another way to parse.")
+                    log.warning("Did not match TKU DEV pattern path tree! Will use another way to parse.")
                     log.debug("I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
 
             elif tku_path_check:
@@ -821,8 +823,8 @@ class LocalLogic:
                                              )
                             return args_dict
                         else:
-                            log.warn("This path did not match any suitable pattern and probably not a tpl file"
-                                     " Or path has superfluous symbols or spaces")
+                            log.warning("This path did not match any suitable pattern and probably not a tpl file"
+                                        " Or path has superfluous symbols or spaces")
                 else:
                     log.debug("FILE: Cannot match file path for alone pattern. "
                               "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
@@ -899,7 +901,7 @@ class LocalLogic:
         if stderr:
             err = stderr.readlines()
             if err:
-                log.warn("ADDM versioning command fails with error: " + str(err))
+                log.warning("ADDM versioning command fails with error: " + str(err))
 
         return tpl_vers, addm_prod, addm_ver, tpl_folder
 
@@ -961,7 +963,8 @@ class LocalLogic:
 
         return dev_vm_check, vm_dev_path
 
-    def check_folders(self, ssh, path):
+    @staticmethod
+    def check_folders(ssh, path):
         """
         Check if folders created, create if needed
 
@@ -994,7 +997,7 @@ class LocalLogic:
                 ssh.exec_command("chmod 777 -R " + path)
                 log.debug("Folder created!")
             else:
-                log.warn("ls command cannot be run on this folder or output is incorrect!")
+                log.warning("ls command cannot be run on this folder or output is incorrect!")
                 folders = []
 
         if output_ok:

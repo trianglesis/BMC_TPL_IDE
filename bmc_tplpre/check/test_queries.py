@@ -44,7 +44,7 @@ class TestRead:
                 log.critical("Error: Unable to parse {!r}".format(str(unicode_err)))
 
         else:
-            log.warn("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
+            log.warning("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
 
     def import_pattern_tests(self, working_dir):
         """
@@ -97,7 +97,7 @@ class TestRead:
 
                 return full_test_patterns_path
         else:
-            log.warn("Cannot get test patterns. "
+            log.warning("Cannot get test patterns. "
                      "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def query_pattern_tests(self, working_dir):
@@ -146,7 +146,7 @@ class TestRead:
                             #     log.debug("This is Binary Options. I do not parse it now, sorry. " + str(operators))
             return query_list
         else:
-            log.warn("Cannot get test queries. "
+            log.warning("Cannot get test queries. "
                      "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def test_patterns_list(self, setup_patterns, working_dir):
@@ -171,7 +171,7 @@ class TestRead:
                 if abs_pattern_path not in patten_abs_path_list:
                     patten_abs_path_list.append(abs_pattern_path)
             else:
-                log.warn("Cannot find file in path"+str(abs_pattern_path))
+                log.warning("Cannot find file in path"+str(abs_pattern_path))
 
         return patten_abs_path_list
 
