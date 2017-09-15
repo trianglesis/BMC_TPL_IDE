@@ -615,83 +615,90 @@ class GlobalLogic:
                                 parse_tests_queries=False,
                                 import_patterns=False)
 
-        if environment_condition == 'developer_tplpre':
-            # NORMAL IMPORTS
-            if import_conditions['usual_imports']:
-                log.info("No extra imports. TPLPreprocessor will import.")
+        assert isinstance(environment_condition, str)
+        assert isinstance(local_conditions, dict)
 
-                import_cond_dict = dict(parse_tests_patterns=False,
-                                        parse_tests_queries=False,
-                                        import_patterns=False)
+        if import_conditions:
+            if environment_condition == 'developer_tplpre':
+                # NORMAL IMPORTS
+                if import_conditions['usual_imports']:
+                    log.info("No extra imports. TPLPreprocessor will import.")
 
-                return import_cond_dict
+                    import_cond_dict = dict(parse_tests_patterns=False,
+                                            parse_tests_queries=False,
+                                            import_patterns=False)
 
-            # RECURSIVE MODE:
-            elif import_conditions['recursive_imports'] and \
-                    not import_conditions['read_test']:
-                log.info("Run recursive imports mode.")
+                    return import_cond_dict
 
-                # Import tplpre's in recursive mode:
-                imports_f = self.make_imports(local_conditions = local_conditions,
-                                              extra_patterns   = None)
+                # RECURSIVE MODE:
+                elif import_conditions['recursive_imports'] and \
+                        not import_conditions['read_test']:
+                    log.info("Run recursive imports mode.")
 
-                import_cond_dict = dict(parse_tests_patterns = False,
-                                        parse_tests_queries  = False,
-                                        import_patterns      = imports_f)
+                    # Import tplpre's in recursive mode:
+                    imports_f = self.make_imports(local_conditions = local_conditions,
+                                                  extra_patterns   = None)
 
-                return import_cond_dict
+                    import_cond_dict = dict(parse_tests_patterns = False,
+                                            parse_tests_queries  = False,
+                                            import_patterns      = imports_f)
 
-            # TESTs + RECURSIVE MODE:
-            elif import_conditions['read_test'] and import_conditions['recursive_imports']:
-                log.info("Run test+recursive imports mode.")
+                    return import_cond_dict
 
-                # Read test.py and extract query for future validation after addm scan and save model:
-                # Later if -T in arg - use this, if no - just ignore.
-                query_t = self.make_test_read_query()
+                # TESTs + RECURSIVE MODE:
+                elif import_conditions['read_test'] and import_conditions['recursive_imports']:
+                    log.info("Run test+recursive imports mode.")
 
-                # Read test.py and extract list of patterns from self.setupPatterns
-                # This is list of patterns I need to import from test.py.
-                imports_t = TestRead().import_pattern_tests(self.working_dir)
+                    # Read test.py and extract query for future validation after addm scan and save model:
+                    # Later if -T in arg - use this, if no - just ignore.
+                    query_t = self.make_test_read_query()
 
-                # Import tplpre's in recursive mode with extras from test.py:
-                imports_f = self.make_imports(local_conditions = local_conditions,
-                                              extra_patterns   = imports_t)
+                    # Read test.py and extract list of patterns from self.setupPatterns
+                    # This is list of patterns I need to import from test.py.
+                    imports_t = TestRead().import_pattern_tests(self.working_dir)
 
-                import_cond_dict = dict(parse_tests_patterns = False,
-                                        parse_tests_queries  = query_t,
-                                        import_patterns      = imports_f)
+                    # Import tplpre's in recursive mode with extras from test.py:
+                    imports_f = self.make_imports(local_conditions = local_conditions,
+                                                  extra_patterns   = imports_t)
 
-                return import_cond_dict
+                    import_cond_dict = dict(parse_tests_patterns = False,
+                                            parse_tests_queries  = query_t,
+                                            import_patterns      = imports_f)
 
-            # SOLO MODE:
-            elif not import_conditions['read_test'] and \
-                    not import_conditions['recursive_imports'] and \
-                    not import_conditions['usual_imports']:
+                    return import_cond_dict
 
-                log.debug("There are no dev arguments found for Test read, or imports, or recursive imports.")
-                log.info("Using as standalone tplpre.")
+                # SOLO MODE:
+                elif not import_conditions['read_test'] and \
+                        not import_conditions['recursive_imports'] and \
+                        not import_conditions['usual_imports']:
 
-                import_cond_dict = dict(parse_tests_patterns = False,
-                                        parse_tests_queries  = False,
-                                        import_patterns      = False)
+                    log.debug("There are no dev arguments found for Test read, or imports, or recursive imports.")
+                    log.info("Using as standalone tplpre.")
 
-                return import_cond_dict
+                    import_cond_dict = dict(parse_tests_patterns = False,
+                                            parse_tests_queries  = False,
+                                            import_patterns      = False)
 
-        elif environment_condition == 'customer_tku':
+                    return import_cond_dict
 
-            if import_conditions['recursive_imports']:
-                log.info("Imports logic working in customer mode.")
+            elif environment_condition == 'customer_tku':
 
-                # Import tplpre's in recursive mode:
-                imports_f = self.make_imports(local_conditions = local_conditions,
-                                              extra_patterns   = None)
+                if import_conditions['recursive_imports']:
+                    log.info("Imports logic working in customer mode.")
 
-                import_cond_dict = dict(parse_tests_patterns = False,
-                                        parse_tests_queries  = False,
-                                        import_patterns      = imports_f)
-                return import_cond_dict
-            else:
-                log.info("Working in customer mode, all other importing option will be ignored.")
+                    # Import tplpre's in recursive mode:
+                    imports_f = self.make_imports(local_conditions = local_conditions,
+                                                  extra_patterns   = None)
+
+                    import_cond_dict = dict(parse_tests_patterns = False,
+                                            parse_tests_queries  = False,
+                                            import_patterns      = imports_f)
+                    return import_cond_dict
+                else:
+                    log.info("Working in customer mode, all other importing option will be ignored.")
+        else:
+            log.debug("No import options passed.")
+
         return import_cond_dict
 
     def preproc_cond(self, **logical_conditions):
@@ -705,6 +712,7 @@ class GlobalLogic:
         :return: func
         """
 
+        # TODO: Check condition groups
         assert isinstance(logical_conditions, dict)
         # Assign
         preproc_f = ''
@@ -714,34 +722,31 @@ class GlobalLogic:
         environment_condition  = logical_conditions['local_conditions']['environment_condition']
 
         if environment_condition == 'developer_tplpre':
-            # Preproc on NORMAL IMPORTS
-            if import_conditions['usual_imports'] and \
-                    not import_conditions['recursive_imports'] and \
-                    not import_conditions['read_test']:
+            if import_conditions:
+                # Preproc on NORMAL IMPORTS
+                if import_conditions['usual_imports'] and not import_conditions['recursive_imports'] and \
+                        not import_conditions['read_test']:
 
-                log.info("TPLPreprocessor run on pattern and import.")
-                log.debug("TPLPreprocessor will run on active file and import by its own logic. (usual_imports)")
-                preproc_f = self.make_preproc(workspace   = self.workspace,
-                                              input_path  = self.full_path,
-                                              output_path = self.working_dir,
-                                              mode        = "usual_imports")
+                    log.info("TPLPreprocessor run on pattern and import.")
+                    log.debug("TPLPreprocessor will run on active file and import by its own logic. (usual_imports)")
+                    preproc_f = self.make_preproc(workspace   = self.workspace,
+                                                  input_path  = self.full_path,
+                                                  output_path = self.working_dir,
+                                                  mode        = "usual_imports")
 
-            # Preproc will run on all files from folder 'imports'
-            elif import_conditions['recursive_imports'] or import_conditions['read_test'] and \
-                    not import_conditions['usual_imports']:
+                # Preproc will run on all files from folder 'imports'
+                elif import_conditions['recursive_imports'] or import_conditions['read_test'] and \
+                        not import_conditions['usual_imports']:
 
-                log.info("TPLPreprocessor run on imports folder.")
-                log.debug("TPLPreprocessor will run on imports folder after my recursive importing logic. (recursive_imports)")
-                # After R imports are finish its work - run TPLPreprocessor on it
-                preproc_f = self.make_preproc(workspace   = self.workspace,
-                                              input_path  = self.working_dir+os.sep+"imports",
-                                              output_path = self.working_dir+os.sep+"imports",
-                                              mode        = "recursive_imports")
-
-            # SOLO MODE:
-            elif not import_conditions['read_test'] and \
-                    not import_conditions['recursive_imports'] and \
-                    not import_conditions['usual_imports']:
+                    log.info("TPLPreprocessor run on imports folder.")
+                    log.debug("TPLPreprocessor will run on imports folder after my recursive importing logic. (recursive_imports)")
+                    # After R imports are finish its work - run TPLPreprocessor on it
+                    preproc_f = self.make_preproc(workspace   = self.workspace,
+                                                  input_path  = self.working_dir+os.sep+"imports",
+                                                  output_path = self.working_dir+os.sep+"imports",
+                                                  mode        = "recursive_imports")
+            # SOLO mode:
+            else:
                 log.info("TPLPreprocessor run on pattern without imports.")
                 log.debug("TPLPreprocessor will run on active file without any additional imports. (solo_mode)")
 
@@ -750,7 +755,8 @@ class GlobalLogic:
                                               output_path = self.working_dir,
                                               mode        = "solo_mode")
 
-            return preproc_f
+                return preproc_f
+
         elif environment_condition == 'customer_tku':
             log.debug("Ignoring TPLPreprocessor on customer_tku environment execution. All files should be tpl.")
             return False
@@ -767,41 +773,38 @@ class GlobalLogic:
         :param logical_conditions: set
         :return: func
         """
+        # TODO: Check condition groups
         assert isinstance(logical_conditions, dict)
 
         # Set examples in __init__ docstrings:
         import_conditions = logical_conditions['import_conditions']
         tpl_version       = logical_conditions['tpl_version']
 
-        # Preproc on NORMAL IMPORTS
-        if import_conditions['usual_imports']:
+        if import_conditions:
+            # Preproc on NORMAL IMPORTS
+            if import_conditions['usual_imports']:
 
-            log.info("Syntax check TPLPreprocessor output.")
-            log.debug("Syntax check will run on tpl folders after usual TPLPreproc output. (usual_imports)")
+                log.info("Syntax check TPLPreprocessor output.")
+                log.debug("Syntax check will run on tpl folders after usual TPLPreproc output. (usual_imports)")
 
-            # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
-            syntax_check_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
+                # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+                syntax_check_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
 
-            return syntax_check_f
+                return syntax_check_f
 
-        # Preproc will run on all files from folder 'imports'
-        elif import_conditions['recursive_imports'] or import_conditions['read_test']:
+            # Preproc will run on all files from folder 'imports'
+            elif import_conditions['recursive_imports'] or import_conditions['read_test']:
 
-            log.info("Syntax check on imports.")
-            log.debug("Syntax check will run on imports folder after my importing logic. (recursive_imports or read_test)")
+                log.info("Syntax check on imports.")
+                log.debug("Syntax check will run on imports folder after my importing logic. (recursive_imports or read_test)")
 
-            # After TPLPreprocessor finished its work - run Syntax Check on folder imports
-            # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
-            syntax_check_f = self.make_syntax_check(self.working_dir+os.sep+"imports",
-                                                    disco_ver=tpl_version)
+                # After TPLPreprocessor finished its work - run Syntax Check on folder imports
+                # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+                syntax_check_f = self.make_syntax_check(self.working_dir+os.sep+"imports",
+                                                        disco_ver=tpl_version)
 
-            return syntax_check_f
-
-        # SOLO MODE:
-        elif not import_conditions['read_test'] and \
-                not import_conditions['recursive_imports'] and \
-                not import_conditions['usual_imports']:
-
+                return syntax_check_f
+        else:
             log.info("1/1 Syntax check solo file.")
             log.debug("1/2 Imports was already created just checking syntax for active pattern. "
                       "(not read_test not recursive_imports not usual_imports)")
