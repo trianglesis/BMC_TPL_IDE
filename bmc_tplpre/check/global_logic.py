@@ -293,6 +293,7 @@ class GlobalLogic:
         """
         assert isinstance(operational_args, dict)
         assert isinstance(conditional_args_set, dict)
+        assert isinstance(addm_args_set, dict)
 
         # Set examples in __init__ docstrings:
         addm_conditions        = addm_args_set
@@ -317,6 +318,12 @@ class GlobalLogic:
         addm_zip         = ''
         local_zip        = ''
         addm_working_dir = ''
+
+        upload_scan = False
+        local_proceed_for_addm = False
+        upload_only = False
+        import_preproc_syntax_local = False
+        tests_run = False
 
         # TODO: Debug disable:
         # noinspection PyUnusedLocal
@@ -347,19 +354,49 @@ class GlobalLogic:
         # TODO: What if declare each this if AS functional dict saparate for each situation?
         assert isinstance(addm_conditions, dict)
 
-        upload_scan = dict(scan_hosts = addm_conditions['scan_hosts'],
-                           disco_mode = addm_conditions['disco_mode'],
-                           ssh_conn = addm_conditions['ssh_connection']
-                           )
-
-
-        # TODO: Maybe better to use IFs in separate function jus for if, and declare modes.
         if addm_conditions['scan_hosts'] and addm_conditions['disco_mode'] and addm_conditions['ssh_connection'] \
                 and not test_conditions:
 
             log.info("ADDM Scan action.")
             log.debug("ADDM Scan args are present, current files will be uploaded to ADDM and Scan will be started.")
 
+            upload_scan = True
+
+        elif not addm_conditions['disco_mode'] and not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder'] \
+                and addm_conditions['ssh_connection'] \
+                and not test_conditions:
+
+            log.info("No ADDM action. Local processing")
+            log.debug("No ADDM Scan and discovery args are present. "
+                      "Local processing with tpl version gathered from live ADDM.")
+
+            local_proceed_for_addm = True
+
+        elif not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder'] and addm_conditions['disco_mode'] \
+                and addm_conditions['ssh_connection'] \
+                and not test_conditions:
+
+            log.info("ADDM Upload. No scan.")
+            log.debug("ADDM Upload args are present, current files will be uploaded to ADDM. No scan.")
+
+            upload_only = True
+
+        elif not addm_conditions['ssh_connection'] and not test_conditions:
+
+            log.info("Local processing. No ADDM connection.")
+            import_preproc_syntax_local = True
+
+        elif addm_conditions['ssh_connection'] and test_conditions:
+
+            tests_run = True
+            log.debug("Will use test")
+        # I don't know:
+        else:
+            log.info("This set of conditional arguments is not supported by my logic, Please read docs.")
+
+
+        # TODO: Maybe better to use IFs in separate function jus for if, and declare modes.
+        if upload_scan:
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions  = local_conditions)
@@ -393,17 +430,9 @@ class GlobalLogic:
             # Better to use filename as active file - which initiates this run:
             scan_f = self.make_scan(addm_conditions = addm_conditions,
                                     module_name     = self.full_path_args['file_name'])
-
         # When I have no args for scan AND NO args for ADDM disco,
         # but have arg for tpl_vers - proceed files locally with that version.
-        elif not addm_conditions['disco_mode'] and not addm_conditions['scan_hosts'] \
-                and addm_conditions['tpl_folder'] and addm_conditions['ssh_connection'] \
-                and not test_conditions:
-
-            log.info("No ADDM action. Local processing")
-            log.debug("No ADDM Scan and discovery args are present. "
-                      "Local processing with tpl version gathered from live ADDM.")
-
+        elif local_proceed_for_addm:
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions  = local_conditions)
@@ -428,15 +457,7 @@ class GlobalLogic:
                      " Tpl v. "+str(addm_conditions['tpl_vers']))
 
         # When I have NO args for Scan, but have args for ADDM status and disco - will start upload only.
-        elif not addm_conditions['scan_hosts'] \
-                and addm_conditions['tpl_folder'] \
-                and addm_conditions['disco_mode'] \
-                and addm_conditions['ssh_connection'] \
-                and not test_conditions:
-
-            log.info("ADDM Upload. No scan.")
-            log.debug("ADDM Upload args are present, current files will be uploaded to ADDM. No scan.")
-
+        elif upload_only:
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions = local_conditions)
@@ -470,11 +491,10 @@ class GlobalLogic:
             # No Scan action because: not addm_conditions['scan_hosts'] just upload and activate.
 
         # No addm args:
-        elif not addm_conditions['ssh_connection'] \
-                and not test_conditions:
+        elif import_preproc_syntax_local:
             # I have no active connection to ADDM so I don't know about tpl version to generate and zip
             #  - SO I will just import, Preproc and check syntax
-            log.info("Local processing. No ADDM connection.")
+
 
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
@@ -495,12 +515,15 @@ class GlobalLogic:
             addm_working_dir = 'There is no ADDM connection, program is running in local mode.'
 
         # When ADDM connection is present and test options used:
-        elif addm_conditions['ssh_connection'] and test_conditions:
+        elif tests_run:
             log.debug("Will use test")
 
         # I don't know:
         else:
-            log.info("This set of conditional arguments is not supported by my logic, Please read docs.")
+            log.warning("I can't understand the logic of current set of options. Printing "
+                        "\noperational_args: "+str(operational_args)+
+                        "\naddm_args_set: "+str(addm_args_set)+
+                        "\nfull_path_args: "+str(full_path_args))
 
         conditional_functions = dict(imports_f       = imports_f,
                                      preproc_f       = preproc_f,
