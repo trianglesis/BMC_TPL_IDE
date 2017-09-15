@@ -210,6 +210,8 @@ class GlobalLogic:
                 log.debug("No tests will run. "+str(self.operational_args['tests']))
         else:
             log.debug("No test runs.")
+            self.related_tests = False
+            self.run_test      = False
 
     def check_args_set(self, **args_from_cmd):
         """
@@ -296,6 +298,7 @@ class GlobalLogic:
         assert isinstance(addm_args_set, dict)
 
         # Set examples in __init__ docstrings:
+        # TODO: Rename conditions to different modes:
         addm_conditions        = addm_args_set
         local_conditions       = full_path_args
 

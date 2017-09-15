@@ -17,6 +17,7 @@ def log_define(log_lvl):
 
     :return: proper level for use in logger
     """
+    assert isinstance(log_lvl, str)
 
     if log_lvl:
         if "info" in log_lvl:
@@ -41,6 +42,7 @@ def i_log(level):
     :param level: logging level
     :return:
     """
+    assert isinstance(level, str)
 
     # Logger:
     log = logging.getLogger(__name__)

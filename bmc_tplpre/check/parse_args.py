@@ -319,4 +319,9 @@ class ArgsParse:
             oper_args_set['tests']['run_test'] = True
             oper_args_set['imports'] = False
 
+        else:
+            # When situation is not implemented - use false by default.
+            oper_args_set['tests'] = False
+            oper_args_set['imports'] = False
+
         return oper_args_set

@@ -6,7 +6,6 @@ Allows you to automate usual routine in pattern development.
 """
 
 import argparse
-import logging
 from check.global_logic import GlobalLogic
 from check.logger import log_define
 
@@ -163,19 +162,19 @@ if conditional_functions['zip_files_f']:
     zip_files_f = conditional_functions['zip_files_f']
     if zip_files_f:
         zip_files_f()
-#
-# # Executing pattern activation:
-# if conditional_functions['addm_activate_f']:
-#     addm_activate_f = conditional_functions['addm_activate_f']
-#     if addm_activate_f:
-#         addm_activate_f()
-#
-# # Executing start scan
-# # # Working in current condition. Disable to save time
-# if conditional_functions['scan_f']:
-#     scan_f = conditional_functions['scan_f']
-#     if scan_f:
-#         scan_f()
+
+# Executing pattern activation:
+if conditional_functions['addm_activate_f']:
+    addm_activate_f = conditional_functions['addm_activate_f']
+    if addm_activate_f:
+        addm_activate_f()
+
+# Executing start scan
+# # Working in current condition. Disable to save time
+if conditional_functions['scan_f']:
+    scan_f = conditional_functions['scan_f']
+    if scan_f:
+        scan_f()
 
 
 log.info("-=== END of Check script. ===-")
