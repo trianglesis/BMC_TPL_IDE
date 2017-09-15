@@ -5,6 +5,8 @@ Syntax checking is based on BMC code and not included in this public version due
 Allows you to automate usual routine in pattern development.
 """
 
+import logging
+log = logging.getLogger("check.logger")
 
 """
 Collecting data after Discovery run

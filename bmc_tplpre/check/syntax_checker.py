@@ -9,6 +9,8 @@ import subprocess
 import re
 import sys
 import os
+import logging
+log = logging.getLogger("check.logger")
 
 '''
 1. Use working dir and tpl ver and run syntax check (input)
@@ -30,13 +32,10 @@ class SyntaxCheck:
         Run check.
     """
 
-    def __init__(self, logging):
+    def __init__(self):
+        """
         """
 
-        :param logging: log class
-        """
-
-        self.logging = logging
 
         # NOTE: tplint was updated in 2016 last time, so we can use only versions not greater then 11.0
         # Maybe I can spend some time to update it to recent versions in future.
@@ -61,7 +60,6 @@ class SyntaxCheck:
         :param working_dir: str
         :return:
         """
-        log = self.logging
         tpl_mod_dir = os.path.abspath(os.path.join(__file__ , "../.."))
         syntax_passed = False
 
@@ -112,7 +110,6 @@ class SyntaxCheck:
         :param result:
         :return:
         """
-        # log = self.logging
         match_result = re.compile("(?P<error>\w+\s\w+) at or near"
                                   " '(?P<near>\S+)', line (?P<line>\d+), in (?P<module>\S+)")
         used_mod_re = re.compile("Module:\s(\S+)\s\s+Errors:")

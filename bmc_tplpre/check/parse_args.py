@@ -8,13 +8,14 @@ Allows you to automate usual routine in pattern development.
 import re
 import paramiko
 from check.local_logic import LocalLogic
+import logging
+
+log = logging.getLogger("check.logger")
 
 
 class ArgsParse:
 
-    def __init__(self, logging):
-
-        self.logging = logging
+    def __init__(self):
 
         # Checking args for ADDM:
         self.ip_addr_check = re.compile("\d+\.\d+\.\d+\.\d+")  # ip addr
@@ -32,7 +33,6 @@ class ArgsParse:
 
         :return:
         """
-        log = self.logging
 
         # Args dedicated to local paths from full path extracted:
         local_arguments_set = self.full_path_parse(known_args.full_path)
@@ -72,10 +72,7 @@ class ArgsParse:
         :return: addm_args_set
         """
 
-        # TODO: Add REST support. Using known args - decide which auth to use REST or SSH.
-
-        log = self.logging
-        addm_env_check = LocalLogic(log)
+        addm_env_check = LocalLogic()
 
         addm_host = known_args.addm_host
         user = known_args.user
@@ -149,7 +146,8 @@ class ArgsParse:
                              addm_prod       = addm_prod)
         return addm_args_set
 
-    def full_path_parse(self, full_path):
+    @staticmethod
+    def full_path_parse(full_path):
         """
         Input the full path arg and tries to parse it for further usage in different scenarios:
 
@@ -165,13 +163,13 @@ class ArgsParse:
         :return: dict
         """
 
-        log = self.logging
-        path_logic = LocalLogic(log)
+        path_logic = LocalLogic()
         args = path_logic.file_path_decisions(full_file_path=full_path)
 
         return args
 
-    def addm_host_check(self, addm_host, user, password):
+    @staticmethod
+    def addm_host_check(addm_host, user, password):
         """
         Check login and password for provided ADDM IP
         If no ADDM IP - should not run this and upload, disco.
@@ -187,7 +185,6 @@ class ArgsParse:
         :param user: str
         :param addm_host: str
         """
-        log = self.logging
 
         ssh = ''
         if addm_host:
@@ -231,7 +228,6 @@ class ArgsParse:
          (standard|playback|record)
          Should run only if SSH session established!
         """
-        log = self.logging
 
         if disco_mode:
             check = self.disco_mode_check.match(disco_mode)
@@ -251,7 +247,6 @@ class ArgsParse:
 
         :param host_list_arg: str
         """
-        log = self.logging
         host_list = False
 
         if host_list_arg:
@@ -269,7 +264,8 @@ class ArgsParse:
 
         return host_list
 
-    def operational_mode_check(self, known_args):
+    @staticmethod
+    def operational_mode_check(known_args):
         """
         Dict should not be empty even if there is no args for that.
         Further Ill check and use logic.
@@ -284,8 +280,8 @@ class ArgsParse:
         :param known_args:
         :return: dict of Bool actions
         """
-        log = self.logging
 
+        # TODO: move test mode to separate function or make two dicts for each?
         oper_args_set = dict(recursive_imports=False,
                              usual_imports=False,
                              read_test=False,

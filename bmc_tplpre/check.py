@@ -6,7 +6,9 @@ Allows you to automate usual routine in pattern development.
 """
 
 import argparse
+import logging
 from check.global_logic import GlobalLogic
+from check.logger import log_define
 
 # # DEBUG
 # import json
@@ -114,14 +116,11 @@ common.add_argument('--version',
 known_args, extra_args = parser.parse_known_args()
 # print("Known args: "+str(known_args))
 
+log = log_define(known_args.log_lvl)
+log.debug("Start: "+__name__)
 
-def log_constructor():
-    from check.logger import Logger
-    log_init = Logger(known_args.log_lvl)
-    return log_init.log_define()
-log = log_constructor()
-
-funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
+# funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
+funcs_run = GlobalLogic(known_args=known_args, extra_args=extra_args)
 conditional_functions, conditional_results = funcs_run.make_function_set()
 
 # Manual functions execution:
@@ -146,36 +145,36 @@ if conditional_functions['imports_f']:
         if import_patterns:
             import_patterns()
 
-# Executing preprocessor:
-if conditional_functions['preproc_f']:
-    preproc_f = conditional_functions['preproc_f']
-    if preproc_f:
-        preproc_f()
-
-# Executing syntax checker:
-if conditional_functions['syntax_check_f']:
-    syntax_check_f = conditional_functions['syntax_check_f']
-    if syntax_check_f:
-        syntax_check_f()
-
-# Executing zipping files (and upload maybe?)
-if conditional_functions['zip_files_f']:
-    zip_files_f = conditional_functions['zip_files_f']
-    if zip_files_f:
-        zip_files_f()
-
-# Executing pattern activation:
-if conditional_functions['addm_activate_f']:
-    addm_activate_f = conditional_functions['addm_activate_f']
-    if addm_activate_f:
-        addm_activate_f()
-
-# Executing start scan
-# Working in current condition. Disable to save time
-if conditional_functions['scan_f']:
-    scan_f = conditional_functions['scan_f']
-    if scan_f:
-        scan_f()
+# # # Executing preprocessor:
+# if conditional_functions['preproc_f']:
+#     preproc_f = conditional_functions['preproc_f']
+#     if preproc_f:
+#         preproc_f()
+#
+# # Executing syntax checker:
+# if conditional_functions['syntax_check_f']:
+#     syntax_check_f = conditional_functions['syntax_check_f']
+#     if syntax_check_f:
+#         syntax_check_f()
+#
+# # Executing zipping files (and upload maybe?)
+# if conditional_functions['zip_files_f']:
+#     zip_files_f = conditional_functions['zip_files_f']
+#     if zip_files_f:
+#         zip_files_f()
+#
+# # Executing pattern activation:
+# if conditional_functions['addm_activate_f']:
+#     addm_activate_f = conditional_functions['addm_activate_f']
+#     if addm_activate_f:
+#         addm_activate_f()
+#
+# # Executing start scan
+# # # Working in current condition. Disable to save time
+# if conditional_functions['scan_f']:
+#     scan_f = conditional_functions['scan_f']
+#     if scan_f:
+#         scan_f()
 
 
 log.info("-=== END of Check script. ===-")

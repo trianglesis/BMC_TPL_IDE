@@ -4,11 +4,12 @@ TPL - (tideway pattern language) syntax highlighting and checking tool.
 Syntax checking is based on BMC code and not included in this public version due to license restrictions.
 Allows you to automate usual routine in pattern development.
 """
-
+import logging
+log = logging.getLogger("check.logger")
 
 class AddmScan:
 
-    def __init__(self, logging, ssh):
+    def __init__(self, ssh):
         """
         1. If pattern module uploaded successfully and activated - start this (input)
         1.1 Open saved SSH session if exist. (input)
@@ -17,11 +18,9 @@ class AddmScan:
         4. Start scan with passed arguments: pattern_name, host_list
         5. Show result, scan ID ect. (output)
 
-        :param logging: func
         :param ssh: func
         """
 
-        self.logging = logging
         self.ssh_cons = ssh
 
     def addm_scan(self, disco_mode, host_list, system_user, system_password, dir_label):
@@ -93,7 +92,6 @@ class AddmScan:
         :param host_list: list - list of hosts to scan. Now only ipv4 supported.
         :param dir_label: Name of folder where pattern executed.
         """
-        log = self.logging
 
         if disco_mode:
             stdin, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_disco_control"
@@ -143,7 +141,6 @@ class AddmScan:
         :param scan_id:
         :return:
         """
-        log = self.logging
         if ssh:
             log.debug('addm_scan_check')
             if scan_id:
@@ -158,7 +155,6 @@ class AddmScan:
         :param reasoning_flag: str
         :return:
         """
-        log = self.logging
         if ssh:
             log.debug('addm_scan_reasoning_on_off')
             if reasoning_flag:

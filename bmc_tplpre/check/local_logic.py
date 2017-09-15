@@ -10,20 +10,19 @@ import re
 import zipfile
 import subprocess
 import datetime
+import logging
+
+log = logging.getLogger("check.logger")
 
 
 # noinspection PyPep8Naming
 class LocalLogic:
 
-    def __init__(self, logging):
+    def __init__(self):
         """
         Gathering local options based on filesystem arguments and cmd results got on working machine.
         And some extra results from external addm machine.
-
-        :param logging: func
         """
-
-        self.logging = logging
 
         # TPL versions check:
         self.tpl_ver_check = re.compile("\d+\.\d+")  # TPl ver 10.2,11.0...
@@ -206,7 +205,6 @@ class LocalLogic:
         Local path will be used to compose same path in remote vm if HGFS shares confirmed.
         :return:
         """
-        log = self.logging
         # Paths from local to remote:
         workspace = dev_vm_path
 
@@ -233,7 +231,6 @@ class LocalLogic:
         :param path: Path where tpl files are ready to be zipped.
         :return: zip path to ready zip file.
         """
-        log = self.logging
 
         norm_path = os.path.normpath(path+os.sep)
         path = norm_path+os.sep
@@ -290,7 +287,6 @@ class LocalLogic:
         :param full_file_path: str
         :return: dict
         """
-        log = self.logging
 
         # These should be filled with paths from p4 cmd or path parse.
         workspace                = ''
@@ -848,7 +844,6 @@ class LocalLogic:
 
         :return: str
         """
-        log = self.logging
         workspace_re = re.compile("(\S+)")
         log.info("Workspace was not found, trying p4 or PATH.")
 
@@ -882,7 +877,6 @@ class LocalLogic:
         :param ssh:
         :return:
         """
-        log = self.logging
         tpl_vers = ''
         addm_prod = ''
         addm_ver = ''
@@ -940,7 +934,6 @@ class LocalLogic:
 
         :return:
         """
-        log = self.logging
 
         # TODO: ../TKU/.. folder should somehow documented as really MUST HAVE parameter in ane ENV.
         dev_vm_check = False
@@ -987,7 +980,6 @@ class LocalLogic:
 
         # TODO: Check if tideway user can run this.
         # TODO: Create all needed dev folders here.
-        log = self.logging
 
         folders = []
         ftp = ssh.open_sftp()
@@ -1011,3 +1003,5 @@ class LocalLogic:
             log.debug("Folder exist! Content: " + ', '.join(folders)+" ls on: "+str(path))
 
         return folders
+
+    # TODO: Add here test.py searching for all in tku:

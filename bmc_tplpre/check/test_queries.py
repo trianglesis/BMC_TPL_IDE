@@ -8,14 +8,14 @@ Allows you to automate usual routine in pattern development.
 import os
 import ast
 import re
-
+import logging
+log = logging.getLogger("check.logger")
 
 class TestRead:
 
-    def __init__(self, logging):
+    def __init__(self):
         # TODO: Allow to parse dev_tests and dml/ip data to use in TH mode
 
-        self.logging = logging
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
         self.core_from_wd_r = re.compile("\S+tku_patterns\\\CORE\\\\")
 
@@ -29,7 +29,6 @@ class TestRead:
         :param working_dir: where pattern lies
         :return: ast tree
         """
-        log = self.logging
         test_py_file_dir = working_dir + os.sep + "tests\\"
         if os.path.exists(test_py_file_dir + os.sep + "test.py"):
             log.debug("Folder tests for current patters - exist: " + str(test_py_file_dir))
@@ -55,7 +54,6 @@ class TestRead:
         :param working_dir: str: path to patterns folder.
         :return: list of pattern to import for test
         """
-        log = self.logging
         test_tree = self._read_pattern_test_file(working_dir)
         pattern_import_test = []
         log.debug("Reading import patterns from test.py")
@@ -112,7 +110,6 @@ class TestRead:
         :param working_dir:
         :return: list of queries to run in test
         """
-        log = self.logging
 
         test_tree = self._read_pattern_test_file(working_dir)
         query_list = []
@@ -160,7 +157,6 @@ class TestRead:
         :param working_dir: working dir of current pattern
         :return:
         """
-        log = self.logging
         log.debug("Composing paths to patterns from test.py")
         patten_abs_path_list = []
 
@@ -221,7 +217,6 @@ class TestRead:
         import json
         from pprint import pformat
 
-        log = self.logging
         curr_patt_dir = 'BMCRemedyARSystem'
         curr_test_path = "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py"
 

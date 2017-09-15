@@ -7,11 +7,12 @@ Allows you to automate usual routine in pattern development.
 
 import hashlib
 import re
-
+import logging
+log = logging.getLogger("check.logger")
 
 class AddmOperations:
 
-    def __init__(self, logging, ssh):
+    def __init__(self, ssh):
         """
 
         1. If syntax_passed = True AND tpl_preproc = True AND addm_host ip in args - start this (input)
@@ -37,12 +38,9 @@ class AddmOperations:
 
         4 When activate finished - return result (pass \ fail) - (output)
 
-        :param logging: func
         :param ssh: func
         """
         # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
-
-        self.logging = logging
         self.ssh_cons = ssh
 
         # noinspection SpellCheckingInspection
@@ -60,8 +58,6 @@ class AddmOperations:
         :param zip_on_local: str - path to zip in local system
         :param zip_on_remote: str - path where put this zip
         """
-
-        log = self.logging
 
         log.debug("zip file local: " + zip_on_local)
         log.debug("zip file remote: " + zip_on_remote)
@@ -108,8 +104,6 @@ class AddmOperations:
         :param module_name: Name of pattern folder
         """
 
-        log = self.logging
-
         uploaded_activated = False  # 1 knowledge upload activated
         log.debug("Activate local zip: ensure we have rights of 777 on this file: "+str(zip_path))
 
@@ -142,7 +136,7 @@ class AddmOperations:
 
         :return:
         """
-        log = self.logging
+
         log.debug("Func to deactivate previous or old TKU updates.")
 
     def check_file_pattern(self, local_file, remote_file):
@@ -161,7 +155,6 @@ class AddmOperations:
         :param local_file: file in local system
         :return:
         """
-        log = self.logging
 
         log.debug("MD5SUM: Checking file sum of local_file: "+str(local_file))
         log.debug("MD5SUM: Checking file sum of remote_file: "+str(remote_file))

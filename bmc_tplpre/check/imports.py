@@ -10,11 +10,14 @@ import re
 import os
 import shutil
 import stat
+import logging
+
+log = logging.getLogger("check.logger")
 
 
 class TPLimports:
 
-    def __init__(self, logging, full_path_args):
+    def __init__(self, full_path_args):
 
         """
         Initialize with startup set of arguments.
@@ -105,9 +108,6 @@ class TPLimports:
         :param full_path_args: args parsed and composed
         """
 
-        self.logging = logging
-        log = self.logging
-
         self.full_path_args = full_path_args
 
         if self.full_path_args:
@@ -135,7 +135,6 @@ class TPLimports:
         :param conditions: set - this is set of options from full_paths parse. Example above.
         :return: nothing - just execute imports.
         """
-        log = self.logging
 
         local_cond = conditions['conditions']['local_conditions']
         env_mode   = conditions['conditions']['local_conditions']['environment_condition']
@@ -253,7 +252,6 @@ class TPLimports:
         :type importing_set_options: set list
         :return:
         """
-        log = self.logging
 
         extra_folders               = importing_set_options['extra_folders']
         current_modules_name        = importing_set_options['current_modules_name']
@@ -320,7 +318,6 @@ class TPLimports:
         :param current_modules_name: incoming list of modules already found
         :return: list
         """
-        log = self.logging
 
         if pattern_path_list:
             log.debug('Step 1.2. Reading patterns from the list.')
@@ -366,7 +363,6 @@ class TPLimports:
         :type env_mode: str
         :return: list
         """
-        log = self.logging
 
         exclude_dirs = ['imports'
                         'tests',
@@ -440,7 +436,6 @@ class TPLimports:
         :return: list
         """
 
-        log = self.logging
         # In list of all available pattern files in searched tree -
         # search all we need to import by reading header of each file.
         # Step 2.1.- search in patterns list.
@@ -498,7 +493,6 @@ class TPLimports:
             :return:
         """
 
-        log = self.logging
         imports_folder = working_dir + os.sep + "imports"
 
         # log.debug("Step 4. Patterns to be copied into 'imports': "+str(patterns_path))
@@ -526,7 +520,6 @@ class TPLimports:
         :param folder_path: str
         :return: list
         """
-        log = self.logging
 
         all_tplre = []
         tplpre_path = []
@@ -555,7 +548,6 @@ class TPLimports:
         :param path: path to imports folder
         :return:
         """
-        log = self.logging
         if os.path.exists(path):
             try:
                 log.debug("Step 4. Wiping 'imports' folder before add new imports in it. "+str(path))

@@ -10,7 +10,9 @@ import os
 import re
 import subprocess
 import datetime
+import logging
 
+log = logging.getLogger("check.logger")
 
 '''
 1. If syntax_passed = True after Notepad_IDE/Sublime/check/syntax_checker.py run TPLPreprocessor (input)
@@ -23,9 +25,8 @@ import datetime
 # noinspection PyBroadException
 class Preproc:
 
-    def __init__(self, logging):
+    def __init__(self):
 
-        self.logging = logging
         self.sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
         # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
 
@@ -36,7 +37,6 @@ class Preproc:
         :type workspace: path to p4 workspace - from -full_path arg
         :return: tpl_preproc_location
         """
-        log = self.logging
 
         if workspace:
             log.debug("Got the p4 workspace path from 'full_path_parse()' "
@@ -71,7 +71,6 @@ class Preproc:
         _, t_pre = self.find_tplpreprocessor(workspace)
         # print(t_pre)
 
-        log = self.logging
         log.debug("Using script path as: " + t_pre)
 
         tpl_preproc = False

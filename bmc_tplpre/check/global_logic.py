@@ -15,10 +15,12 @@ from check.syntax_checker import SyntaxCheck
 from check.local_logic import LocalLogic
 from check.scan import AddmScan
 
+import logging
+log = logging.getLogger("check.logger")
 
 class GlobalLogic:
 
-    def __init__(self, **kwargs):
+    def __init__(self, extra_args, known_args, **kwargs):
         """
         Initialize with options for logical operations.
         Check arg sets and output messages for different option scenarios.
@@ -41,14 +43,11 @@ class GlobalLogic:
         :param kwargs:
         """
 
-        logging = kwargs['logging']
-        self.logging = logging
-        log = self.logging
 
         # Get all available arguments in three sets based on its type:
         self.full_path_args, self.operational_args, self.addm_args_set = self.check_args_set(
-                                                                                    known_args = kwargs['known_args'],
-                                                                                    extra_args = kwargs['extra_args'])
+                                                                                    known_args =known_args,
+                                                                                    extra_args =extra_args)
 
         # DEBUG
         # import json
@@ -56,6 +55,7 @@ class GlobalLogic:
         # print(json.dumps(self.addm_args_set, indent=4, ensure_ascii=False, default=pformat))
 
         # Check args in init module to further assign on function bodies:
+        assert isinstance(self.full_path_args, dict)
         if self.full_path_args:
             '''
                 Examples of arg sets
@@ -131,6 +131,7 @@ class GlobalLogic:
             msg = "There is no -full_path argument set or it cannot be parsed."
             raise Error(msg)
 
+        assert isinstance(self.addm_args_set, dict)
         if self.addm_args_set:
             '''
             ADDM VM ARGS: {dev_vm_path": "/usr/tideway/TKU",
@@ -154,19 +155,22 @@ class GlobalLogic:
         else:
             log.debug("ADDM arguments are gathered or wasn't set. Program will work on local mode.")
 
+        assert isinstance(self.operational_args, dict)
         if self.operational_args:
             '''
-                {
-                    "read_test": false,
-                    "usual_imports": true,
-                    "recursive_imports": false
-                }
+                {'recursive_imports': False, 
+                'read_test': False, 
+                'run_test': True, 
+                'related_tests': False, 
+                'usual_imports': False}
 
             '''
 
             self.recursive_imports = self.operational_args['recursive_imports']
             self.usual_imports     = self.operational_args['usual_imports']
             self.read_test         = self.operational_args['read_test']
+            self.related_tests     = self.operational_args['related_tests']
+            self.run_test          = self.operational_args['run_test']
 
             if self.recursive_imports and not self.usual_imports and not self.read_test:
                 log.debug("Recursive imports used - I will find and copy any imports I found in TKN_CORE.")
@@ -183,6 +187,13 @@ class GlobalLogic:
 
             else:
                 log.debug("Import arguments was not set: "+str(self.operational_args))
+
+            if self.related_tests and not self.run_test:
+                log.debug("Will find all related tests for this pattern.")
+            elif self.run_test and not self.related_tests:
+                log.debug("Will run test for this pattern.")
+            else:
+                log.debug("No tests will run.")
         else:
             log.debug("Import arguments was not set: "+str(self.operational_args))
             log.debug("Import arguments are set to False.")
@@ -226,14 +237,13 @@ class GlobalLogic:
         :param args_from_cmd: set
         :return:
         """
-        log = self.logging
-        parse_args = ArgsParse(log)
+        parse_args = ArgsParse()
 
         return parse_args.gather_args(known_args=args_from_cmd['known_args'],
                                       extra_args=args_from_cmd['extra_args'])
 
 # Doing business based on all decisions made:
-    def cond_args(self, **conditional_args_set):
+    def cond_args(self, addm_args_set, full_path_args, operational_args, **conditional_args_set):
         """
         This section will compose sets of functions to execute.
         Each function will use conditional arguments to understand which scenario to use now.
@@ -271,12 +281,11 @@ class GlobalLogic:
 
         :return:
         """
-        log = self.logging
 
         # Set examples in __init__ docstrings:
-        addm_conditions        = conditional_args_set['addm_args_set']
-        local_conditions       = conditional_args_set['full_path_args']
-        operational_conditions = conditional_args_set['operational_args']
+        addm_conditions        = addm_args_set
+        local_conditions       = full_path_args
+        operational_conditions = operational_args
 
         # Set operational option for dev or customer:
         environment_condition = local_conditions['environment_condition']
@@ -297,31 +306,36 @@ class GlobalLogic:
 
         # TODO: Debug disable:
         # noinspection PyUnusedLocal
-        operational_conditions_debug = dict(recursive_imports=False,
-                                            usual_imports=False,
-                                            read_test=False)
+        # operational_conditions_debug = dict(recursive_imports=False,
+        #                                     usual_imports=False,
+        #                                     read_test=False,
+        #                                     related_tests=False,
+        #                                     run_test=False
+        #                                     )
 
         # noinspection PyUnusedLocal
-        addm_conditions_debug = dict(
-                                     scan_hosts='172.25.144.95, 172.25.144.39',
-                                     addm_prod='Bobblehat',
-                                     disco_mode='record',
-                                     addm_ver='11.1',
-                                     # ssh_connection=False,
-                                     ssh_connection=addm_conditions['ssh_connection'],
-                                     tpl_folder='tpl113',
-                                     dev_vm_check=True,
-                                     dev_vm_path='/usr/tideway/TKU',
-                                     tpl_vers='1.13'
-                                    )
+        # addm_conditions_debug = dict(
+        #                              scan_hosts='172.25.144.95, 172.25.144.39',
+        #                              addm_prod='Bobblehat',
+        #                              disco_mode='record',
+        #                              addm_ver='11.1',
+        #                              # ssh_connection=False,
+        #                              ssh_connection=addm_conditions['ssh_connection'],
+        #                              tpl_folder='tpl113',
+        #                              dev_vm_check=True,
+        #                              dev_vm_path='/usr/tideway/TKU',
+        #                              tpl_vers='1.13'
+        #                             )
 
         # addm_conditions = addm_conditions_debug
         # operational_conditions = operational_conditions_debug
-
         # Addm args for scan
-        if addm_conditions['scan_hosts'] \
-                and addm_conditions['disco_mode'] \
-                and addm_conditions['ssh_connection']:
+
+        assert isinstance(addm_conditions, dict)
+
+        # TODO: Maybe better to use IFs in separate function jus for if, and declare modes.
+        if addm_conditions['scan_hosts'] and addm_conditions['disco_mode'] and addm_conditions['ssh_connection'] \
+                and not operational_conditions['run_test'] and not operational_conditions['related_tests']:
 
             log.info("ADDM Scan action.")
             log.debug("ADDM Scan args are present, current files will be uploaded to ADDM and Scan will be started.")
@@ -363,7 +377,8 @@ class GlobalLogic:
         # When I have no args for scan AND NO args for ADDM disco,
         # but have arg for tpl_vers - proceed files locally with that version.
         elif not addm_conditions['disco_mode'] and not addm_conditions['scan_hosts'] \
-                and addm_conditions['tpl_folder'] and addm_conditions['ssh_connection']:
+                and addm_conditions['tpl_folder'] and addm_conditions['ssh_connection'] \
+                and not operational_conditions['run_test'] and not operational_conditions['related_tests']:
 
             log.info("No ADDM action. Local processing")
             log.debug("No ADDM Scan and discovery args are present. "
@@ -396,7 +411,8 @@ class GlobalLogic:
         elif not addm_conditions['scan_hosts'] \
                 and addm_conditions['tpl_folder'] \
                 and addm_conditions['disco_mode'] \
-                and addm_conditions['ssh_connection']:
+                and addm_conditions['ssh_connection'] \
+                and not operational_conditions['run_test'] and not operational_conditions['related_tests']:
 
             log.info("ADDM Upload. No scan.")
             log.debug("ADDM Upload args are present, current files will be uploaded to ADDM. No scan.")
@@ -434,7 +450,8 @@ class GlobalLogic:
             # No Scan action because: not addm_conditions['scan_hosts'] just upload and activate.
 
         # No addm args:
-        elif not addm_conditions['ssh_connection']:
+        elif not addm_conditions['ssh_connection'] \
+                and not operational_conditions['run_test'] and not operational_conditions['related_tests']:
             # I have no active connection to ADDM so I don't know about tpl version to generate and zip
             #  - SO I will just import, Preproc and check syntax
             log.info("Local processing. No ADDM connection.")
@@ -456,6 +473,10 @@ class GlobalLogic:
             addm_zip         = 'There is no ADDM connection, program is running in local mode.'
             local_zip        = 'There is no ADDM connection, program is running in local mode.'
             addm_working_dir = 'There is no ADDM connection, program is running in local mode.'
+
+        # When ADDM connection is present and test options used:
+        elif addm_conditions['ssh_connection'] and (operational_conditions['run_test'] or operational_conditions['related_tests']):
+            log.debug("Will use test")
 
         # I don't know:
         else:
@@ -536,7 +557,6 @@ class GlobalLogic:
         :param logical_conditions: mode to operate with - dev or customer.
         :return:
         """
-        log = self.logging
 
         # Set examples in __init__ docstrings:
         operational_conditions = logical_conditions['operational_conditions']
@@ -583,7 +603,7 @@ class GlobalLogic:
 
                 # Read test.py and extract list of patterns from self.setupPatterns
                 # This is list of patterns I need to import from test.py.
-                imports_t = TestRead(log).import_pattern_tests(self.working_dir)
+                imports_t = TestRead().import_pattern_tests(self.working_dir)
 
                 # Import tplpre's in recursive mode with extras from test.py:
                 imports_f = self.make_imports(local_conditions = local_conditions,
@@ -638,7 +658,6 @@ class GlobalLogic:
         """
         # Assign
         preproc_f = ''
-        log = self.logging
 
         # Set examples in __init__ docstrings:
         operational_conditions = logical_conditions['operational_conditions']
@@ -698,7 +717,6 @@ class GlobalLogic:
         :param logical_conditions: set
         :return: func
         """
-        log = self.logging
 
         # Set examples in __init__ docstrings:
         operational_conditions = logical_conditions['operational_conditions']
@@ -754,7 +772,6 @@ class GlobalLogic:
         """
         # Assign
         addm_wd = ''
-        log = self.logging
 
         # Set examples in __init__ docstrings:
         if environment_condition == 'developer_tplpre':
@@ -762,7 +779,7 @@ class GlobalLogic:
                 log.info("DEV ADDM - files activating in mirrored filesystem.")
 
                 # Compose paths:
-                local_logic = LocalLogic(log)
+                local_logic = LocalLogic()
                 addm_wd = local_logic.addm_compose_paths(dev_vm_path    = self.dev_vm_path,
                                                          pattern_folder = self.full_path_args['pattern_folder'])
 
@@ -821,7 +838,6 @@ class GlobalLogic:
         addm_zip = ''
         local_zip = ''
 
-        log = self.logging
 
         # Set examples in __init__ docstrings:
         operational_conditions = logical_conditions['operational_conditions']
@@ -959,7 +975,6 @@ class GlobalLogic:
         :param zipping_conditions: set
         :return: upload_f, addm_activate_f
         """
-        log = self.logging
 
         # Set examples in __init__ docstrings:
         addm_conditions   = zipping_conditions['addm_conditions']
@@ -1023,10 +1038,9 @@ class GlobalLogic:
         Closure for reading test.py queries.
         :return: func with query results list.
         """
-        log = self.logging
 
         def test_queries():
-            test_read = TestRead(log)
+            test_read = TestRead()
             test_read.query_pattern_tests(self.working_dir)
 
         return test_queries
@@ -1040,10 +1054,9 @@ class GlobalLogic:
 
         :return: func with imports
         """
-        log = self.logging
 
         def importer():
-            tpl_imports = TPLimports(log, self.full_path_args)
+            tpl_imports = TPLimports(self.full_path_args)
             # Now I don't need args because class was initialized with args above:
             tpl_imports.import_modules(conditions=condition_kwargs)
         return importer
@@ -1059,10 +1072,9 @@ class GlobalLogic:
 
         :return: func preproc with args in it
         """
-        log = self.logging
 
         def pre_processing():
-            preproc = Preproc(log)
+            preproc = Preproc()
             preproc.tpl_preprocessor(workspace, input_path, output_path, mode)
         return pre_processing
 
@@ -1078,10 +1090,9 @@ class GlobalLogic:
         :param disco_ver: str - version of discover engine to use for check, if empty - run all.
         :return: func - syntax check with args in it.
         """
-        log = self.logging
 
         def syntax_check():
-            syntax = SyntaxCheck(log)
+            syntax = SyntaxCheck()
             if_check = syntax.syntax_check(working_dir, disco_ver)
             return if_check
 
@@ -1095,10 +1106,9 @@ class GlobalLogic:
         :type path_to_result: str - path to zip with patterns
         :return: func zipper
         """
-        log = self.logging
 
         def zipper():
-            local_logic = LocalLogic(log)
+            local_logic = LocalLogic()
             # Zip local processed files and return path to zip on local and name if zip for addm mirror FS:
             local_logic.make_zip(path_to_result, active_folder)
 
@@ -1111,10 +1121,9 @@ class GlobalLogic:
         :type zip_on_local: str actual path to local zip file
         :return: activate patterns func
         """
-        log = self.logging
 
         def activate():
-            addm = AddmOperations(log, self.ssh)
+            addm = AddmOperations(self.ssh)
             # Activate local zip package using remote mirror path to it:
             addm.upload_knowledge(zip_on_local=zip_on_local, zip_on_remote=zip_on_remote)
 
@@ -1131,10 +1140,9 @@ class GlobalLogic:
         :type zip_path: str
         :return: func
         """
-        log = self.logging
 
         def activate():
-            addm = AddmOperations(log, self.ssh)
+            addm = AddmOperations(self.ssh)
             # Activate zip package using path from arg (local|remote):
             addm.activate_knowledge(zip_path, module_name, system_user, system_password)
 
@@ -1162,7 +1170,6 @@ class GlobalLogic:
         :type module_name: str
         :return: func
         """
-        log = self.logging
 
         disco_mode      = addm_conditions['disco_mode']
         host_list       = addm_conditions['scan_hosts']
@@ -1170,7 +1177,7 @@ class GlobalLogic:
         system_password = addm_conditions['system_password']
 
         def scan():
-            addm_scan = AddmScan(log, self.ssh)
+            addm_scan = AddmScan(self.ssh)
             # Activate local zip package using remote mirror path to it:
             addm_scan.addm_scan(disco_mode,
                                 host_list,
