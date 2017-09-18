@@ -128,53 +128,53 @@ if conditional_functions['imports_f']:
     imports_f = conditional_functions['imports_f']
 
     # Executing test queries parser:
-    if imports_f['parse_tests_queries']:
+    if callable(imports_f['parse_tests_queries']):
         parse_tests_queries = imports_f['parse_tests_queries']
         if parse_tests_queries:
             parse_tests_queries()
 
     # Executing test patterns list get:
-    if imports_f['parse_tests_patterns']:
+    if callable(imports_f['parse_tests_patterns']):
         parse_tests_patterns = imports_f['parse_tests_patterns']
         if parse_tests_patterns:
             parse_tests_patterns()
 
     # Executing all imports:
-    if imports_f['import_patterns']:
+    if callable(imports_f['import_patterns']):
         import_patterns = imports_f['import_patterns']
         if import_patterns:
             import_patterns()
 
-# # Executing preprocessor:
-if conditional_functions['preproc_f']:
-    preproc_f = conditional_functions['preproc_f']
-    if preproc_f:
-        preproc_f()
-
-# Executing syntax checker:
-if conditional_functions['syntax_check_f']:
-    syntax_check_f = conditional_functions['syntax_check_f']
-    if syntax_check_f:
-        syntax_check_f()
-
-# Executing zipping files (and upload maybe?)
-if conditional_functions['zip_files_f']:
-    zip_files_f = conditional_functions['zip_files_f']
-    if zip_files_f:
-        zip_files_f()
-
-# Executing pattern activation:
-if conditional_functions['addm_activate_f']:
-    addm_activate_f = conditional_functions['addm_activate_f']
-    if addm_activate_f:
-        addm_activate_f()
-
-# Executing start scan
-# # Working in current condition. Disable to save time
-if conditional_functions['scan_f']:
-    scan_f = conditional_functions['scan_f']
-    if scan_f:
-        scan_f()
+# # # Executing preprocessor:
+# if callable(conditional_functions['preproc_f']):
+#     preproc_f = conditional_functions['preproc_f']
+#     if preproc_f:
+#         preproc_f()
+#
+# # Executing syntax checker:
+# if callable(conditional_functions['syntax_check_f']):
+#     syntax_check_f = conditional_functions['syntax_check_f']
+#     if syntax_check_f:
+#         syntax_check_f()
+#
+# # Executing zipping files (and upload maybe?)
+# if callable(conditional_functions['zip_files_f']):
+#     zip_files_f = conditional_functions['zip_files_f']
+#     if zip_files_f:
+#         zip_files_f()
+#
+# # Executing pattern activation:
+# if callable(conditional_functions['addm_activate_f']):
+#     addm_activate_f = conditional_functions['addm_activate_f']
+#     if addm_activate_f:
+#         addm_activate_f()
+#
+# # Executing start scan
+# # # Working in current condition. Disable to save time
+# if callable(conditional_functions['scan_f']):
+#     scan_f = conditional_functions['scan_f']
+#     if scan_f:
+#         scan_f()
 
 
 log.info("-=== END of Check script. ===-")

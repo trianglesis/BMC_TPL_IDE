@@ -12,6 +12,7 @@ import subprocess
 # import datetime
 import logging
 
+
 log = logging.getLogger("check.logger")
 
 
@@ -204,6 +205,7 @@ class LocalLogic:
     def addm_compose_paths(dev_vm_path, pattern_folder):
         """
         Local path will be used to compose same path in remote vm if HGFS shares confirmed.
+        To further usega I also compose path to remote test.py
         :return:
         """
         # Paths from local to remote:
@@ -221,9 +223,10 @@ class LocalLogic:
 
         # Composing working dir as in def full_path_parse() but now for remote mirror:
         working_dir_virt = CORE_virt+"/"+pattern_folder
+        pattern_test_virt = working_dir_virt+"/tests/test.py"
         log.debug("Mirrored working dir for ADDM VM is: "+str(working_dir_virt))
 
-        return working_dir_virt
+        return working_dir_virt, pattern_test_virt
 
     @staticmethod
     def make_zip(path, module_name):
@@ -306,6 +309,7 @@ class LocalLogic:
         STORAGE_t                = ''
         SYSTEM_t                 = ''
         tkn_sandbox_t            = ''
+        pattern_test_t           = ''
 
         if os.path.exists(full_file_path):
             log.debug("-full_file_path is: " + full_file_path)
@@ -352,6 +356,8 @@ class LocalLogic:
                     if re.match('tplpre', file_ext):
                         # pattern working dir, where pattern file is really lies:
                         working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder
+                        # Making prognosable place to test.py - but check if exist in global logic mod
+                        pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
 
                         # Set of arguments, conditional options and paths to pattern libs:
                         args_dict = dict(
@@ -374,7 +380,8 @@ class LocalLogic:
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
                                          STORAGE_t                = STORAGE_t,
                                          SYSTEM_t                 = SYSTEM_t,
-                                         tkn_sandbox_t            = tkn_sandbox_t
+                                         tkn_sandbox_t            = tkn_sandbox_t,
+                                         pattern_test_t           = pattern_test_t
                                          )
                         # log.info("Arguments from file path: " + str(args_dict))
                         log.debug("TPLPRE: File extension mach .tplpre and dev_path_check is found, "
@@ -937,7 +944,7 @@ class LocalLogic:
         :return:
         """
 
-        # TODO: ../TKU/.. folder should somehow documented as really MUST HAVE parameter in ane ENV.
+        # TODO: ../TKU/.. folder should somehow documented as really MUST HAVE parameter in any ENV.
         dev_vm_check = False
         vm_dev_path = ''
         _, stdout, stderr = ssh.exec_command("df -h")
@@ -1008,3 +1015,147 @@ class LocalLogic:
         return folders
 
     # TODO: Add here test.py searching for all in tku:
+    def get_related_tests(self, **conditions):
+        """
+        During search of recursive patterns + test, also check each test.py where active pattern also used,
+        then compose dict with name of patern_directory: test_path which will be used for further run to validate
+        each related test.
+
+        dict example:
+        {
+          "curr_patt_test": {
+            "curr_patt_dir": "BMCRemedyARSystem",
+            "curr_test_path": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py",
+            "rel_tests": {
+              "AvnetSeamlessDataPump": {
+                "rel_patt": "AvnetSeamlessDataPump",
+                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py"
+              },
+              "BMCRemedyMigrator": {
+                "rel_patt": "BMCRemedyMigrator",
+                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py"
+              },
+              "BMC_CloudLifecycleManagement": {
+                "rel_patt": "BMC_CloudLifecycleManagement",
+                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py"
+              },
+              "BMC_HRCaseManagement": {
+                "rel_patt": "BMC_HRCaseManagement",
+                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"
+              }
+            }
+          }
+        }
+
+        :return: dict
+        """
+
+        local_cond = conditions['local_conditions']
+        active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
+        log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
+
+        from check.imports import TPLimports
+        list_files = TPLimports(local_cond)
+
+        # Get extra folders from previous parse in full_path_args.
+        extra_folders = []
+        extra_folders_keys = ['BLADE_ENCLOSURE_t',
+                              'CLOUD_t',
+                              'CORE_t',
+                              'DBDETAILS_t',
+                              'LOAD_BALANCER_t',
+                              'MANAGEMENT_CONTROLLERS_t',
+                              'MIDDLEWAREDETAILS_t',
+                              'SYSTEM_t',
+                              'STORAGE_t']
+
+        # Extracting matched folders from 'local_conditions':
+        # Making list of all possible pattern paths and then search through them all for imports.
+        for folder_key in extra_folders_keys:
+            if local_cond[folder_key]:
+                extra_folder = local_cond[folder_key]
+                # Add only unique folders:
+                if extra_folder not in extra_folders:
+                    # To be sure I can read files in folder - check folder existence.
+                    if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
+                        extra_folders.append(extra_folder)
+                    else:
+                        log.warning("Step 1.1 This path is not exist: "+str(extra_folder))
+            else:
+                log.info("Be aware that this folder key is not exist: "+str(folder_key))
+
+        # Make list of all test.py in extra folders, like in files_to_read()
+        exclude_dirs = ['imports'
+                        'tpl',
+                        'dml',
+                        'expected',
+                        'actuals',
+                        'HarnessFiles']
+
+        # TODO: Is it useful to know which pattern related to each test or not?
+        test_files = []
+        test_files = list_files.files_to_read(env_mode='related_tests',
+                                              search_path=extra_folders,
+                                              exclude_dirs=exclude_dirs)
+        related_tests = []
+        for test in test_files:
+            file = test['test_file']
+            with open(file, "r", encoding="utf8") as f:
+                read_file = f.read()
+
+                pattern_r = re.compile(active_pattern)
+                check_modules = pattern_r.findall(read_file)
+
+                # When module name were found in opened file add each to list and later find them:
+                if check_modules:
+                    # Make dict as  current_modules_name
+                    current_pattern_dict = dict(pattern   = active_pattern,
+                                                test_path = file,
+                                                test_wd = test['test_wd'])
+                    if current_pattern_dict not in related_tests:
+                        # Now copy released file:
+                        related_tests.append(current_pattern_dict)
+
+        for test in related_tests:
+            print(test)
+
+        # # DEBUG
+        import json
+        from pprint import pformat
+
+        # log = self.logging
+        curr_patt_dir = 'BMCRemedyARSystem'
+        curr_test_path = "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py"
+
+        # noinspection PyPep8
+        related_tests_list_dev = iter(["D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py",
+                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py",
+                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py",
+                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"])
+
+        related_pattern_list = iter(["AvnetSeamlessDataPump",
+                                "BMCRemedyMigrator",
+                                "BMC_CloudLifecycleManagement",
+                                "BMC_HRCaseManagement"])
+
+        related_pattern_tests_dict = {
+            "AvnetSeamlessDataPump": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py",
+            "BMCRemedyMigrator": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py",
+            "BMC_CloudLifecycleManagement": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py",
+            "BMC_HRCaseManagement": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"
+            }
+
+        rel_tests = dict()
+        test_dict = dict(curr_patt_test = dict(curr_patt_dir=curr_patt_dir,
+                                               curr_test_path=curr_test_path,
+                                               rel_tests=rel_tests)
+                         )
+
+        for pattern in related_pattern_list:
+            test_path = related_pattern_tests_dict[pattern]
+
+            rel_tests.update({pattern: dict(rel_patt=pattern,
+                                            rel_test=test_path)})
+
+        print(json.dumps(test_dict, indent=4, ensure_ascii=False, default=pformat))
+        return test_dict

@@ -258,9 +258,19 @@ class TPLimports:
         find_importing_modules      = importing_set_options['find_importing_modules']
         env_mode                    = importing_set_options['env_mode']
 
+        exclude_dirs = ['imports'
+                        'tests',
+                        'tpl',
+                        'dml',
+                        'expected',
+                        'actuals',
+                        'HarnessFiles'
+                        ]
+
         # Make pattern list to found in each:
-        all_patterns_list = self.patterns_to_read(env_mode=env_mode,
-                                                  search_path=extra_folders)
+        all_patterns_list = self.files_to_read(env_mode=env_mode,
+                                               search_path=extra_folders,
+                                               exclude_dirs=exclude_dirs)
 
         iteration_count = 0
         while iteration_count < 3:
@@ -289,7 +299,7 @@ class TPLimports:
 
         if find_importing_modules:
             log.warning("Step 3. These modules cannot be found anywhere in 'tku_patterns' "
-                     "please check manually: "+str(find_importing_modules))
+                        "please check manually: "+str(find_importing_modules))
         if current_modules_name:
             log.debug("Step 3.1 Found modules list: "+str(current_modules_name))
 
@@ -351,7 +361,8 @@ class TPLimports:
             log.warning("Nothing to read for read_pattern module. No imports will be found.")
             return False, False
 
-    def patterns_to_read(self, env_mode, search_path):
+    @staticmethod
+    def files_to_read(env_mode, search_path, exclude_dirs):
         """
         Composing path to each pattern file in working directories or workspace.
         Then I will search modules to import through this list.
@@ -359,19 +370,11 @@ class TPLimports:
         This function looks odd, but I need to be sure I can walk each 1st level folders for each in tkn tree
         And the same variant should be used for customer - so I can have one module for both scenarios.
 
+        :param exclude_dirs:
         :param search_path: list
         :type env_mode: str
         :return: list
         """
-
-        exclude_dirs = ['imports'
-                        'tests',
-                        'tpl',
-                        'dml',
-                        'expected',
-                        'actuals',
-                        'HarnessFiles'
-                        ]
 
         file_candidates = []
 
@@ -417,6 +420,41 @@ class TPLimports:
                                 file_candidates.append(file_candidate)
 
             return file_candidates
+        # Extra construction for test.py search.
+        elif env_mode == 'related_tests':
+            log.debug("Step 2 - Composing list of all test files in tkn path.")
+            # Sort only test.py files
+            file_end = "test.py"
+            for path in search_path:
+                for root, dirs, files in os.walk(path, topdown=True):
+                    # Exclude service folders:
+                    dirs[:] = [d for d in dirs if d not in exclude_dirs]
+                    # Make path to each folder:
+                    for folder in dirs:
+                        folder_to_find = os.path.join(root, folder)
+                        tests_folder = folder_to_find+os.sep+"tests"
+                        # List content of each folder in path and save if there is any file end with tplpre.
+
+                        if os.path.exists(tests_folder):
+
+                            files_in = os.listdir(tests_folder)
+
+                            for file_p in files_in:
+                                if file_p.endswith(file_end):
+                                    # Make full path to tplpre file or files in folder:
+                                    file_candidate = os.path.join(root, folder)
+                                    test_file = file_candidate+os.sep+"tests"+os.sep+file_p
+                                    test_wd = file_candidate+os.sep+"tests"
+
+                                    if test_file not in file_candidates:
+                                        # List with all available pattern files is ready to search with:
+                                        file_candidates.append(dict(test_file=test_file,
+                                                                    test_wd=test_wd))
+                        # Stop on first level, no need to jump deeper.
+                        # No need when searching fot test.py:
+                        # break
+            return file_candidates
+
         else:
             log.warning("I can import only pattern files tplre or tpl.")
 
@@ -511,7 +549,8 @@ class TPLimports:
                 log.debug("Step 5.1 Copy to 'imports' pattern: " + str(pattern['path']))
 
     # Service functions:
-    def list_folder(self, folder_path):
+    @staticmethod
+    def list_folder(folder_path):
         """
         Get working_dir content to find all
         Only for DEV scenario - because we have cases with two patterns in one folder.

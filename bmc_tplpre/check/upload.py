@@ -10,6 +10,7 @@ import re
 import logging
 log = logging.getLogger("check.logger")
 
+
 class AddmOperations:
 
     def __init__(self, ssh):
@@ -171,4 +172,12 @@ class AddmOperations:
             file_ok = False
 
         return file_ok
+
+    def tests_run(self, tests_paths):
+        """
+        Placeholder for tests run
+        :param tests_paths:
+        :return:
+        """
+        log.debug("Placeholder for tests run. Args: "+str(tests_paths))
 

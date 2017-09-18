@@ -83,6 +83,7 @@ def i_log(level):
 
         con_extra_formatter = logging.Formatter('%(asctime)-24s'
                                                 '%(levelname)-9s'
+                                                '%(filename)-18s'
                                                 '%(funcName)-28s'
                                                 'Line:%(lineno)-6s'
                                                 '%(message)8s')

@@ -36,12 +36,15 @@ class ArgsParse:
 
         # Args dedicated to local paths from full path extracted:
         local_arguments_set = self.full_path_parse(known_args.full_path)
+        assert isinstance(local_arguments_set, dict)
 
         # Args dedicated to imports logic from args parse:
         operational_args_set = self.operational_mode_check(known_args)
+        assert isinstance(operational_args_set, dict)
 
         # Args dedicated to addm actions - gathered from addm ssh connection if available:
         addm_args_set = self.addm_args(known_args)
+        assert isinstance(addm_args_set, dict)
 
         if extra_args:
             log.warning("HEY, you forgot some arguments:" + str(extra_args))
@@ -74,10 +77,10 @@ class ArgsParse:
 
         addm_env_check = LocalLogic()
 
-        addm_host = known_args.addm_host
-        user = known_args.user
-        password = known_args.password
-        disco_mode = known_args.disco_mode
+        addm_host      = known_args.addm_host
+        user           = known_args.user
+        password       = known_args.password
+        disco_mode     = known_args.disco_mode
         scan_host_list = known_args.scan_host_list
 
         # For user 'system' in addm - which is used to start scans,, activate patterns, etc.
@@ -88,18 +91,18 @@ class ArgsParse:
         if not system_password:
             system_password = 'system'
 
-        tpl_vers = ''
-        addm_ver = ''
-        tpl_folder = ''
-        addm_prod = ''
+        tpl_vers     = ''
+        addm_ver     = ''
+        tpl_folder   = ''
+        addm_prod    = ''
 
-        dev_vm_path = False
+        dev_vm_path  = False
         dev_vm_check = False
 
-        disco = self.discovery_mode_check(disco_mode)
-        scan_hosts = self.host_list_check(scan_host_list)
+        disco        = self.discovery_mode_check(disco_mode)
+        scan_hosts   = self.host_list_check(scan_host_list)
 
-        ssh = self.addm_host_check(addm_host, user, password)
+        ssh          = self.addm_host_check(addm_host, user, password)
         if ssh:
             '''
             Here I check ADDM VM version and tpl version supported.
@@ -131,7 +134,7 @@ class ArgsParse:
                                   "will be used for upload patterns and tests.")
 
         else:
-            log.debug("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
+            log.info("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
 
         addm_args_set = dict(ssh_connection  = ssh,
                              disco_mode      = disco,
