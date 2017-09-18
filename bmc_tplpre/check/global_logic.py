@@ -584,7 +584,11 @@ class GlobalLogic:
             elif test_conditions['related_tests']:
                 log.debug("Will run related tests where active pattern is used: "+str(self.full_path_args['file_name']))
 
-                related_tests = LocalLogic.get_related_tests(self, local_conditions=self.full_path_args)
+
+
+                related_tests = LocalLogic.get_related_tests(local_conditions=self.full_path_args,
+                                                             dev_vm_path=self.dev_vm_path,
+                                                             pattern_folder=self.full_path_args['pattern_folder'])
 
                 # TODO Insert here:
                 '''

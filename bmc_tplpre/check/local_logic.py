@@ -1015,7 +1015,8 @@ class LocalLogic:
         return folders
 
     # TODO: Add here test.py searching for all in tku:
-    def get_related_tests(self, **conditions):
+    @staticmethod
+    def get_related_tests(**conditions):
         """
         During search of recursive patterns + test, also check each test.py where active pattern also used,
         then compose dict with name of patern_directory: test_path which will be used for further run to validate
@@ -1051,11 +1052,14 @@ class LocalLogic:
         """
 
         local_cond = conditions['local_conditions']
-        active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
-        log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
+        # print(local_cond)
 
-        from check.imports import TPLimports
-        list_files = TPLimports(local_cond)
+        dev_vm_path = conditions['dev_vm_path']
+        pattern_folder = conditions['pattern_folder']
+        active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
+        workspace = local_cond['workspace']
+
+        log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
 
         # Get extra folders from previous parse in full_path_args.
         extra_folders = []
@@ -1093,10 +1097,10 @@ class LocalLogic:
                         'HarnessFiles']
 
         # TODO: Is it useful to know which pattern related to each test or not?
-        test_files = []
-        test_files = list_files.files_to_read(env_mode='related_tests',
-                                              search_path=extra_folders,
-                                              exclude_dirs=exclude_dirs)
+        test_files = LocalLogic.tests_to_read(search_path=extra_folders,
+                                              exclude_dirs=exclude_dirs,
+                                              dev_vm_path=dev_vm_path,
+                                              workspace=workspace)
         related_tests = []
         for test in test_files:
             file = test['test_file']
@@ -1111,51 +1115,70 @@ class LocalLogic:
                     # Make dict as  current_modules_name
                     current_pattern_dict = dict(pattern   = active_pattern,
                                                 test_path = file,
-                                                test_wd = test['test_wd'])
+                                                rem_test_path = test['remote_test_file'],
+                                                test_wd = test['test_wd'],
+                                                rem_test_wd = test['remote_test_wd'])
                     if current_pattern_dict not in related_tests:
                         # Now copy released file:
                         related_tests.append(current_pattern_dict)
 
-        for test in related_tests:
-            print(test)
+        # {'rem_test_path': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/WebsphereAppServer/tests/test.py',
+        # 'rem_test_wd': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/WebsphereAppServer/tests',
+        # 'test_path': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\WebsphereAppServer\\tests\\test.py',
+        # 'test_wd': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\WebsphereAppServer\\tests',
+        # 'pattern': 'MicrosoftSQLServer.tplpre'}
 
-        # # DEBUG
-        import json
-        from pprint import pformat
+        # print(related_tests)
+        # for test in related_tests:
+        #     print(test)
 
-        # log = self.logging
-        curr_patt_dir = 'BMCRemedyARSystem'
-        curr_test_path = "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py"
+        # TODO: How would be better to execute this huge amount of related tests?
+        # Run test_executor from DEV_TEST example.
 
-        # noinspection PyPep8
-        related_tests_list_dev = iter(["D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py",
-                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py",
-                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py",
-                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"])
+    @staticmethod
+    def tests_to_read(search_path, exclude_dirs, dev_vm_path, workspace):
+        """
 
-        related_pattern_list = iter(["AvnetSeamlessDataPump",
-                                "BMCRemedyMigrator",
-                                "BMC_CloudLifecycleManagement",
-                                "BMC_HRCaseManagement"])
+        :return:
+        """
+        file_candidates = []
+        # Extra construction for test.py search.
+        log.debug("Step 2 - Composing list of all test files in tkn path.")
+        # Sort only test.py files
+        file_end = "test.py"
+        for path in search_path:
+            for root, dirs, files in os.walk(path, topdown=True):
+                # Exclude service folders:
+                dirs[:] = [d for d in dirs if d not in exclude_dirs]
+                # Make path to each folder:
+                for folder in dirs:
+                    folder_to_find = os.path.join(root, folder)
+                    tests_folder = folder_to_find+os.sep+"tests"
+                    # List content of each folder in path and save if there is any file end with tplpre.
 
-        related_pattern_tests_dict = {
-            "AvnetSeamlessDataPump": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py",
-            "BMCRemedyMigrator": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py",
-            "BMC_CloudLifecycleManagement": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py",
-            "BMC_HRCaseManagement": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"
-            }
+                    if os.path.exists(tests_folder):
 
-        rel_tests = dict()
-        test_dict = dict(curr_patt_test = dict(curr_patt_dir=curr_patt_dir,
-                                               curr_test_path=curr_test_path,
-                                               rel_tests=rel_tests)
-                         )
+                        files_in = os.listdir(tests_folder)
 
-        for pattern in related_pattern_list:
-            test_path = related_pattern_tests_dict[pattern]
+                        for file_p in files_in:
+                            if file_p.endswith(file_end):
+                                # Make full path to tplpre file or files in folder:
+                                file_candidate = os.path.join(root, folder)
+                                test_file = file_candidate+os.sep+"tests"+os.sep+file_p
+                                test_wd = file_candidate+os.sep+"tests"
 
-            rel_tests.update({pattern: dict(rel_patt=pattern,
-                                            rel_test=test_path)})
+                                # Replace local workspace path to remote:
+                                remote_test_wd = test_wd.replace(workspace, dev_vm_path).replace('\\', '/')
+                                remote_test_file = remote_test_wd+'/test.py'
 
-        print(json.dumps(test_dict, indent=4, ensure_ascii=False, default=pformat))
-        return test_dict
+                                if test_file not in file_candidates:
+                                    # List with all available pattern files is ready to search with:
+                                    file_candidates.append(dict(test_file=test_file,
+                                                                test_wd=test_wd,
+                                                                remote_test_wd=remote_test_wd,
+                                                                remote_test_file=remote_test_file
+                                                                ))
+                    # Stop on first level, no need to jump deeper.
+                    # No need when searching fot test.py:
+                    # break
+        return file_candidates

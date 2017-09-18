@@ -103,8 +103,6 @@ class TPLimports:
                 }
 
 
-
-        :param logging: inherited log class
         :param full_path_args: args parsed and composed
         """
 
@@ -419,40 +417,6 @@ class TPLimports:
                                 # List with all available pattern files is ready to search with:
                                 file_candidates.append(file_candidate)
 
-            return file_candidates
-        # Extra construction for test.py search.
-        elif env_mode == 'related_tests':
-            log.debug("Step 2 - Composing list of all test files in tkn path.")
-            # Sort only test.py files
-            file_end = "test.py"
-            for path in search_path:
-                for root, dirs, files in os.walk(path, topdown=True):
-                    # Exclude service folders:
-                    dirs[:] = [d for d in dirs if d not in exclude_dirs]
-                    # Make path to each folder:
-                    for folder in dirs:
-                        folder_to_find = os.path.join(root, folder)
-                        tests_folder = folder_to_find+os.sep+"tests"
-                        # List content of each folder in path and save if there is any file end with tplpre.
-
-                        if os.path.exists(tests_folder):
-
-                            files_in = os.listdir(tests_folder)
-
-                            for file_p in files_in:
-                                if file_p.endswith(file_end):
-                                    # Make full path to tplpre file or files in folder:
-                                    file_candidate = os.path.join(root, folder)
-                                    test_file = file_candidate+os.sep+"tests"+os.sep+file_p
-                                    test_wd = file_candidate+os.sep+"tests"
-
-                                    if test_file not in file_candidates:
-                                        # List with all available pattern files is ready to search with:
-                                        file_candidates.append(dict(test_file=test_file,
-                                                                    test_wd=test_wd))
-                        # Stop on first level, no need to jump deeper.
-                        # No need when searching fot test.py:
-                        # break
             return file_candidates
 
         else:
