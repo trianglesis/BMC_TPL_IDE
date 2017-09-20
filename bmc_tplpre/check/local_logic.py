@@ -1018,35 +1018,12 @@ class LocalLogic:
     @staticmethod
     def get_related_tests(**conditions):
         """
+
+        UPDATE:
+
         During search of recursive patterns + test, also check each test.py where active pattern also used,
         then compose dict with name of patern_directory: test_path which will be used for further run to validate
         each related test.
-
-        dict example:
-        {
-          "curr_patt_test": {
-            "curr_patt_dir": "BMCRemedyARSystem",
-            "curr_test_path": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py",
-            "rel_tests": {
-              "AvnetSeamlessDataPump": {
-                "rel_patt": "AvnetSeamlessDataPump",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py"
-              },
-              "BMCRemedyMigrator": {
-                "rel_patt": "BMCRemedyMigrator",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py"
-              },
-              "BMC_CloudLifecycleManagement": {
-                "rel_patt": "BMC_CloudLifecycleManagement",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py"
-              },
-              "BMC_HRCaseManagement": {
-                "rel_patt": "BMC_HRCaseManagement",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"
-              }
-            }
-          }
-        }
 
         :return: dict
         """
@@ -1104,6 +1081,7 @@ class LocalLogic:
         related_tests = []
         for test in test_files:
             file = test['test_file']
+            local_tests_path = file
             with open(file, "r", encoding="utf8") as f:
                 read_file = f.read()
 
@@ -1113,11 +1091,11 @@ class LocalLogic:
                 # When module name were found in opened file add each to list and later find them:
                 if check_modules:
                     # Make dict as  current_modules_name
-                    current_pattern_dict = dict(pattern   = active_pattern,
-                                                test_path = file,
+                    current_pattern_dict = dict(pattern       = active_pattern,
+                                                test_path     = local_tests_path,
                                                 rem_test_path = test['remote_test_file'],
-                                                test_wd = test['test_wd'],
-                                                rem_test_wd = test['remote_test_wd'])
+                                                test_wd       = test['test_wd'],
+                                                rem_test_wd   = test['remote_test_wd'])
                     if current_pattern_dict not in related_tests:
                         # Now copy released file:
                         related_tests.append(current_pattern_dict)
@@ -1131,9 +1109,7 @@ class LocalLogic:
         # print(related_tests)
         # for test in related_tests:
         #     print(test)
-
-        # TODO: How would be better to execute this huge amount of related tests?
-        # Run test_executor from DEV_TEST example.
+        return related_tests
 
     @staticmethod
     def tests_to_read(search_path, exclude_dirs, dev_vm_path, workspace):

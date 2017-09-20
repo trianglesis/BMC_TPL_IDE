@@ -131,7 +131,8 @@ class AddmOperations:
 
         return uploaded_activated
 
-    def deactivate_tku(self):
+    @staticmethod
+    def deactivate_tku():
         """
         IDEA - run deactivate and removals if requested - before activate new.
 
@@ -173,11 +174,62 @@ class AddmOperations:
 
         return file_ok
 
-    def tests_run(self, tests_paths):
+    def tests_executor(self, tests_list):
         """
         Placeholder for tests run
-        :param tests_paths:
+        :param tests_list: list
         :return:
         """
-        log.debug("Placeholder for tests run. Args: "+str(tests_paths))
+        # log.debug("Placeholder for tests run. Args: "+str(tests_list))
 
+        # log.info("\n")
+        log.info("-==== START RELATED TESTS EXECUTION ====-")
+        log.info("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
+        log.info("Tests related to: "+str(tests_list[0]['pattern']))
+
+        # TODO: Here execute each test from related_tests_dict and save log for all, or separate?
+        for test in tests_list:
+            """
+            Remote run: 
+            ssh://tideway@192.168.5.11:22/usr/bin/python -u /usr/tideway/TKU/addm/tkn_main/buildscripts/test_executor.py
+            ssh://tideway@192.168.5.11:22/usr/tideway/bin/python -u /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/MicrosoftAppFabric/tests/test.py TestStandalone.test2_Windows_main
+            
+            export TKN_MAIN=/usr/tideway/TKU/addm/tkn_main/
+            export TKN_CORE=$TKN_MAIN/tku_patterns/CORE
+            export PYTHONPATH=$PYTHONPATH:$TKN_MAIN/python
+
+            # cmd = "cd "+test['rem_test_wd']+"; ls; python -u "+test['rem_test_path']+" --verbose"
+            # cmd = "cd "+test['rem_test_wd']+"; /usr/tideway/bin/python --version"
+            # cmd = "cd "+test['rem_test_wd']+"; python --version"
+            # cmd = "cd "+test['rem_test_wd']+"; echo $TKN_MAIN"
+            # cmd = "cd "+test['rem_test_wd']+"; echo $TKN_CORE"
+            # cmd = "cd "+test['rem_test_wd']+"; echo $PYTHONPATH"
+            # cmd = "cd "+test['rem_test_wd']+"; ls"
+
+            Local run: ?
+            """
+
+            # tests_output = 'tests.out'
+            log.info("Start test:" + str(test['rem_test_path']))
+
+            pre_cmd = ". ~/.bash_profile;"
+            wd_cmd = "cd "+test['rem_test_wd']+";"
+            cmd_test = "/usr/tideway/bin/python -u "+test['rem_test_path']+" --verbose"
+
+            cmd = pre_cmd + wd_cmd + cmd_test
+            log.debug("Run: "+str(cmd))
+
+            _, stdout, stderr = self.ssh_cons.exec_command(cmd)
+
+            if stdout:
+                output = stdout.readlines()
+                raw_out = "".join(output)
+                log.info("-==== DETAILED LOG ====-")
+                log.info("\n"+raw_out)
+            if stderr:
+                output = stderr.readlines()
+                raw_out = "".join(output)
+                log.info("-==== UNITTEST LOG ====-")
+                log.info("\n\n"+raw_out)
+
+            # break

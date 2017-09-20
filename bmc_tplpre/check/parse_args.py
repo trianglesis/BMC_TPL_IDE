@@ -39,7 +39,7 @@ class ArgsParse:
         assert isinstance(local_arguments_set, dict)
 
         # Args dedicated to imports logic from args parse:
-        operational_args_set = self.operational_mode_check(known_args)
+        operational_args_set = self.oper_mode(known_args)
         assert isinstance(operational_args_set, dict)
 
         # Args dedicated to addm actions - gathered from addm ssh connection if available:
@@ -268,7 +268,7 @@ class ArgsParse:
         return host_list
 
     @staticmethod
-    def operational_mode_check(known_args):
+    def oper_mode(known_args):
         """
         Dict should not be empty even if there is no args for that.
         Further Ill check and use logic.

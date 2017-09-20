@@ -115,7 +115,7 @@ common.add_argument('--version',
 known_args, extra_args = parser.parse_known_args()
 # print("Known args: "+str(known_args))
 
-log = log_define(known_args.log_lvl)
+log = log_define(known_args)
 log.debug("Start: "+__name__)
 
 funcs_run = GlobalLogic(known_args=known_args, extra_args=extra_args)
@@ -175,7 +175,10 @@ if conditional_functions['imports_f']:
 #     scan_f = conditional_functions['scan_f']
 #     if scan_f:
 #         scan_f()
-
+if callable(conditional_functions['test_executor_f']):
+    test_executor = conditional_functions['test_executor_f']
+    if test_executor:
+        test_executor()
 
 log.info("-=== END of Check script. ===-")
 

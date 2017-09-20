@@ -6,9 +6,10 @@ Allows you to automate usual routine in pattern development.
 """
 
 import logging
+from check.local_logic import LocalLogic
 
 
-def log_define(log_lvl):
+def log_define(args):
 
     """
     Set the proper log level based on arguments.
@@ -17,29 +18,35 @@ def log_define(log_lvl):
 
     :return: proper level for use in logger
     """
+    log_lvl = args.log_lvl
     assert isinstance(log_lvl, str)
+
+    path_logic = LocalLogic()
+    path_args = path_logic.file_path_decisions(full_file_path=args.full_path)
+    log_path = path_args['working_dir']
 
     if log_lvl:
         if "info" in log_lvl:
-            return i_log(level='INFO')
+            return i_log(level='INFO', log_path=log_path)
         elif "warning" in log_lvl:
-            return i_log(level='WARN')
+            return i_log(level='WARN', log_path=log_path)
         elif "error" in log_lvl:
-            return i_log(level='ERROR')
+            return i_log(level='ERROR', log_path=log_path)
         elif "critical" in log_lvl:
-            return i_log(level='CRITICAL')
+            return i_log(level='CRITICAL', log_path=log_path)
         elif "debug" in log_lvl:
-            return i_log(level='DEBUG')
+            return i_log(level='DEBUG', log_path=log_path)
         else:
-            return i_log(level='INFO')
+            return i_log(level='INFO', log_path=log_path)
     else:
-        return i_log(level='DEBUG')
+        return i_log(level='DEBUG', log_path=log_path)
 
 
-def i_log(level):
+def i_log(level, log_path):
     """
 
     :param level: logging level
+    :param log_path: path to working dir
     :return:
     """
     assert isinstance(level, str)
@@ -48,7 +55,7 @@ def i_log(level):
     log = logging.getLogger(__name__)
     log.setLevel(level)
     # Usual logging to file:
-    file_handler = logging.FileHandler('check.log')
+    file_handler = logging.FileHandler(log_path+'\\check.log')
     file_handler.setLevel(level)
     # Usual logging to console
     console_handler = logging.StreamHandler()
@@ -67,7 +74,7 @@ def i_log(level):
 
     if level == 'DEBUG':
         # Extra detailed logging to file:
-        file_extra_handler = logging.FileHandler('step.log')
+        file_extra_handler = logging.FileHandler(log_path+'\\step.log')
         file_extra_handler.setLevel(logging.DEBUG)
         # Extra detailed logging to console
         con_extra_handler = logging.StreamHandler()
@@ -75,17 +82,16 @@ def i_log(level):
 
         file_extra_formatter = logging.Formatter('%(asctime)-24s'
                                                  '%(levelname)-8s '
-                                                 '%(name)-21s'
-                                                 '%(filename)-18s'
-                                                 '%(funcName)-28s'
-                                                 'Line:%(lineno)-6s'
-                                                 ' - %(message)-8s')
+                                                 '%(filename)-21s'
+                                                 '%(funcName)-22s'
+                                                 'L:%(lineno)-6s'
+                                                 '%(message)8s')
 
         con_extra_formatter = logging.Formatter('%(asctime)-24s'
                                                 '%(levelname)-9s'
-                                                '%(filename)-18s'
-                                                '%(funcName)-28s'
-                                                'Line:%(lineno)-6s'
+                                                '%(module)-21s'
+                                                '%(funcName)-22s'
+                                                'L:%(lineno)-6s'
                                                 '%(message)8s')
 
         file_extra_handler.setFormatter(file_extra_formatter)

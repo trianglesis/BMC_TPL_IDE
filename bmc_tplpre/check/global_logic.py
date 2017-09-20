@@ -559,47 +559,12 @@ class GlobalLogic:
             addm_working_dir = 'There is no ADDM connection, program is running in local mode.'
 
         # When ADDM connection is present and test options used:
+        # TODO: Will move it to test_run_cond()
         elif tests_run:
-            # TODO: Insert here function which execute test runs.
-            if test_conditions['run_test']:
-                local_tests_path = self.full_path_args['pattern_test_t']
-                log.debug("Will run single test for active pattern: "+str(local_tests_path))
+            test_executor_f = self.test_run_cond(test_conditions=test_conditions,
+                                                 addm_conditions=addm_conditions,
+                                                 environment_condition=environment_condition)
 
-                # Lets declare here some variables to see what we have:
-                if local_tests_path and os.path.exists(local_tests_path):
-
-                    # Generate addm working dir based on DEV condition:
-                    addm_working_dir, remote_tests_path = self.addm_dev_cond(addm_conditions['dev_vm_check'],
-                                                                             environment_condition)
-                    # TODO Insert here:
-                    '''
-                    Remote cmd execute with path to test.py and working dir situated in /tests/ folder:
-                    1. CD to working folder
-                    2. execute test.py
-                    _, stdout, stderr = self.ssh_cons.exec_command("python "+str(remote_tests_path))
-                    '''
-
-                    log.debug("Test file path to run: "+str(remote_tests_path))
-
-            elif test_conditions['related_tests']:
-                log.debug("Will run related tests where active pattern is used: "+str(self.full_path_args['file_name']))
-
-
-
-                related_tests = LocalLogic.get_related_tests(local_conditions=self.full_path_args,
-                                                             dev_vm_path=self.dev_vm_path,
-                                                             pattern_folder=self.full_path_args['pattern_folder'])
-
-                # TODO Insert here:
-                '''
-                Compose py script which will automate execution of set of tests:
-            
-                
-                Remote cmd execute with path to test.py and working dir situated in /tests/ folder:
-                1. CD to working folder
-                2. execute test.py
-                _, stdout, stderr = self.ssh_cons.exec_command("python "+str(remote_tests_path))
-                '''
 
 
         # I don't know:
@@ -615,7 +580,8 @@ class GlobalLogic:
                                      zip_files_f     = zip_files_f,
                                      upload_f        = upload_f,
                                      addm_activate_f = addm_activate_f,
-                                     scan_f          = scan_f)
+                                     scan_f          = scan_f,
+                                     test_executor_f = test_executor_f)
 
         conditional_results = dict(addm_zip         = addm_zip,
                                    local_zip        = local_zip,
@@ -1143,15 +1109,63 @@ class GlobalLogic:
 
             return upload_f, addm_activate_f
 
-    def test_run_cond(self, tests_logic, tests_py):
+    def test_run_cond(self, test_conditions, addm_conditions, environment_condition):
         """
         Placeholder
-        :param tests_py:
-        :param tests_logic:
-        :return: function from make_
+
+        [{'test_wd': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\MSSQLServer\\tests',
+        'rem_test_path': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/MSSQLServer/tests/test.py',
+        'rem_test_wd': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/MSSQLServer/tests',
+        'test_path': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\MSSQLServer\\tests\\test.py',
+        'pattern': 'MicrosoftSQLServer.tplpre'}]
+
+
+        :param test_conditions:
+        :return: function from make_test_run
         """
-        log.debug("Placeholder for future test.py run here.")
-        # Make here some logic to use to run ONE test or all RELATED?
+
+        if test_conditions['run_test']:
+
+            # Lets declare here some variables to see what we have:
+            local_tests_path = self.full_path_args['pattern_test_t']
+            active_pattern = self.full_path_args['file_name']+'.'+self.full_path_args['file_ext']
+
+            workspace = self.full_path_args['workspace']
+            addm_wd = addm_conditions['dev_vm_path']
+            test_wd = self.working_dir+os.sep+'tests'
+
+            log.debug("Will run single test for active pattern: "+str(local_tests_path))
+
+            if local_tests_path and os.path.exists(local_tests_path):
+
+                remote_test_wd = test_wd.replace(workspace, addm_wd).replace('\\', '/')
+                remote_test_file = remote_test_wd+'/test.py'
+
+                related_tests = []
+                current_pattern_dict = dict(pattern       = active_pattern,
+                                            test_path     = local_tests_path,
+                                            rem_test_path = remote_test_file,
+                                            test_wd       = test_wd,
+                                            rem_test_wd   = remote_test_wd
+                                            )
+                related_tests.append(current_pattern_dict)
+                # print(related_tests)
+
+                if related_tests:
+                    test_executor_f = self.make_test_run(related_tests)
+                # log.debug("Test file path to run: "+str(remote_tests_path))
+
+                    return test_executor_f
+
+        elif test_conditions['related_tests']:
+            log.debug("Will run related tests where active pattern is used: "+str(self.full_path_args['file_name']))
+
+            related_tests = LocalLogic.get_related_tests(local_conditions=self.full_path_args,
+                                                         dev_vm_path=addm_wd)
+            # print(related_tests)
+            test_executor_f = self.make_test_run(related_tests)
+
+            return test_executor_f
 
 # Functions to create closures for all related options:
     def make_test_read_query(self):
@@ -1308,16 +1322,16 @@ class GlobalLogic:
 
         return scan
 
-    def make_test_tun(self, tests_paths):
+    def make_test_run(self, tests_list):
         """
         Closure placeholder for tests run
-        :param tests_paths:
+        :param tests_list: list
         :return:
         """
         def test_run():
             addm = AddmOperations(self.ssh)
             # Activate local zip package using remote mirror path to it:
-            addm.tests_run(tests_paths)
+            addm.tests_executor(tests_list)
 
         return test_run
 
