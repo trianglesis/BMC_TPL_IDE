@@ -945,6 +945,7 @@ class LocalLogic:
         """
 
         # TODO: ../TKU/.. folder should somehow documented as really MUST HAVE parameter in any ENV.
+        # TODO: Why this function is in the local logic? move to parse args or AddmOperations, maybe.
         dev_vm_check = False
         vm_dev_path = ''
         _, stdout, stderr = ssh.exec_command("df -h")

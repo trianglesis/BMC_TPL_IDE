@@ -1123,17 +1123,16 @@ class GlobalLogic:
         :param test_conditions:
         :return: function from make_test_run
         """
+        # Lets declare here some variables to see what we have:
+        local_tests_path = self.full_path_args['pattern_test_t']
+        active_pattern = self.full_path_args['file_name']+'.'+self.full_path_args['file_ext']
 
+        workspace = self.full_path_args['workspace']
+        addm_wd = addm_conditions['dev_vm_path']
+        test_wd = self.working_dir+os.sep+'tests'
+
+        # TODO: Check if related test run also an initial test? Do we need it run, or better leave in separate modes?
         if test_conditions['run_test']:
-
-            # Lets declare here some variables to see what we have:
-            local_tests_path = self.full_path_args['pattern_test_t']
-            active_pattern = self.full_path_args['file_name']+'.'+self.full_path_args['file_ext']
-
-            workspace = self.full_path_args['workspace']
-            addm_wd = addm_conditions['dev_vm_path']
-            test_wd = self.working_dir+os.sep+'tests'
-
             log.debug("Will run single test for active pattern: "+str(local_tests_path))
 
             if local_tests_path and os.path.exists(local_tests_path):
