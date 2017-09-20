@@ -1033,7 +1033,6 @@ class LocalLogic:
         # print(local_cond)
 
         dev_vm_path = conditions['dev_vm_path']
-        pattern_folder = conditions['pattern_folder']
         active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
         workspace = local_cond['workspace']
 
