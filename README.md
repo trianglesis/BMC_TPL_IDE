@@ -19,8 +19,21 @@ This is IDE and automation program for [BMC Discovery (ADDM)](https://discovery.
 ##### Can run in usual shell or like 'build system'
 
 Just run it from CMD:
+#### Usage ####
 
-    -full_path "d:\ROOT\addm\tkn_main\tku_patterns\CORE\PatternFolderName\PatternName.tplpre" -l "debug" --help
+    -full_path "d:\addm\tkn_main\tku_patterns\CORE\PatternFolder\Pattern.tplpre" --help
+
+#### Syntax check ####
+NOTE: syntax tests (require 3rd party [module tplint](https://communities.bmc.com/docs/DOC-42313) by Ladkau, Matthias)
+
+
+### Install: ###
+
+- download ZIP;
+- use master/bmc_tplpre;
+- copy it wherever you want;
+- point your build system to it;
+- use arguments;
 
 
 ## Current features:
@@ -38,7 +51,12 @@ Some of them is still in progress:
     - [X] check DEV paths;
     - [X] pattern uploading;
     - [X] auto scan start;
-- [X] Start scan
+- [X] Start scan;
+- [X] Run pattern test;
+- [X] Run pattern related tests;
+
+
+##### Plan #####
 - [ ] Validate results:
     - [ ] si query;
     - [ ] si models;
@@ -47,74 +65,20 @@ Some of them is still in progress:
     - [ ] generate test data;
 
 
+## Usage: ##
 
-## Can be added soon:
+Different run mode available:
 
-Now in progress:
+### In editor: ###
 
-- [X] Pattern upload without checks;
-- [X] root or not-root user;
-- [X] folder auto creation;
-- [ ] automatic record and dml data gathering (can be useful for support);
-- [ ] automatic verifying discovered data;
-- [X] better console output;
-- [ ] tests;
-- [ ] REST API usage for BMC Discovery;
-- [ ] Credentials update;
+Sublime: use it's build system, [example](https://github.com/trianglesis/bmc_tpl/blob/master/tplpre_various.sublime-build).
 
-### Install:
+Atom: install plugin 'build' and use atom-build.yml [example](https://github.com/trianglesis/language-tplpre/blob/master/.atom-build.yml-EXAMPLE).
 
-- download project;
-- use master/bmc_tplpre;
-- copy it wherever you want;
-- point your build system to it;
-- use arguments;
-
-## Usage:
-
-This is dev example. Args can change soon. Please subscribe for recent changes.
-
-usage: check.py
-
-        [-h] [-tpl VERSION_TPL] [-imp] [-r_imp] [-T] [-full_path FULL_PATH] [-u USER] [-p PASSWORD] [-addm ADDM_HOST] [-host_list SCAN_HOST_LIST] [-disco_mode DISCO_MODE] [-l LOG_LVL] [--version]
+### In CMD: ###
 
 
-- optional arguments:
-    - *-h, --help* Show this help message and exit.
-
-- Common options:
-    - *-full_path FULL_PATH*
-        - Path to current edited or processed file.
-    - *-u USER*
-        - Your ADDM user - root or tideway
-    - *-p PASSWORD*
-        - Password for ADDM user
-    - *-system_user*
-        - Your ADDM system user used to start scan
-    - *-system_password*
-        - Your ADDM system user password used to start scan
-    - *-addm ADDM_HOST*
-        - ADDM ip address.
-    - *-host_list SCAN_HOST_LIST*
-        - Host list to Discovery scan on ADDM sep by comma.
-    - *-disco_mode DISCO_MODE*
-        - Choose the discovery mode: standard|playback|record
-    - *-l LOG_LVL*
-        - Please set log level
-    - *--version*
-        - show program's version number and exit
-
-- Developer options:
-    - *-tpl VERSION_TPL*
-      - Ignored option. In progress...
-    - *-imp*
-      - Set if you want to import patterns only imported in current opened pattern from -full_path. No recursive imports will run. If file is not a .tplpre - this option will be ignored.
-    - *-recursive_import*
-      - Options imports all patterns in recursive mode including each 'imports' from each found pattern.
-    - *-usual_import*
-      - Option imports patterns which only imported in currently opened pattern
-    - *-read_test*
-      - Read test.py file and get all patterns which used for test and import in recursive mode.
+### From windows context menu: ###
 
 
 
