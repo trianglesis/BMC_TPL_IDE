@@ -8,20 +8,21 @@ Allows you to automate usual routine in pattern development.
 import os
 import ast
 import re
-
+import logging
+log = logging.getLogger("check.logger")
 
 class TestRead:
 
-    def __init__(self, logging):
+    def __init__(self):
         # TODO: Allow to parse dev_tests and dml/ip data to use in TH mode
 
-        self.logging = logging
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import')
         self.core_from_wd_r = re.compile("\S+tku_patterns\\\CORE\\\\")
 
         self.tkn_core = os.environ.get("TKN_CORE")
 
-    def _read_pattern_test_file(self, working_dir):
+    @staticmethod
+    def _read_test(working_dir):
         """
         Read test.py
         Return AST tree
@@ -29,7 +30,6 @@ class TestRead:
         :param working_dir: where pattern lies
         :return: ast tree
         """
-        log = self.logging
         test_py_file_dir = working_dir + os.sep + "tests\\"
         if os.path.exists(test_py_file_dir + os.sep + "test.py"):
             log.debug("Folder tests for current patters - exist: " + str(test_py_file_dir))
@@ -45,7 +45,7 @@ class TestRead:
                 log.critical("Error: Unable to parse {!r}".format(str(unicode_err)))
 
         else:
-            log.warn("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
+            log.warning("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
 
     def import_pattern_tests(self, working_dir):
         """
@@ -55,8 +55,7 @@ class TestRead:
         :param working_dir: str: path to patterns folder.
         :return: list of pattern to import for test
         """
-        log = self.logging
-        test_tree = self._read_pattern_test_file(working_dir)
+        test_tree = self._read_test(working_dir)
         pattern_import_test = []
         log.debug("Reading import patterns from test.py")
 
@@ -99,7 +98,7 @@ class TestRead:
 
                 return full_test_patterns_path
         else:
-            log.warn("Cannot get test patterns. "
+            log.warning("Cannot get test patterns. "
                      "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def query_pattern_tests(self, working_dir):
@@ -112,9 +111,8 @@ class TestRead:
         :param working_dir:
         :return: list of queries to run in test
         """
-        log = self.logging
 
-        test_tree = self._read_pattern_test_file(working_dir)
+        test_tree = self._read_test(working_dir)
         query_list = []
 
         # Walk in test.py file and get function arguments where import patterns lies:
@@ -149,7 +147,7 @@ class TestRead:
                             #     log.debug("This is Binary Options. I do not parse it now, sorry. " + str(operators))
             return query_list
         else:
-            log.warn("Cannot get test queries. "
+            log.warning("Cannot get test queries. "
                      "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def test_patterns_list(self, setup_patterns, working_dir):
@@ -160,7 +158,6 @@ class TestRead:
         :param working_dir: working dir of current pattern
         :return:
         """
-        log = self.logging
         log.debug("Composing paths to patterns from test.py")
         patten_abs_path_list = []
 
@@ -175,7 +172,7 @@ class TestRead:
                 if abs_pattern_path not in patten_abs_path_list:
                     patten_abs_path_list.append(abs_pattern_path)
             else:
-                log.warn("Cannot find file in path"+str(abs_pattern_path))
+                log.warning("Cannot find file in path"+str(abs_pattern_path))
 
         return patten_abs_path_list
 
@@ -221,7 +218,6 @@ class TestRead:
         import json
         from pprint import pformat
 
-        log = self.logging
         curr_patt_dir = 'BMCRemedyARSystem'
         curr_test_path = "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py"
 

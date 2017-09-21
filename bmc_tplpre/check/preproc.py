@@ -10,7 +10,9 @@ import os
 import re
 import subprocess
 import datetime
+import logging
 
+log = logging.getLogger("check.logger")
 
 '''
 1. If syntax_passed = True after Notepad_IDE/Sublime/check/syntax_checker.py run TPLPreprocessor (input)
@@ -23,9 +25,8 @@ import datetime
 # noinspection PyBroadException
 class Preproc:
 
-    def __init__(self, logging):
+    def __init__(self):
 
-        self.logging = logging
         self.sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
         # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
 
@@ -36,7 +37,6 @@ class Preproc:
         :type workspace: path to p4 workspace - from -full_path arg
         :return: tpl_preproc_location
         """
-        log = self.logging
 
         if workspace:
             log.debug("Got the p4 workspace path from 'full_path_parse()' "
@@ -51,9 +51,9 @@ class Preproc:
                 log.debug("TPLPreprocessor found in folder: " + tpl_preproc_dir)
                 return tpl_preproc_dir, tpl_preproc_py
             else:
-                log.warn("TPLPreprocessor.py file is not found in path: " + str(tpl_preproc_py))
+                log.warning("TPLPreprocessor.py file is not found in path: " + str(tpl_preproc_py))
         else:
-            log.warn("Cannot run without p4 workspace path. Check args.")
+            log.warning("Cannot run without p4 workspace path. Check args.")
 
     def tpl_preprocessor(self, workspace, input_path, output_path, mode):
         """
@@ -71,7 +71,6 @@ class Preproc:
         _, t_pre = self.find_tplpreprocessor(workspace)
         # print(t_pre)
 
-        log = self.logging
         log.debug("Using script path as: " + t_pre)
 
         tpl_preproc = False
@@ -100,7 +99,7 @@ class Preproc:
                                 file_time_stamp = datetime.datetime.fromtimestamp(file_time)
 
                                 if file_time_stamp < ago:
-                                    log.warn("TPLPreprocessor result files looks like older that 5 min. "
+                                    log.warning("TPLPreprocessor result files looks like older that 5 min. "
                                              "Please check: " + str(file) + " time: " + str(file_time_stamp))
 
                                 if file_time_stamp > ago:
@@ -144,7 +143,7 @@ class Preproc:
 
                                 if file_time_stamp < ago:
 
-                                    log.warn("TPLPreprocessor result files looks like older that 5 min. "
+                                    log.warning("TPLPreprocessor result files looks like older that 5 min. "
                                              "Please check: " + str(file) + " time: " + str(file_time_stamp))
 
                                 if file_time_stamp > ago:

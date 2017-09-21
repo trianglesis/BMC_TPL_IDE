@@ -5,6 +5,8 @@ Syntax checking is based on BMC code and not included in this public version due
 Allows you to automate usual routine in pattern development.
 """
 
+import logging
+log = logging.getLogger("check.logger")
 
 """
 Collecting data after Discovery run
@@ -19,7 +21,7 @@ where options can be
 
       --dip-support           Generate DIP support file
   -h, --help                  Display help on standard options
-      --loglevel=LEVEL        Logging level: debug, info, warn, error, crit
+      --loglevel=LEVEL        Logging level: debug, info, warning, error, crit
       --lookup=ARG            Node ID to lookup (search ignored)
   -o, --output=ARG            Output file/prefix (ignored with -N)
   -p, --password=PASSWD       Password

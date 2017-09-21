@@ -6,100 +6,108 @@ Allows you to automate usual routine in pattern development.
 """
 
 import logging
+from check.local_logic import LocalLogic
 
 
-class Logger:
+def log_define(args):
 
-    def __init__(self, log_args):
+    """
+    Set the proper log level based on arguments.
+    Used for python standard logging module.
+    Check for typos and handle them.
 
-        self.log_lvl = log_args
+    :return: proper level for use in logger
+    """
+    log_lvl = args.log_lvl
+    assert isinstance(log_lvl, str)
 
-    def log_define(self):
+    path_logic = LocalLogic()
+    path_args = path_logic.file_path_decisions(full_file_path=args.full_path)
 
-        """
-        Set the proper log level based on arguments.
-        Used for python standard logging module.
-        Check for typos and handle them.
+    # TODO: What to do, if path was not obtained? Use default or detect active folder?
+    try:
+        log_path = path_args['working_dir']
+    except TypeError as e:
+        log_path = ""
+        print("Working dir cannot be obtained. WIll save log to module folder in dir 'ERROR'.")
+        print(e)
 
-        :return: proper level for use in logger
-        """
-
-        if self.log_lvl:
-            if "info" in self.log_lvl:
-                return Logger.i_log(level='INFO')
-            elif "warn" in self.log_lvl:
-                return Logger.i_log(level='WARN')
-            elif "error" in self.log_lvl:
-                return Logger.i_log(level='ERROR')
-            elif "critical" in self.log_lvl:
-                return Logger.i_log(level='CRITICAL')
-            elif "debug" in self.log_lvl:
-                return Logger.i_log(level='DEBUG')
-            else:
-                return Logger.i_log(level='INFO')
+    if log_lvl:
+        if "info" in log_lvl:
+            return i_log(level='INFO', log_path=log_path)
+        elif "warning" in log_lvl:
+            return i_log(level='WARN', log_path=log_path)
+        elif "error" in log_lvl:
+            return i_log(level='ERROR', log_path=log_path)
+        elif "critical" in log_lvl:
+            return i_log(level='CRITICAL', log_path=log_path)
+        elif "debug" in log_lvl:
+            return i_log(level='DEBUG', log_path=log_path)
         else:
-            return Logger.i_log(level='DEBUG')
+            return i_log(level='INFO', log_path=log_path)
+    else:
+        return i_log(level='DEBUG', log_path=log_path)
 
-    @staticmethod
-    def i_log(level):
-        """
 
-        :param level: logging level
-        :return:
-        """
+def i_log(level, log_path):
+    """
 
-        name = __name__
+    :param level: logging level
+    :param log_path: path to working dir
+    :return:
+    """
+    assert isinstance(level, str)
 
-        # Logger:
-        logger = logging.getLogger(name)
-        logger.setLevel(level)
-        # Usual logging to file:
-        file_handler = logging.FileHandler('check.log')
-        file_handler.setLevel(level)
-        # Usual logging to console
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(level)
+    # Logger:
+    log = logging.getLogger(__name__)
+    log.setLevel(level)
+    # Usual logging to file:
+    file_handler = logging.FileHandler(log_path+'\\check.log')
+    file_handler.setLevel(level)
+    # Usual logging to console
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(level)
 
-        file_formatter = logging.Formatter('%(asctime)-24s'
-                                           '%(levelname)-8s '
-                                           ' - %(message)-8s')
+    file_formatter = logging.Formatter('%(asctime)-24s'
+                                       '%(levelname)-8s '
+                                       ' - %(message)-8s')
 
-        console_formatter = logging.Formatter('%(asctime)-24s'
-                                              '%(levelname)-9s'
-                                              '%(message)8s')
+    console_formatter = logging.Formatter('%(asctime)-24s'
+                                          '%(levelname)-9s'
+                                          '%(message)8s')
 
-        file_handler.setFormatter(file_formatter)
-        console_handler.setFormatter(console_formatter)
+    file_handler.setFormatter(file_formatter)
+    console_handler.setFormatter(console_formatter)
 
-        if level == 'DEBUG':
-            # Extra detailed logging to file:
-            file_extra_handler = logging.FileHandler('step.log')
-            file_extra_handler.setLevel(logging.DEBUG)
-            # Extra detailed logging to console
-            con_extra_handler = logging.StreamHandler()
-            con_extra_handler.setLevel(logging.DEBUG)
+    if level == 'DEBUG':
+        # Extra detailed logging to file:
+        file_extra_handler = logging.FileHandler(log_path+'\\step.log')
+        file_extra_handler.setLevel(logging.DEBUG)
+        # Extra detailed logging to console
+        con_extra_handler = logging.StreamHandler()
+        con_extra_handler.setLevel(logging.DEBUG)
 
-            file_extra_formatter = logging.Formatter('%(asctime)-24s'
-                                                     '%(levelname)-8s '
-                                                     '%(name)-21s'
-                                                     '%(filename)-18s'
-                                                     '%(funcName)-28s'
-                                                     'Line:%(lineno)-6s'
-                                                     ' - %(message)-8s')
+        file_extra_formatter = logging.Formatter('%(asctime)-24s'
+                                                 '%(levelname)-8s '
+                                                 '%(filename)-21s'
+                                                 '%(funcName)-22s'
+                                                 'L:%(lineno)-6s'
+                                                 '%(message)8s')
 
-            con_extra_formatter = logging.Formatter('%(asctime)-24s'
-                                                    '%(levelname)-9s'
-                                                    '%(funcName)-28s'
-                                                    'Line:%(lineno)-6s'
-                                                    '%(message)8s')
+        con_extra_formatter = logging.Formatter('%(asctime)-24s'
+                                                '%(levelname)-9s'
+                                                '%(module)-21s'
+                                                '%(funcName)-22s'
+                                                'L:%(lineno)-6s'
+                                                '%(message)8s')
 
-            file_extra_handler.setFormatter(file_extra_formatter)
-            con_extra_handler.setFormatter(con_extra_formatter)
+        file_extra_handler.setFormatter(file_extra_formatter)
+        con_extra_handler.setFormatter(con_extra_formatter)
 
-            logger.addHandler(file_extra_handler)
-            logger.addHandler(con_extra_handler)
-        else:
-            logger.addHandler(file_handler)
-            logger.addHandler(console_handler)
+        log.addHandler(file_extra_handler)
+        log.addHandler(con_extra_handler)
+    else:
+        log.addHandler(file_handler)
+        log.addHandler(console_handler)
 
-        return logger
+    return log

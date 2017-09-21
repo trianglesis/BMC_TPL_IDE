@@ -10,11 +10,14 @@ import re
 import os
 import shutil
 import stat
+import logging
+
+log = logging.getLogger("check.logger")
 
 
 class TPLimports:
 
-    def __init__(self, logging, full_path_args):
+    def __init__(self, full_path_args):
 
         """
         Initialize with startup set of arguments.
@@ -50,11 +53,11 @@ class TPLimports:
                 Repeat execution with vars from Round 2
                 Break the loop 'while < 3'
 
-            Step 3: Show list of modules which wasn't found anywhere during 3 rounds in log warn.
+            Step 3: Show list of modules which wasn't found anywhere during 3 rounds in log warning.
             Step 3.1: Show list of found modules and path to patterns in log debug.
 
             Step 4: Wiping 'imports' folder before add new imports in it.
-                Step 4.1 If folder cannot be wiped - show warning log.
+                Step 4.1 If folder cannot be wiped - show warninging log.
 
             Step 5: Create 'imports' folder if isn't exist.
             Step 5.1: Copy pattern to imports folder and show debug log with path to copied pattern.
@@ -100,13 +103,8 @@ class TPLimports:
                 }
 
 
-
-        :param logging: inherited log class
         :param full_path_args: args parsed and composed
         """
-
-        self.logging = logging
-        log = self.logging
 
         self.full_path_args = full_path_args
 
@@ -121,7 +119,7 @@ class TPLimports:
 
             log.debug("Arguments from -full_path are obtained and program will make decisions.")
         else:
-            log.warn("Arguments from -full_path are'n obtained and program cannot make decisions.")
+            log.warning("Arguments from -full_path are'n obtained and program cannot make decisions.")
 
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import\s+\S+\s+\d+')
         self.pattern_module_name_r = re.compile('tpl\s+(?:\$\$TPLVERSION\$\$|\d+\.\d+)\s+module\s+(\S+);')
@@ -135,7 +133,6 @@ class TPLimports:
         :param conditions: set - this is set of options from full_paths parse. Example above.
         :return: nothing - just execute imports.
         """
-        log = self.logging
 
         local_cond = conditions['conditions']['local_conditions']
         env_mode   = conditions['conditions']['local_conditions']['environment_condition']
@@ -165,7 +162,7 @@ class TPLimports:
                     if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
                         extra_folders.append(extra_folder)
                     else:
-                        log.warn("Step 1.1 This path is not exist: "+str(extra_folder))
+                        log.warning("Step 1.1 This path is not exist: "+str(extra_folder))
             else:
                 log.info("Be aware that this folder key is not exist: "+str(folder_key))
 
@@ -253,21 +250,30 @@ class TPLimports:
         :type importing_set_options: set list
         :return:
         """
-        log = self.logging
 
         extra_folders               = importing_set_options['extra_folders']
         current_modules_name        = importing_set_options['current_modules_name']
         find_importing_modules      = importing_set_options['find_importing_modules']
         env_mode                    = importing_set_options['env_mode']
 
+        exclude_dirs = ['imports'
+                        'tests',
+                        'tpl',
+                        'dml',
+                        'expected',
+                        'actuals',
+                        'HarnessFiles'
+                        ]
+
         # Make pattern list to found in each:
-        all_patterns_list = self.patterns_to_read(env_mode=env_mode,
-                                                  search_path=extra_folders)
+        all_patterns_list = self.files_to_read(env_mode=env_mode,
+                                               search_path=extra_folders,
+                                               exclude_dirs=exclude_dirs)
 
         iteration_count = 0
         while iteration_count < 3:
             # Recursive search for imports and imports for found patterns for 3 times.
-            # If something was not found on 3rd iteration - print warn message with these items.
+            # If something was not found on 3rd iteration - print warning message with these items.
             iteration_count = iteration_count + 1
             if find_importing_modules:
                 log.debug("Round: "+str(iteration_count)+" - of recursive search.")
@@ -290,8 +296,8 @@ class TPLimports:
                 break
 
         if find_importing_modules:
-            log.warn("Step 3. These modules cannot be found anywhere in 'tku_patterns' "
-                     "please check manually: "+str(find_importing_modules))
+            log.warning("Step 3. These modules cannot be found anywhere in 'tku_patterns' "
+                        "please check manually: "+str(find_importing_modules))
         if current_modules_name:
             log.debug("Step 3.1 Found modules list: "+str(current_modules_name))
 
@@ -320,7 +326,6 @@ class TPLimports:
         :param current_modules_name: incoming list of modules already found
         :return: list
         """
-        log = self.logging
 
         if pattern_path_list:
             log.debug('Step 1.2. Reading patterns from the list.')
@@ -351,10 +356,11 @@ class TPLimports:
 
             return find_importing_modules, current_modules_name
         else:
-            log.warn("Nothing to read for read_pattern module. No imports will be found.")
+            log.warning("Nothing to read for read_pattern module. No imports will be found.")
             return False, False
 
-    def patterns_to_read(self, env_mode, search_path):
+    @staticmethod
+    def files_to_read(env_mode, search_path, exclude_dirs):
         """
         Composing path to each pattern file in working directories or workspace.
         Then I will search modules to import through this list.
@@ -362,20 +368,11 @@ class TPLimports:
         This function looks odd, but I need to be sure I can walk each 1st level folders for each in tkn tree
         And the same variant should be used for customer - so I can have one module for both scenarios.
 
+        :param exclude_dirs:
         :param search_path: list
         :type env_mode: str
         :return: list
         """
-        log = self.logging
-
-        exclude_dirs = ['imports'
-                        'tests',
-                        'tpl',
-                        'dml',
-                        'expected',
-                        'actuals',
-                        'HarnessFiles'
-                        ]
 
         file_candidates = []
 
@@ -421,8 +418,9 @@ class TPLimports:
                                 file_candidates.append(file_candidate)
 
             return file_candidates
+
         else:
-            log.warn("I can import only pattern files tplre or tpl.")
+            log.warning("I can import only pattern files tplre or tpl.")
 
     def search_in_path(self, file_candidates, find_importing_modules, current_modules_name):
         # noinspection SpellCheckingInspection
@@ -440,7 +438,6 @@ class TPLimports:
         :return: list
         """
 
-        log = self.logging
         # In list of all available pattern files in searched tree -
         # search all we need to import by reading header of each file.
         # Step 2.1.- search in patterns list.
@@ -498,7 +495,6 @@ class TPLimports:
             :return:
         """
 
-        log = self.logging
         imports_folder = working_dir + os.sep + "imports"
 
         # log.debug("Step 4. Patterns to be copied into 'imports': "+str(patterns_path))
@@ -517,7 +513,8 @@ class TPLimports:
                 log.debug("Step 5.1 Copy to 'imports' pattern: " + str(pattern['path']))
 
     # Service functions:
-    def list_folder(self, folder_path):
+    @staticmethod
+    def list_folder(folder_path):
         """
         Get working_dir content to find all
         Only for DEV scenario - because we have cases with two patterns in one folder.
@@ -526,7 +523,6 @@ class TPLimports:
         :param folder_path: str
         :return: list
         """
-        log = self.logging
 
         all_tplre = []
         tplpre_path = []
@@ -546,7 +542,7 @@ class TPLimports:
 
             return tplpre_path
         else:
-            log.warn("Current folder is empty or does not exist. Please check arguments and path to current file.")
+            log.warning("Current folder is empty or does not exist. Please check arguments and path to current file.")
 
     def _del_old_imports(self, path):
         """
@@ -555,14 +551,13 @@ class TPLimports:
         :param path: path to imports folder
         :return:
         """
-        log = self.logging
         if os.path.exists(path):
             try:
                 log.debug("Step 4. Wiping 'imports' folder before add new imports in it. "+str(path))
                 shutil.rmtree(path, onerror=self._del_rw)
                 # shutil.rmtree(path)
             except:
-                log.warn("Step 4.1 This folder exist but program have no permission to remove it. "
+                log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
                          "Please check path and permissions and 'AR' attribute in file.")
                 raise
 

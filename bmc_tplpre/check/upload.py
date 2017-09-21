@@ -7,11 +7,14 @@ Allows you to automate usual routine in pattern development.
 
 import hashlib
 import re
+import logging
+import progressbar
+log = logging.getLogger("check.logger")
 
 
 class AddmOperations:
 
-    def __init__(self, logging, ssh):
+    def __init__(self, ssh):
         """
 
         1. If syntax_passed = True AND tpl_preproc = True AND addm_host ip in args - start this (input)
@@ -37,12 +40,9 @@ class AddmOperations:
 
         4 When activate finished - return result (pass \ fail) - (output)
 
-        :param logging: func
         :param ssh: func
         """
         # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
-
-        self.logging = logging
         self.ssh_cons = ssh
 
         # noinspection SpellCheckingInspection
@@ -60,8 +60,6 @@ class AddmOperations:
         :param zip_on_local: str - path to zip in local system
         :param zip_on_remote: str - path where put this zip
         """
-
-        log = self.logging
 
         log.debug("zip file local: " + zip_on_local)
         log.debug("zip file remote: " + zip_on_remote)
@@ -108,8 +106,6 @@ class AddmOperations:
         :param module_name: Name of pattern folder
         """
 
-        log = self.logging
-
         uploaded_activated = False  # 1 knowledge upload activated
         log.debug("Activate local zip: ensure we have rights of 777 on this file: "+str(zip_path))
 
@@ -136,13 +132,14 @@ class AddmOperations:
 
         return uploaded_activated
 
-    def deactivate_tku(self):
+    @staticmethod
+    def deactivate_tku():
         """
         IDEA - run deactivate and removals if requested - before activate new.
 
         :return:
         """
-        log = self.logging
+
         log.debug("Func to deactivate previous or old TKU updates.")
 
     def check_file_pattern(self, local_file, remote_file):
@@ -161,7 +158,6 @@ class AddmOperations:
         :param local_file: file in local system
         :return:
         """
-        log = self.logging
 
         log.debug("MD5SUM: Checking file sum of local_file: "+str(local_file))
         log.debug("MD5SUM: Checking file sum of remote_file: "+str(remote_file))
@@ -179,3 +175,83 @@ class AddmOperations:
 
         return file_ok
 
+    def tests_executor(self, tests_list):
+        """
+        Placeholder for tests run
+        :param tests_list: list
+        :return:
+        """
+        tests_len = len(tests_list)
+
+        try:
+            import progressbar
+            progressbar.streams.flush()
+            progressbar.streams.wrap_stderr()
+            bar = progressbar.ProgressBar(max_value=tests_len)
+        except ImportError:
+            progressbar = False
+            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
+            pass
+
+        log.info("-==== START RELATED TESTS EXECUTION ====-")
+        log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
+        log.debug("Tests related to: "+str(tests_list[0]['pattern']))
+        log.debug("All tests len: "+str(tests_len))
+
+        for i, test in enumerate(tests_list):
+            """
+            Remote run: 
+            ssh://tideway@192.168.5.11:22/usr/bin/python -u /usr/tideway/TKU/addm/tkn_main/buildscripts/test_executor.py
+            ssh://tideway@192.168.5.11:22/usr/tideway/bin/python -u /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/MicrosoftAppFabric/tests/test.py TestStandalone.test2_Windows_main
+            
+            export TKN_MAIN=/usr/tideway/TKU/addm/tkn_main/
+            export TKN_CORE=$TKN_MAIN/tku_patterns/CORE
+            export PYTHONPATH=$PYTHONPATH:$TKN_MAIN/python
+
+            # cmd = "cd "+test['rem_test_wd']+"; ls; python -u "+test['rem_test_path']+" --verbose"
+            # cmd = "cd "+test['rem_test_wd']+"; /usr/tideway/bin/python --version"
+            # cmd = "cd "+test['rem_test_wd']+"; python --version"
+            # cmd = "cd "+test['rem_test_wd']+"; echo $TKN_MAIN"
+            # cmd = "cd "+test['rem_test_wd']+"; echo $TKN_CORE"
+            # cmd = "cd "+test['rem_test_wd']+"; echo $PYTHONPATH"
+            # cmd = "cd "+test['rem_test_wd']+"; ls"
+
+            Local run: ?
+            """
+
+            log.info("Start test:" + str(test['rem_test_path']))
+
+            try:
+                bar(range(tests_len))
+                bar.update(i)
+            except NameError:
+                pass
+
+            log.info("%d test of "+str(tests_len), i+1)  # Just print
+
+            pre_cmd = ". ~/.bash_profile;"
+            wd_cmd = "cd "+test['rem_test_wd']+";"
+            cmd_test = "/usr/tideway/bin/python -u "+test['rem_test_path']+" --verbose"
+
+            cmd = pre_cmd + wd_cmd + cmd_test
+            log.debug("Run: "+str(cmd))
+
+            _, stdout, stderr = self.ssh_cons.exec_command(cmd)
+
+            if stdout:
+                output = stdout.readlines()
+                raw_out = "".join(output)
+                log.info("-==== DETAILED LOG ====-")
+                log.info("\n"+raw_out)
+            if stderr:
+                output = stderr.readlines()
+                raw_out = "".join(output)
+                log.info("-==== UNITTEST LOG ====-")
+                log.info("\n\n"+raw_out)
+
+            # break
+        try:
+            bar.finish()
+        except NameError:
+            pass
+        log.info("-==== END OF RELATED TESTS EXECUTION ====-")

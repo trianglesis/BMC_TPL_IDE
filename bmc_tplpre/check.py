@@ -7,6 +7,7 @@ Allows you to automate usual routine in pattern development.
 
 import argparse
 from check.global_logic import GlobalLogic
+from check.logger import log_define
 
 # # DEBUG
 # import json
@@ -106,7 +107,7 @@ common.add_argument("-l",
                     action='store',
                     dest="log_lvl",
                     default="1",
-                    help="Please set log level")  # info, quiet, warn, debug, output, error
+                    help="Please set log level")  # info, quiet, warning, debug, output, error
 common.add_argument('--version',
                     action='version',
                     version='%(prog)s 1.0')
@@ -114,69 +115,71 @@ common.add_argument('--version',
 known_args, extra_args = parser.parse_known_args()
 # print("Known args: "+str(known_args))
 
+log = log_define(known_args)
+log.debug("Start: "+__name__)
 
-def log_constructor():
-    from check.logger import Logger
-    log_init = Logger(known_args.log_lvl)
-    return log_init.log_define()
-log = log_constructor()
-
-funcs_run = GlobalLogic(logging=log, known_args=known_args, extra_args=extra_args)
+funcs_run = GlobalLogic(known_args=known_args, extra_args=extra_args)
 conditional_functions, conditional_results = funcs_run.make_function_set()
 
 # Manual functions execution:
+assert isinstance(conditional_functions, dict)
+
 if conditional_functions['imports_f']:
     imports_f = conditional_functions['imports_f']
 
     # Executing test queries parser:
-    if imports_f['parse_tests_queries']:
+    if callable(imports_f['parse_tests_queries']):
         parse_tests_queries = imports_f['parse_tests_queries']
         if parse_tests_queries:
             parse_tests_queries()
 
     # Executing test patterns list get:
-    if imports_f['parse_tests_patterns']:
+    if callable(imports_f['parse_tests_patterns']):
         parse_tests_patterns = imports_f['parse_tests_patterns']
         if parse_tests_patterns:
             parse_tests_patterns()
 
     # Executing all imports:
-    if imports_f['import_patterns']:
+    if callable(imports_f['import_patterns']):
         import_patterns = imports_f['import_patterns']
         if import_patterns:
             import_patterns()
 
-# Executing preprocessor:
-if conditional_functions['preproc_f']:
+# # Executing preprocessor:
+if callable(conditional_functions['preproc_f']):
     preproc_f = conditional_functions['preproc_f']
     if preproc_f:
         preproc_f()
 
 # Executing syntax checker:
-if conditional_functions['syntax_check_f']:
+if callable(conditional_functions['syntax_check_f']):
     syntax_check_f = conditional_functions['syntax_check_f']
     if syntax_check_f:
         syntax_check_f()
 
 # Executing zipping files (and upload maybe?)
-if conditional_functions['zip_files_f']:
+if callable(conditional_functions['zip_files_f']):
     zip_files_f = conditional_functions['zip_files_f']
     if zip_files_f:
         zip_files_f()
 
 # Executing pattern activation:
-if conditional_functions['addm_activate_f']:
+if callable(conditional_functions['addm_activate_f']):
     addm_activate_f = conditional_functions['addm_activate_f']
     if addm_activate_f:
         addm_activate_f()
 
 # Executing start scan
-# Working in current condition. Disable to save time
-if conditional_functions['scan_f']:
+# # Working in current condition. Disable to save time
+if callable(conditional_functions['scan_f']):
     scan_f = conditional_functions['scan_f']
     if scan_f:
         scan_f()
 
+if callable(conditional_functions['test_executor_f']):
+    test_executor = conditional_functions['test_executor_f']
+    if test_executor:
+        test_executor()
 
 log.info("-=== END of Check script. ===-")
 

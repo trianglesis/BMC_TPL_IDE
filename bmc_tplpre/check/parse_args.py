@@ -8,13 +8,14 @@ Allows you to automate usual routine in pattern development.
 import re
 import paramiko
 from check.local_logic import LocalLogic
+import logging
+
+log = logging.getLogger("check.logger")
 
 
 class ArgsParse:
 
-    def __init__(self, logging):
-
-        self.logging = logging
+    def __init__(self):
 
         # Checking args for ADDM:
         self.ip_addr_check = re.compile("\d+\.\d+\.\d+\.\d+")  # ip addr
@@ -32,19 +33,21 @@ class ArgsParse:
 
         :return:
         """
-        log = self.logging
 
         # Args dedicated to local paths from full path extracted:
         local_arguments_set = self.full_path_parse(known_args.full_path)
+        assert isinstance(local_arguments_set, dict)
 
         # Args dedicated to imports logic from args parse:
-        operational_args_set = self.operational_mode_check(known_args)
+        operational_args_set = self.oper_mode(known_args)
+        assert isinstance(operational_args_set, dict)
 
         # Args dedicated to addm actions - gathered from addm ssh connection if available:
         addm_args_set = self.addm_args(known_args)
+        assert isinstance(addm_args_set, dict)
 
         if extra_args:
-            log.warn("HEY, you forgot some arguments:" + str(extra_args))
+            log.warning("HEY, you forgot some arguments:" + str(extra_args))
 
         return local_arguments_set, operational_args_set, addm_args_set
 
@@ -72,15 +75,12 @@ class ArgsParse:
         :return: addm_args_set
         """
 
-        # TODO: Add REST support. Using known args - decide which auth to use REST or SSH.
+        addm_env_check = LocalLogic()
 
-        log = self.logging
-        addm_env_check = LocalLogic(log)
-
-        addm_host = known_args.addm_host
-        user = known_args.user
-        password = known_args.password
-        disco_mode = known_args.disco_mode
+        addm_host      = known_args.addm_host
+        user           = known_args.user
+        password       = known_args.password
+        disco_mode     = known_args.disco_mode
         scan_host_list = known_args.scan_host_list
 
         # For user 'system' in addm - which is used to start scans,, activate patterns, etc.
@@ -91,18 +91,18 @@ class ArgsParse:
         if not system_password:
             system_password = 'system'
 
-        tpl_vers = ''
-        addm_ver = ''
-        tpl_folder = ''
-        addm_prod = ''
+        tpl_vers     = ''
+        addm_ver     = ''
+        tpl_folder   = ''
+        addm_prod    = ''
 
-        dev_vm_path = False
+        dev_vm_path  = False
         dev_vm_check = False
 
-        disco = self.discovery_mode_check(disco_mode)
-        scan_hosts = self.host_list_check(scan_host_list)
+        disco        = self.discovery_mode_check(disco_mode)
+        scan_hosts   = self.host_list_check(scan_host_list)
 
-        ssh = self.addm_host_check(addm_host, user, password)
+        ssh          = self.addm_host_check(addm_host, user, password)
         if ssh:
             '''
             Here I check ADDM VM version and tpl version supported.
@@ -134,7 +134,7 @@ class ArgsParse:
                                   "will be used for upload patterns and tests.")
 
         else:
-            log.debug("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
+            log.info("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
 
         addm_args_set = dict(ssh_connection  = ssh,
                              disco_mode      = disco,
@@ -149,7 +149,8 @@ class ArgsParse:
                              addm_prod       = addm_prod)
         return addm_args_set
 
-    def full_path_parse(self, full_path):
+    @staticmethod
+    def full_path_parse(full_path):
         """
         Input the full path arg and tries to parse it for further usage in different scenarios:
 
@@ -165,13 +166,13 @@ class ArgsParse:
         :return: dict
         """
 
-        log = self.logging
-        path_logic = LocalLogic(log)
+        path_logic = LocalLogic()
         args = path_logic.file_path_decisions(full_file_path=full_path)
 
         return args
 
-    def addm_host_check(self, addm_host, user, password):
+    @staticmethod
+    def addm_host_check(addm_host, user, password):
         """
         Check login and password for provided ADDM IP
         If no ADDM IP - should not run this and upload, disco.
@@ -187,7 +188,6 @@ class ArgsParse:
         :param user: str
         :param addm_host: str
         """
-        log = self.logging
 
         ssh = ''
         if addm_host:
@@ -215,7 +215,7 @@ class ArgsParse:
                     ssh = False
                 except TimeoutError:
                     log.critical("Connection failed. Probably host or IP of ADDM is not set or incorrect!")
-                    log.warn("Will continue further check, but nothing will proceed on ADDM!")
+                    log.warning("Will continue further check, but nothing will proceed on ADDM!")
                     ssh = False
                     # raise
             else:
@@ -231,7 +231,6 @@ class ArgsParse:
          (standard|playback|record)
          Should run only if SSH session established!
         """
-        log = self.logging
 
         if disco_mode:
             check = self.disco_mode_check.match(disco_mode)
@@ -251,7 +250,6 @@ class ArgsParse:
 
         :param host_list_arg: str
         """
-        log = self.logging
         host_list = False
 
         if host_list_arg:
@@ -260,7 +258,7 @@ class ArgsParse:
                 host_list = host_list_arg  # Host(s) to scan are:       10.49.32.114
                 log.debug("Will add host(s) for discovery: " + str(host_list))
             else:
-                log.warn("Host list for scan should consist of IPs.")
+                log.warning("Host list for scan should consist of IPs.")
         else:
             if host_list != 'None':
                 log.debug("Please specify some hosts to scan for ADDM!")
@@ -269,91 +267,64 @@ class ArgsParse:
 
         return host_list
 
-    def operational_mode_check(self, known_args):
+    @staticmethod
+    def oper_mode(known_args):
         """
         Dict should not be empty even if there is no args for that.
         Further Ill check and use logic.
-        Vars should be re-written of True:
+        If imports used - than no test run!
+        I test run used - than no imports!
+
+        {'run_test': True,
+        'related_tests': False,
+        'usual_imports': False,
+        'read_test': False,
+        'recursive_imports': False}
 
         :param known_args:
         :return: dict of Bool actions
         """
-        log = self.logging
 
-        recursive_imports = False
-        usual_imports = False
-        read_test = False
-        related_tests = False
-        run_test = False
-        oper_args_set = {
-            'recursive_imports': recursive_imports,
-            'usual_imports': usual_imports,
-            'read_test': read_test,
-            'related_tests': related_tests,
-            'run_test': run_test,
-        }
+        oper_args_set = dict(
+                             imports = dict(recursive_imports=False, usual_imports=False, read_test=False
+                                            ),
+                             tests = dict(related_tests=False, run_test=False
+                                          )
+                             )
 
-        # TODO: Add dict.update
-        # TODO: Use dict()
         if known_args.read_test and known_args.recursive_import:
-            read_test = True
-            recursive_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            oper_args_set['imports']['recursive_imports'] = True
+            oper_args_set['imports']['read_test'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.usual_import and not known_args.recursive_import:
-            usual_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            oper_args_set['imports']['usual_imports'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.recursive_import and not known_args.usual_import:
-            recursive_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            oper_args_set['imports']['recursive_imports'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.usual_import and known_args.recursive_import:
-            log.warn("You cannot add two import scenarios in one run. Please choose only one. "
-                     "But I will run usual_imports by default.")
-            usual_imports = True
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            log.warning("You cannot add two import scenarios in one run. Please choose only one. "
+                        "But I will run usual_imports by default.")
+            oper_args_set['imports']['usual_imports'] = True
+            oper_args_set['tests'] = False
 
         elif known_args.related_tests and not known_args.run_test:
-            log.warn("You .")
-            recursive_imports = False
-            usual_imports = False
-            read_test = False
-            related_tests = False
-            run_test = False
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            log.info("Related test run option. I will search for all related "
+                     "tests which use current active pattern and run them.")
+            oper_args_set['tests']['related_tests'] = True
+            oper_args_set['imports'] = False
 
         elif known_args.run_test and not known_args.related_tests:
-            log.warn("You ")
-            recursive_imports = False
-            usual_imports = False
-            read_test = False
-            related_tests = False
-            run_test = False
-            oper_args_set = {
-                'recursive_imports': recursive_imports,
-                'usual_imports': usual_imports,
-                'read_test': read_test,
-            }
+            log.info("Single test run options. I will run only test for current pattern in its tests folder.")
+            oper_args_set['tests']['run_test'] = True
+            oper_args_set['imports'] = False
+
+        else:
+            # When situation is not implemented - use false by default.
+            oper_args_set['tests'] = False
+            oper_args_set['imports'] = False
 
         return oper_args_set
