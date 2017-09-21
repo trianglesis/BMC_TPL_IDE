@@ -8,6 +8,7 @@ Allows you to automate usual routine in pattern development.
 import hashlib
 import re
 import logging
+import progressbar
 log = logging.getLogger("check.logger")
 
 
@@ -180,15 +181,24 @@ class AddmOperations:
         :param tests_list: list
         :return:
         """
-        # log.debug("Placeholder for tests run. Args: "+str(tests_list))
+        tests_len = len(tests_list)
 
-        # log.info("\n")
+        try:
+            import progressbar
+            progressbar.streams.flush()
+            progressbar.streams.wrap_stderr()
+            bar = progressbar.ProgressBar(max_value=tests_len)
+        except ImportError:
+            progressbar = False
+            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
+            pass
+
         log.info("-==== START RELATED TESTS EXECUTION ====-")
-        log.info("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
-        log.info("Tests related to: "+str(tests_list[0]['pattern']))
+        log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
+        log.debug("Tests related to: "+str(tests_list[0]['pattern']))
+        log.debug("All tests len: "+str(tests_len))
 
-        # TODO: Here execute each test from related_tests_dict and save log for all, or separate?
-        for test in tests_list:
+        for i, test in enumerate(tests_list):
             """
             Remote run: 
             ssh://tideway@192.168.5.11:22/usr/bin/python -u /usr/tideway/TKU/addm/tkn_main/buildscripts/test_executor.py
@@ -209,8 +219,15 @@ class AddmOperations:
             Local run: ?
             """
 
-            # tests_output = 'tests.out'
             log.info("Start test:" + str(test['rem_test_path']))
+
+            try:
+                bar(range(tests_len))
+                bar.update(i)
+            except NameError:
+                pass
+
+            log.info("%d test of "+str(tests_len), i+1)  # Just print
 
             pre_cmd = ". ~/.bash_profile;"
             wd_cmd = "cd "+test['rem_test_wd']+";"
@@ -233,3 +250,8 @@ class AddmOperations:
                 log.info("\n\n"+raw_out)
 
             # break
+        try:
+            bar.finish()
+        except NameError:
+            pass
+        log.info("-==== END OF RELATED TESTS EXECUTION ====-")
