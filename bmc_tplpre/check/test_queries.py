@@ -21,7 +21,8 @@ class TestRead:
 
         self.tkn_core = os.environ.get("TKN_CORE")
 
-    def _read_pattern_test_file(self, working_dir):
+    @staticmethod
+    def _read_test(working_dir):
         """
         Read test.py
         Return AST tree
@@ -54,7 +55,7 @@ class TestRead:
         :param working_dir: str: path to patterns folder.
         :return: list of pattern to import for test
         """
-        test_tree = self._read_pattern_test_file(working_dir)
+        test_tree = self._read_test(working_dir)
         pattern_import_test = []
         log.debug("Reading import patterns from test.py")
 
@@ -111,7 +112,7 @@ class TestRead:
         :return: list of queries to run in test
         """
 
-        test_tree = self._read_pattern_test_file(working_dir)
+        test_tree = self._read_test(working_dir)
         query_list = []
 
         # Walk in test.py file and get function arguments where import patterns lies:

@@ -360,6 +360,7 @@ class GlobalLogic:
         addm_activate_f             = False
         upload_f                    = False
         scan_f                      = False
+        test_executor_f             = False
 
         addm_zip                    = ''
         local_zip                   = ''
@@ -843,6 +844,7 @@ class GlobalLogic:
         """
         # Assign
         addm_wd = ''
+        test_path = ''
 
         # Set examples in __init__ docstrings:
         if environment_condition == 'developer_tplpre':
@@ -917,11 +919,9 @@ class GlobalLogic:
         local_conditions      = logical_conditions['local_conditions']
         environment_condition = local_conditions['environment_condition']
 
-        assert isinstance(import_conditions, dict)
         assert isinstance(local_conditions, dict)
         # Based on imports mode:
-        # TODO: Make decisional functions and move all those decisions to them, so I can just call it and know wnat mode to run!
-        if import_conditions['usual_imports'] or import_conditions['recursive_imports']:
+        if import_conditions:
             log.debug("Making zip from imported patterns.")
 
             # Include 'imports' dir into the path:
@@ -976,7 +976,7 @@ class GlobalLogic:
             log.debug("addm_result_folder: "+str(addm_result_folder))
             log.debug("path_to_result: "+str(path_to_result))
 
-        elif not import_conditions['usual_imports'] and not import_conditions['recursive_imports']:
+        else:
             log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip with one active file.")
 
             # Path of active pattern to ZIP:

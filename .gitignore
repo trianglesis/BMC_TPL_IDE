@@ -27,3 +27,5 @@ bmc_tplpre/DEV_TEST/IIS_ast_dump_test_py.txt
 bmc_tplpre/DEV_TEST/REMEDY_ast_dump_test_py.txt
 bmc_tplpre/DEV_TEST/related_test_parse.py
 bmc_tplpre/DEV_TEST/test_executor.py
+bmc_tplpre/DEV_TEST/tests_init.json
+bmc_tplpre/DEV_TEST/TEST_BMC_TPL_Ide_All.py

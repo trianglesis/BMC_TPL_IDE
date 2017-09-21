@@ -23,7 +23,14 @@ def log_define(args):
 
     path_logic = LocalLogic()
     path_args = path_logic.file_path_decisions(full_file_path=args.full_path)
-    log_path = path_args['working_dir']
+
+    # TODO: What to do, if path was not obtained? Use default or detect active folder?
+    try:
+        log_path = path_args['working_dir']
+    except TypeError as e:
+        log_path = ""
+        print("Working dir cannot be obtained. WIll save log to module folder in dir 'ERROR'.")
+        print(e)
 
     if log_lvl:
         if "info" in log_lvl:
