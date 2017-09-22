@@ -148,7 +148,7 @@ class TestRead:
             return query_list
         else:
             log.warning("Cannot get test queries. "
-                     "File test.py is not found or not readable in this path: "+str(working_dir))
+                        "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def test_patterns_list(self, setup_patterns, working_dir):
         """
@@ -175,100 +175,5 @@ class TestRead:
                 log.warning("Cannot find file in path"+str(abs_pattern_path))
 
         return patten_abs_path_list
-
-    # noinspection PyPep8
-    def get_related_tests(self):
-        """
-        During search of recursive patterns + test, also check each test.py where active pattern also used,
-        then compose dict with name of patern_directory: test_path which will be used for further run to validate
-        each related test.
-
-        Use same mechanism as for recursive imports BUT not copy, just make set for each result.
-
-        dict example:
-        {
-          "curr_patt_test": {
-            "curr_patt_dir": "BMCRemedyARSystem",
-            "curr_test_path": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py",
-            "rel_tests": {
-              "AvnetSeamlessDataPump": {
-                "rel_patt": "AvnetSeamlessDataPump",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py"
-              },
-              "BMCRemedyMigrator": {
-                "rel_patt": "BMCRemedyMigrator",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py"
-              },
-              "BMC_CloudLifecycleManagement": {
-                "rel_patt": "BMC_CloudLifecycleManagement",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py"
-              },
-              "BMC_HRCaseManagement": {
-                "rel_patt": "BMC_HRCaseManagement",
-                "rel_test": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"
-              }
-            }
-          }
-        }
-
-        :return: dict
-        """
-
-        # # DEBUG
-        import json
-        from pprint import pformat
-
-        curr_patt_dir = 'BMCRemedyARSystem'
-        curr_test_path = "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py"
-
-        # noinspection PyPep8
-        related_tests_list_dev = iter(["D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py",
-                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py",
-                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py",
-                                  "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"])
-
-        related_pattern_list = iter(["AvnetSeamlessDataPump",
-                                "BMCRemedyMigrator",
-                                "BMC_CloudLifecycleManagement",
-                                "BMC_HRCaseManagement"])
-
-        related_pattern_tests_dict = {
-            "AvnetSeamlessDataPump": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\AvnetSeamlessDataPump\\tests\\test.py",
-            "BMCRemedyMigrator": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyMigrator\\tests\\test.py",
-            "BMC_CloudLifecycleManagement": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_CloudLifecycleManagement\\tests\\test.py",
-            "BMC_HRCaseManagement": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMC_HRCaseManagement\\tests\\test.py"
-            }
-
-        rel_tests = dict()
-        test_dict = dict(curr_patt_test = dict(curr_patt_dir=curr_patt_dir,
-                                               curr_test_path=curr_test_path,
-                                               rel_tests=rel_tests)
-                         )
-
-        for pattern in related_pattern_list:
-            test_path = related_pattern_tests_dict[pattern]
-
-            rel_tests.update({pattern: dict(rel_patt=pattern,
-                                            rel_test=test_path)})
-
-        print(json.dumps(test_dict, indent=4, ensure_ascii=False, default=pformat))
-
-        # DEV:
-        test_dict = TestRead.get_related_tests()
-
-        # print(test_dict['curr_patt_test'])
-        # print(test_dict['curr_patt_test']['curr_test_path'])
-        # print(test_dict['curr_patt_test']['curr_patt_dir'])
-        # print(test_dict['curr_patt_test']['rel_tests'])
-
-        related_tests_reveal = test_dict['curr_patt_test']['rel_tests']
-        for key, value in related_tests_reveal.items():
-            pattern_dir = key
-            # pattern_test_d = value
-            pattern_rel_test = value['rel_test']
-            print("Found related pattern: '"+str(pattern_dir)+"' with test: "+str(pattern_rel_test))
-            # print(value[key])
-
-        return test_dict
 
 

@@ -558,7 +558,7 @@ class TPLimports:
                 # shutil.rmtree(path)
             except:
                 log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
-                         "Please check path and permissions and 'AR' attribute in file.")
+                            "Please check path and permissions and 'AR' attribute in file.")
                 raise
 
     @staticmethod

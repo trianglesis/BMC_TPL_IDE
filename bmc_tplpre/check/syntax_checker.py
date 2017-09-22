@@ -10,6 +10,17 @@ import re
 import sys
 import os
 import logging
+import time
+
+try:
+    import progressbar
+except ModuleNotFoundError:
+    progressbar = ''
+    pass
+except ImportError:
+    progressbar = ''
+    pass
+
 log = logging.getLogger("check.logger")
 
 '''
@@ -36,7 +47,6 @@ class SyntaxCheck:
         """
         """
 
-
         # NOTE: tplint was updated in 2016 last time, so we can use only versions not greater then 11.0
         # Maybe I can spend some time to update it to recent versions in future.
         self.SYNTAX_SUPPORTED = {
@@ -60,6 +70,16 @@ class SyntaxCheck:
         :param working_dir: str
         :return:
         """
+
+        # TODO: Add progressbar:
+        if progressbar:
+            progressbar.streams.flush()
+            progressbar.streams.wrap_stderr()
+            bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+        else:
+            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
+            pass
+
         tpl_mod_dir = os.path.abspath(os.path.join(__file__ , "../.."))
         syntax_passed = False
 
@@ -83,10 +103,19 @@ class SyntaxCheck:
 
             open_path = subprocess.Popen('"' + tpl_mod_dir + '\\tplint\\tplint.exe"'
                                                              ' --discovery-versions='+str(disco_ver) +
-                                                             ' --loglevel=WARN'
-                                                             ' -t "'+tpl_mod_dir+'\\taxonomy\\00taxonomy.xml"',
-                                         cwd=working_dir, stdout=subprocess.PIPE)
-            result = open_path.stdout.read().decode()
+                                         ' --loglevel=WARN'
+                                         ' -t "'+tpl_mod_dir+'\\taxonomy\\00taxonomy.xml"',
+                                         cwd=working_dir,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+
+            stdout, stderr = open_path.communicate()
+            open_path.wait()  # wait until command finished
+
+            result = stdout.decode('UTF-8').rstrip('\r|\n')
+            err_result = stderr.decode('UTF-8').rstrip('\r|\n')
+
+            # result = open_path.stdout.read().decode()
             if "No issues found!" in result:
                 log.info("\t\tBuild OK: Syntax: PASSED!")
                 syntax_passed = True
@@ -96,10 +125,14 @@ class SyntaxCheck:
                 log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
             else:
                 log.error("Syntax: Something is not OK \n" + str(result))
+
+            if err_result:
+                log.error("This error occurs while executing syntax check: "+str(err_result))
         except:
             log.error("Syntax: Tplint cannot run, check if working dir is present!")
             log.error("Syntax: Tplint use path: " + tpl_mod_dir)
 
+        # bar.finish()
         return syntax_passed
 
     @staticmethod

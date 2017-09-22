@@ -82,10 +82,16 @@ class Preproc:
             log.debug("Running in usual_imports mode!")
             if os.path.exists(input_path):
                 try:
+                    # TODO: Add communicate?
                     run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
                                                    + t_pre + '" -q -o "' + output_path + '" -f "' + input_path + '"',
-                                                   stdout=subprocess.PIPE)
+                                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = run_preproc.communicate()
                     run_preproc.wait()  # wait until command finished
+
+                    result = stdout.decode('UTF-8').rstrip('\r|\n')
+                    err_result = stderr.decode('UTF-8').rstrip('\r|\n')
+
                     folder_content = os.listdir(output_path)
                     for folder in folder_content:
                         if re.match("tpl\d+", folder) is not None:
@@ -110,6 +116,8 @@ class Preproc:
                             break
                     if tpl_preproc:
                         log.debug("TPLPreprocessor success: " + output_path)
+                    if err_result:
+                        log.error("While TPLPreproc - this error occurs: "+str(err_result))
                 except:
                     log.error("TPL_Preprocessor won't run! "
                               "Check paths, user rights and logs. Try to execute preproc from cmd.")
@@ -124,10 +132,12 @@ class Preproc:
             if os.path.exists(input_path):
                 try:
                     run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -d "' + input_path + '"',
-                                                   stdout=subprocess.PIPE)
+                                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = run_preproc.communicate()
                     run_preproc.wait()  # wait until command finished
 
-                    # result = run_preproc.stdout.read().decode()
+                    result = stdout.decode('UTF-8').rstrip('\r|\n')
+                    err_result = stderr.decode('UTF-8').rstrip('\r|\n')
 
                     folder_content = os.listdir(output_path)
                     for folder in folder_content:
@@ -155,6 +165,8 @@ class Preproc:
                             break
                     if tpl_preproc:
                         log.debug("TPLPreprocessor success: " + output_path)
+                    if err_result:
+                        log.error("While TPLPreproc - this error occurs: "+str(err_result))
                 except:
                     log.error("TPL_Preprocessor won't run! "
                               "Check paths, user rights and logs. Try to execute preproc from cmd.")
@@ -167,11 +179,14 @@ class Preproc:
             log.debug("Solo mode - only active file will be processed!")
             if os.path.exists(input_path):
                 try:
+                    # TODO: Add communicate?
                     run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -f "' + input_path + '"',
-                                                   stdout=subprocess.PIPE)
+                                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = run_preproc.communicate()
                     run_preproc.wait()  # wait until command finished
 
-                    # result = run_preproc.stdout.read().decode()
+                    result = stdout.decode('UTF-8').rstrip('\r|\n')
+                    err_result = stderr.decode('UTF-8').rstrip('\r|\n')
 
                     folder_content = os.listdir(output_path)
                     for folder in folder_content:
@@ -197,6 +212,8 @@ class Preproc:
                             break
                     if tpl_preproc:
                         log.debug("TPLPreprocessor success: " + output_path)
+                    if err_result:
+                        log.error("While TPLPreproc - this error occurs: "+str(err_result))
                 except:
                     log.error("TPL_Preprocessor won't run! "
                               "Check paths, user rights and logs. Try to execute preproc from cmd.")

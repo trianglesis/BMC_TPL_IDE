@@ -8,8 +8,30 @@ Allows you to automate usual routine in pattern development.
 import hashlib
 import re
 import logging
-import progressbar
+# import time
+
+try:
+    import progressbar
+except ModuleNotFoundError:
+    progressbar = ''
+    pass
+except ImportError:
+    progressbar = ''
+    pass
+
 log = logging.getLogger("check.logger")
+
+# TODO: Add one progressbar for all processes and call.
+# if progressbar:
+#     progressbar.streams.flush()
+#     progressbar.streams.wrap_stderr()
+#     bar = progressbar.ProgressBar(max_value=100)
+# else:
+#     log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
+#     pass
+# def progressbar(bar, len, i):
+#     bar(range(len))
+#     bar.update(i)
 
 
 class AddmOperations:
@@ -64,20 +86,30 @@ class AddmOperations:
         log.debug("zip file local: " + zip_on_local)
         log.debug("zip file remote: " + zip_on_remote)
 
-        ftp = self.ssh_cons.open_sftp()
+        sftp = self.ssh_cons.open_sftp()
         try:
-            ftp.put(zip_on_local, zip_on_remote)
-            ftp.close()
+            sftp.put(zip_on_local, zip_on_remote)
+            sftp.close()
             log.info("Patterns upload:" + "PASSED!")
         except:
-            log.error("Something goes wrong with ftp connection or zip file! Check if file path or folder exists")
+            log.error("Something goes wrong with sftp connection or zip file! Check if file path or folder exists")
 
         if zip_on_local:
             file_check = self.check_file_pattern(local_file=zip_on_local, remote_file=zip_on_remote)
+            if file_check:
+                log.debug("File was found on ADDM file system.")
+            else:
+                log.error("File was found or not uploaded on ADDM file system.")
+                raise FileNotFoundError
         else:
             file_check = self.check_file_pattern(local_file=zip_on_remote, remote_file=zip_on_local)
+            if file_check:
+                log.debug("File was found on ADDM file system.")
+            else:
+                log.error("File was found or not uploaded on ADDM file system.")
+                raise FileNotFoundError
 
-        return file_check
+        # return file_check
 
     def activate_knowledge(self, zip_path, module_name, system_user, system_password):
         """
@@ -105,30 +137,51 @@ class AddmOperations:
         :param zip_path: Path to zip with patterns uploaded or mirrored
         :param module_name: Name of pattern folder
         """
+        # TODO: Check if exist or MD5 sum will do it better?
+
+        if progressbar:
+            progressbar.streams.flush()
+            progressbar.streams.wrap_stderr()
+            bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+        else:
+            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
+            pass
 
         uploaded_activated = False  # 1 knowledge upload activated
         log.debug("Activate local zip: ensure we have rights of 777 on this file: "+str(zip_path))
 
-        self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
         log.info("Installing and activating modules.")
 
-        _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management"
-                                                       " -u " + system_user +
-                                                       " -p " + system_password +
-                                                       " --install-activate "+str(zip_path))
+        try:
+            self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
+            try:
+                _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management"
+                                                               " -u " + system_user +
+                                                               " -p " + system_password +
+                                                               " --install-activate "+str(zip_path))
+                # while not stdout:
+                #     time.sleep(0.001)
+                #     for i in range(10):
+                #         bar.update(i)
+                #         log.debug("")
 
-        # TODO: Is there a way to draw a progress bar until it activating?
-        if stdout:
-            output = stdout.readlines()
-            raw_out = "".join(output)
-            item = self.upload_num_item.findall(raw_out)
-            if self.upload_activated_check.findall(raw_out):
-                uploaded_activated = True
-                log.info("Upload activating: " + "PASSED!")
-                log.info("Upload successfully. Module: " + str(module_name)+" as "+str(item[0]))
-            else:
-                log.critical("Pattern activation failed! Scan will not start.")
-                log.critical("Detailed description from ADDM: \n"+raw_out)
+                if stdout:
+                    output = stdout.readlines()
+                    raw_out = "".join(output)
+                    item = self.upload_num_item.findall(raw_out)
+                    if self.upload_activated_check.findall(raw_out):
+                        uploaded_activated = True
+                        log.info("Upload activating: " + "PASSED!")
+                        log.info("Upload successfully. Module: " + str(module_name)+" as "+str(item[0]))
+                    else:
+                        log.critical("Pattern activation run with errors or warnings!")
+                        log.critical("Detailed description from ADDM: \n"+raw_out)
+            except:
+                log.warning("Activation tw_pattern_management command cannot run!")
+        except:
+            log.warning("Command 'chmod 777' cannot run on path: "+str(zip_path))
+
+        # bar.finish()
 
         return uploaded_activated
 
@@ -159,18 +212,25 @@ class AddmOperations:
         :return:
         """
 
+        local_hash5 = ''
+        output_ok = ''
+
         log.debug("MD5SUM: Checking file sum of local_file: "+str(local_file))
         log.debug("MD5SUM: Checking file sum of remote_file: "+str(remote_file))
 
-        local_hash5 = hashlib.md5(open(local_file, 'rb').read()).hexdigest()
-        _, stdout, stderr = self.ssh_cons.exec_command("md5sum " + remote_file)
-        output_ok = stdout.readlines()
+        try:
+            local_hash5 = hashlib.md5(open(local_file, 'rb').read()).hexdigest()
+            _, stdout, stderr = self.ssh_cons.exec_command("md5sum " + remote_file)
+            output_ok = stdout.readlines()
+            output_ok = output_ok[0]
+        except FileNotFoundError as e:
+            log.error("File cannot be found in this path. Message: "+str(e))
 
-        if local_hash5 in output_ok[0]:
-            log.debug("Checksum of files is OK!\n Local sum:  " + local_hash5 + "\n Remote sum: " + output_ok[0])
+        if local_hash5 in output_ok:
+            log.debug("Checksum of files is OK!\n Local sum:  " + local_hash5 + "\n Remote sum: " + output_ok)
             file_ok = True
         else:
-            log.debug("Checksum of files is DIFFERENT!\n Local sum: " + local_hash5 + "\n Remote sum: " + output_ok[0])
+            log.error("Checksum of files is DIFFERENT!\n Local sum: " + local_hash5 + "\n Remote sum: " + output_ok)
             file_ok = False
 
         return file_ok
@@ -183,13 +243,11 @@ class AddmOperations:
         """
         tests_len = len(tests_list)
 
-        try:
-            import progressbar
+        if progressbar:
             progressbar.streams.flush()
             progressbar.streams.wrap_stderr()
             bar = progressbar.ProgressBar(max_value=tests_len)
-        except ImportError:
-            progressbar = False
+        else:
             log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
             pass
 
@@ -221,10 +279,10 @@ class AddmOperations:
 
             log.info("Start test:" + str(test['rem_test_path']))
 
-            try:
+            if progressbar:
                 bar(range(tests_len))
                 bar.update(i)
-            except NameError:
+            else:
                 pass
 
             log.info("%d test of "+str(tests_len), i+1)  # Just print
@@ -236,22 +294,25 @@ class AddmOperations:
             cmd = pre_cmd + wd_cmd + cmd_test
             log.debug("Run: "+str(cmd))
 
-            _, stdout, stderr = self.ssh_cons.exec_command(cmd)
+            try:
+                _, stdout, stderr = self.ssh_cons.exec_command(cmd)
 
-            if stdout:
-                output = stdout.readlines()
-                raw_out = "".join(output)
-                log.info("-==== DETAILED LOG ====-")
-                log.info("\n"+raw_out)
-            if stderr:
-                output = stderr.readlines()
-                raw_out = "".join(output)
-                log.info("-==== UNITTEST LOG ====-")
-                log.info("\n\n"+raw_out)
-
+                if stdout:
+                    output = stdout.readlines()
+                    raw_out = "".join(output)
+                    log.info("-==== DETAILED LOG ====-")
+                    log.info("\n"+raw_out)
+                if stderr:
+                    output = stderr.readlines()
+                    raw_out = "".join(output)
+                    log.info("-==== UNITTEST LOG ====-")
+                    log.info("\n\n"+raw_out)
+            except:
+                log.error("Test execution command cannot run: "+str(cmd))
             # break
-        try:
+
+        if progressbar:
             bar.finish()
-        except NameError:
+        else:
             pass
         log.info("-==== END OF RELATED TESTS EXECUTION ====-")

@@ -12,7 +12,6 @@ import subprocess
 # import datetime
 import logging
 
-
 log = logging.getLogger("check.logger")
 
 
@@ -253,8 +252,8 @@ class LocalLogic:
             for foldername, subfolders, filenames in os.walk(norm_path):
                 for filename in filenames:
                     if filename != zip_filename:
-                        # check if file mod date is recent:
 
+                        # check if file mod date is recent:
                         # TODO: Check current file or folder mod time?
                         # file_time = os.path.getmtime(path+module_name)
                         # now = datetime.datetime.now()
@@ -858,16 +857,22 @@ class LocalLogic:
 
         # noinspection PyBroadException
         try:
-            run_p4 = subprocess.Popen('p4 -F %clientRoot% -ztag info', stdout=subprocess.PIPE)
-            run_p4.wait()
-            workspace_out = run_p4.stdout.read().decode()
+            run_p4 = subprocess.Popen('p4 -F %clientRoot% -ztag info',
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+            stdout, stderr = run_p4.communicate()
+            run_p4.wait()  # wait until command finished
 
-            if workspace_out:
-                workspace = workspace_re.match(workspace_out).group(1)
+            result = stdout.decode('UTF-8').rstrip('\r|\n')
+            err_result = stderr.decode('UTF-8').rstrip('\r|\n')
+
+            if result:
+                # workspace_out = run_p4.stdout.read().decode()
+                workspace = workspace_re.match(result).group(1)
                 log.debug("Workspace was obtained from command run 'p4 -F %clientRoot% -ztag info'")
                 return workspace
 
-            if not workspace_out:
+            if not result:
                 # d:\perforce\addm\tkn_main\tku_patterns\
                 tkn_core = os.environ.get("TKN_CORE")
                 path_parse = self.tkn_core_parse_re.match(tkn_core)
@@ -876,6 +881,8 @@ class LocalLogic:
                     if workspace:
                         log.debug("Workspace was obtained from windows PATH env - '%TKN_CORE%'")
                         return workspace
+            if err_result:
+                log.error("P4 workspace cmd fail: "+str(err_result))
         except:
             log.error("CMD for p4 workspace won't run.")
 
@@ -891,24 +898,27 @@ class LocalLogic:
         addm_ver = ''
         tpl_folder = ''
 
-        _, stdout, stderr = ssh.exec_command("tw_pattern_management -v")
-        if stdout:
+        try:
+            _, stdout, stderr = ssh.exec_command("tw_pattern_management -v")
+            if stdout:
 
-            output = stdout.readlines()
-            addm_version_full = self.addm_version_full_re.match(output[0])
-            addm_version = self.addm_version_re.match(addm_version_full.group(1))
-            addm_ver = str(addm_version.group(1))
+                output = stdout.readlines()
+                addm_version_full = self.addm_version_full_re.match(output[0])
+                addm_version = self.addm_version_re.match(addm_version_full.group(1))
+                addm_ver = str(addm_version.group(1))
 
-            if addm_ver in self.PRODUCT_VERSIONS:
-                addm_prod = self.PRODUCT_VERSIONS[addm_ver]
-                tpl_vers = self.TPL_VERSIONS[addm_prod]
-                if tpl_vers in self.tpl_folder_k:
-                    tpl_folder = self.tpl_folder_k[tpl_vers]
+                if addm_ver in self.PRODUCT_VERSIONS:
+                    addm_prod = self.PRODUCT_VERSIONS[addm_ver]
+                    tpl_vers = self.TPL_VERSIONS[addm_prod]
+                    if tpl_vers in self.tpl_folder_k:
+                        tpl_folder = self.tpl_folder_k[tpl_vers]
 
-        if stderr:
-            err = stderr.readlines()
-            if err:
-                log.warning("ADDM versioning command fails with error: " + str(err))
+            if stderr:
+                err = stderr.readlines()
+                if err:
+                    log.warning("ADDM versioning command fails with error: " + str(err))
+        except:
+            log.error("Cannot run 'tw_pattern_management -v' command on ADDM!")
 
         return tpl_vers, addm_prod, addm_ver, tpl_folder
 
@@ -948,21 +958,24 @@ class LocalLogic:
         # TODO: Why this function is in the local logic? move to parse args or AddmOperations, maybe.
         dev_vm_check = False
         vm_dev_path = ''
-        _, stdout, stderr = ssh.exec_command("df -h")
-        if stdout:
-            output = stdout.readlines()
-            for line in output:
-                command_output_parse = self.hgfs_path_re.search(line)
-                if command_output_parse:
-                    path_search = self.vm_tkn_path_re.match(command_output_parse.group(0))
-                    if path_search:
-                        vm_dev_path = path_search.group('tkn_path')
-                        # Stop after any first match is found.
-                        break
-        if stderr:
-            err = stderr.readlines()
-            if err:
-                print(err)
+        try:
+            _, stdout, stderr = ssh.exec_command("df -h")
+            if stdout:
+                output = stdout.readlines()
+                for line in output:
+                    command_output_parse = self.hgfs_path_re.search(line)
+                    if command_output_parse:
+                        path_search = self.vm_tkn_path_re.match(command_output_parse.group(0))
+                        if path_search:
+                            vm_dev_path = path_search.group('tkn_path')
+                            # Stop after any first match is found.
+                            break
+            if stderr:
+                err = stderr.readlines()
+                if err:
+                    print(err)
+        except:
+            log.error("Cannot run 'df -h' command on ADDM!")
 
         if vm_dev_path:
             dev_vm_check = True
@@ -989,33 +1002,36 @@ class LocalLogic:
         :param path: path to check
         """
 
-        # TODO: Check if tideway user can run this.
-        # TODO: Create all needed dev folders here.
-
         folders = []
         ftp = ssh.open_sftp()
-        _, stdout, stderr = ssh.exec_command("ls " + path)
-        output_ok = stdout.readlines()
-        output_err = stderr.readlines()
-        if output_err:
-            if "No such file or directory" in output_err[0]:
-                log.debug("Creating folder: " + path)
-                ftp.mkdir(path)
-                ftp.mkdir(path+'Tpl_DEV')
-                ssh.exec_command("chmod 777 -R " + path)
-                log.debug("Folder created!")
-            else:
-                log.warning("ls command cannot be run on this folder or output is incorrect!")
-                folders = []
+        try:
+            _, stdout, stderr = ssh.exec_command("ls " + path)
+            output_ok = stdout.readlines()
+            output_err = stderr.readlines()
 
-        if output_ok:
-            for folder in output_ok:
-                folders.append(folder.strip('\n'))
-            log.debug("Folder exist! Content: " + ', '.join(folders)+" ls on: "+str(path))
+            if output_err:
+                if "No such file or directory" in output_err[0]:
+                    log.debug("Creating folder: " + path)
+                    try:
+                        ftp.mkdir(path)
+                        ftp.mkdir(path+'Tpl_DEV')
+                        ssh.exec_command("chmod 777 -R " + path)
+                        log.debug("Folder created!")
+                    except:
+                        log.error("ADDM Folders cannot be created in path: "+str(path))
+                else:
+                    log.warning("ls command cannot be run on this folder or output is incorrect!")
+                    folders = []
+
+            if output_ok:
+                for folder in output_ok:
+                    folders.append(folder.strip('\n'))
+                log.debug("Folder exist! Content: " + ', '.join(folders)+" ls on: "+str(path))
+        except:
+            log.error("ls command cannot be run on this path: "+str(path))
 
         return folders
 
-    # TODO: Add here test.py searching for all in tku:
     @staticmethod
     def get_related_tests(**conditions):
         """

@@ -10,16 +10,7 @@ This is IDE and automation program for [BMC Discovery (ADDM)](https://discovery.
 
 ### Designed for Python 3 ###
 
-
 ##### Can run in usual shell or like 'build system'
-
-Just run it from CMD:
-
-#### Usage ####
-
-    -full_path "d:\addm\tkn_main\tku_patterns\CORE\PatternFolder\Pattern.tplpre" --help
-
-
 
 #### Syntax check ####
 
@@ -44,19 +35,19 @@ All available modes described [here in pdf.](https://trianglesis.github.io/BMC_T
 
 ### In editor: ###
 
-##### Sublime: use it's build system, [example](https://github.com/trianglesis/bmc_tpl/blob/master/tplpre_various.sublime-build).
+- ##### Sublime: use it's build system, [example](https://github.com/trianglesis/bmc_tpl/blob/master/tplpre_various.sublime-build).
 
 ![Build](https://trianglesis.github.io/BMC_TPL_IDE_auto_pics/TPL_IDE_Build_Sublime3.png)
 
 You probably should update build file example according to recent arguments.
 
 
-##### Atom: install plugin 'build' and use atom-build.yml [example](https://github.com/trianglesis/language-tplpre/blob/master/.atom-build.yml-EXAMPLE).
+- ##### Atom: install plugin 'build' and use atom-build.yml [example](https://github.com/trianglesis/language-tplpre/blob/master/.atom-build.yml-EXAMPLE).
 
 ![Build](https://trianglesis.github.io/BMC_TPL_IDE_auto_pics/TPL_IDE_Build_Atom.png)
 
 
-### In CMD: ###
+- ### In CMD: ###
 
 Common options:
 
@@ -73,7 +64,7 @@ Common options:
       -h, --help            show this help message and exit
 
 
-### From windows context menu: ###
+- ### From windows context menu: ###
 
 Run regedit;
 Add keys as described:

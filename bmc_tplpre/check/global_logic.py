@@ -52,8 +52,8 @@ class GlobalLogic:
                                                  extra_args =extra_args)
 
         # DEBUG
-        import json
-        from pprint import pformat
+        # import json
+        # from pprint import pformat
         # print(json.dumps(self.addm_args_set, indent=4, ensure_ascii=False, default=pformat))
 
         # Check args in init module to further assign on function bodies:
@@ -94,29 +94,29 @@ class GlobalLogic:
                         "tkn_sandbox_t": ""
                     }
         
-                    PATH ARGS: {
+                    PATH ARGS:
                             {
-                                "file_ext": "tplpre",
-                                "DBDETAILS_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\DBDETAILS",
-                                "MANAGEMENT_CONTROLLERS_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\MANAGEMENT_CONTROLLERS",
-                                "STORAGE_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\STORAGE",
-                                "full_path": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\MSSQLServer\\MicrosoftSQLServer.tplpre",
-                                "file_name": "MicrosoftSQLServer",
-                                "tkn_sandbox_t": "D:\\perforce\\addm\\tkn_sandbox",
-                                "buildscripts_t": "D:\\perforce\\addm\\tkn_main\\buildscripts",
-                                "tku_patterns_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns",
-                                "CORE_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE",
-                                "environment_condition": "developer_tplpre",
-                                "tkn_main_t": "D:\\perforce\\addm\\tkn_main",
-                                "BLADE_ENCLOSURE_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\BLADE_ENCLOSURE",
-                                "pattern_test_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\MSSQLServer\\tests\\test.py",
-                                "LOAD_BALANCER_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\LOAD_BALANCER",
-                                "CLOUD_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CLOUD",
-                                "working_dir": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\MSSQLServer",
-                                "MIDDLEWAREDETAILS_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\MIDDLEWAREDETAILS",
-                                "SYSTEM_t": "D:\\perforce\\addm\\tkn_main\\tku_patterns\\SYSTEM",
-                                "workspace": "D:\\perforce",
-                                "pattern_folder": "MSSQLServer"
+                            "MANAGEMENT_CONTROLLERS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\MANAGEMENT_CONTROLLERS",
+                            "CLOUD_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CLOUD",
+                            "BLADE_ENCLOSURE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\BLADE_ENCLOSURE",
+                            "file_name": "BMCRemedyARSystem",
+                            "tkn_sandbox_t": "d:\\perforce\\addm\\tkn_sandbox",
+                            "tku_patterns_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns",
+                            "LOAD_BALANCER_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\LOAD_BALANCER",
+                            "CORE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE",
+                            "SYSTEM_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\SYSTEM",
+                            "STORAGE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\STORAGE",
+                            "working_dir": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem",
+                            "DBDETAILS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\DBDETAILS",
+                            "pattern_folder": "BMCRemedyARSystem",
+                            "file_ext": "tplpre",
+                            "environment_condition": "developer_tplpre",
+                            "tkn_main_t": "d:\\perforce\\addm\\tkn_main",
+                            "pattern_test_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py",
+                            "buildscripts_t": "d:\\perforce\\addm\\tkn_main\\buildscripts",
+                            "full_path": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\BMCRemedyARSystem.tplpre",
+                            "workspace": "d:\\perforce",
+                            "MIDDLEWAREDETAILS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\MIDDLEWAREDETAILS"
                             }
 
             '''
@@ -372,31 +372,38 @@ class GlobalLogic:
         import_preproc_syntax_local = False
         tests_run                   = False
 
+        import json
+        from pprint import pformat
+        # print(json.dumps(addm_conditions, indent=4, ensure_ascii=False, default=pformat))
+        # print(json.dumps(local_conditions, indent=4, ensure_ascii=False, default=pformat))
+        # print(json.dumps(operational_args, indent=4, ensure_ascii=False, default=pformat))
+        # print(json.dumps(import_conditions, indent=4, ensure_ascii=False, default=pformat))
+
         # TODO: Debug disable:
         # noinspection PyUnusedLocal
-        # import_conditions_debug = dict(recursive_imports=False,
-        #                                     usual_imports=False,
-        #                                     read_test=False,
-        #                                     related_tests=False,
-        #                                     run_test=False
-        #                                     )
+        import_conditions_debug = dict(read_test         = False,
+                                       recursive_imports = True,
+                                       usual_imports     = False)
 
         # noinspection PyUnusedLocal
-        # addm_conditions_debug = dict(
-        #                              scan_hosts='172.25.144.95, 172.25.144.39',
-        #                              addm_prod='Bobblehat',
-        #                              disco_mode='record',
-        #                              addm_ver='11.1',
-        #                              # ssh_connection=False,
-        #                              ssh_connection=addm_conditions['ssh_connection'],
-        #                              tpl_folder='tpl113',
-        #                              dev_vm_check=True,
-        #                              dev_vm_path='/usr/tideway/TKU',
-        #                              tpl_vers='1.13'
-        #                             )
+        addm_conditions_debug = dict(
+                                    disco_mode      = "record",
+                                    system_password = "system",
+                                    tpl_vers        = "1.13",
+                                    addm_prod       = "Bobblehat",
+                                    tpl_folder      = "tpl113",
+                                    addm_ver        = "11.1",
+                                    system_user     = "system",
+                                    # dev_vm_path     = "/usr/tideway/TKU",
+                                    dev_vm_path     = "/usr/tideway/TKU/Tpl_DEV/",
+                                    dev_vm_check    = True,
+                                    ssh_connection  = addm_conditions['ssh_connection'],
+                                    scan_hosts      = False
+                                    )
 
         # addm_conditions = addm_conditions_debug
         # import_conditions = import_conditions_debug
+
         # Addm args for scan
         # TODO: What if declare each this if AS functional dict splitted for each situation?
         if addm_conditions['scan_hosts'] and addm_conditions['disco_mode'] and addm_conditions['ssh_connection'] \
@@ -442,6 +449,7 @@ class GlobalLogic:
 
         # TODO: Maybe better to use IFs in separate function jus for if, and declare modes. Or this can be over-minded?
         if upload_scan:
+            log.info("Upload and scan.")
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions  = local_conditions)
@@ -478,6 +486,7 @@ class GlobalLogic:
         # When I have no args for scan AND NO args for ADDM disco,
         # but have arg for tpl_vers - proceed files locally with that version.
         elif local_proceed_for_addm:
+            log.info("Local processing based on args from ADDM.")
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions  = local_conditions)
@@ -503,6 +512,7 @@ class GlobalLogic:
 
         # When I have NO args for Scan, but have args for ADDM status and disco - will start upload only.
         elif upload_only:
+            log.info("Upload only.")
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions = local_conditions)
@@ -517,7 +527,8 @@ class GlobalLogic:
                                               local_conditions  = local_conditions)
 
             # Generate addm working dir based on DEV condition:
-            addm_working_dir, tests_path = self.addm_dev_cond(addm_conditions['dev_vm_check'], environment_condition)
+            addm_working_dir, tests_path = self.addm_dev_cond(addm_conditions['dev_vm_check'],
+                                                              environment_condition)
 
             # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
             zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_vm_condition = addm_conditions['dev_vm_check'],
@@ -560,13 +571,10 @@ class GlobalLogic:
             addm_working_dir = 'There is no ADDM connection, program is running in local mode.'
 
         # When ADDM connection is present and test options used:
-        # TODO: Will move it to test_run_cond()
         elif tests_run:
             test_executor_f = self.test_run_cond(test_conditions=test_conditions,
                                                  addm_conditions=addm_conditions,
                                                  environment_condition=environment_condition)
-
-
 
         # I don't know:
         else:
@@ -919,8 +927,13 @@ class GlobalLogic:
         local_conditions      = logical_conditions['local_conditions']
         environment_condition = local_conditions['environment_condition']
 
+        # Make addm dev vm check to false for condition when this is customer mode.
+        if environment_condition == 'customer_tku':
+            addm_vm_condition = False
+
         assert isinstance(local_conditions, dict)
         # Based on imports mode:
+
         if import_conditions:
             log.debug("Making zip from imported patterns.")
 
@@ -928,10 +941,14 @@ class GlobalLogic:
             imports_dir = os.sep+"imports"+os.sep
 
             # Path of active pattern folder + imports dir + tpl<version dir>(or not is customer):
+            # In dev mode I have pattern folder as name and result path to tpl after Preproc:
             if environment_condition == 'developer_tplpre':
                 path_to_result = self.full_path_args['working_dir']+imports_dir+self.tpl_folder+os.sep
+
+            # In customer mode I have just only imports folder and pattern name for module naming:
             elif environment_condition == 'customer_tku':
                 path_to_result = self.full_path_args['working_dir']+imports_dir
+
 
             # Pattern remote path in ADDM FS:
             if addm_vm_condition:
@@ -945,22 +962,25 @@ class GlobalLogic:
                 # addm_result_folder: /usr/tideway/TKU/Tpl_DEV
                 addm_result_folder = addm_working_dir
                 # local_zip: d:\workspace\addm\tkn_main\tku_patterns\CORE\PatternName\imports\tpl113\PatternName.zip
-                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                # local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                local_zip = path_to_result+self.full_path_args['file_name'] + '.zip'
                 log.debug("local_zip: "+str(local_zip))
             else:
                 # I do not use this, because I want to zip files without uploading:
                 addm_result_folder = addm_working_dir
                 # Just make zip on local files and don't move it:
-                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                # local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                local_zip = path_to_result+self.full_path_args['file_name'] + '.zip'
                 log.debug("local_zip: "+str(local_zip))
 
-            # In dev mode I have pattern folder as name and result path to tpl after Preproc:
+            # In dev - use path_to_result with working dir and <tpl_ver> in it:
             if environment_condition == 'developer_tplpre':
                 addm_zip_f = self.make_zip(path_to_result=path_to_result,
-                                           active_folder=self.full_path_args['pattern_folder'])
+                                           active_folder=local_conditions['file_name'])
                 # Making function obj for ZIP
-                zip_mirror = addm_result_folder+"/"+self.full_path_args['pattern_folder'] + '.zip'
-            # In customer mode I have just only imports folder and pattern name for module naming:
+                zip_mirror = addm_result_folder+"/"+self.full_path_args['file_name'] + '.zip'
+
+            # In dev - use path_to_result with only working dir in it:
             elif environment_condition == 'customer_tku':
                 addm_zip_f = self.make_zip(path_to_result=path_to_result,
                                            active_folder=local_conditions['file_name'])
@@ -1167,6 +1187,7 @@ class GlobalLogic:
             return test_executor_f
 
 # Functions to create closures for all related options:
+
     def make_test_read_query(self):
         """
         Closure for reading test.py queries.
