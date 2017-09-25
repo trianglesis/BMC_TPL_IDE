@@ -228,56 +228,60 @@ class LocalLogic:
         return working_dir_virt, pattern_test_virt
 
     @staticmethod
-    def make_zip(path, module_name):
+    def make_zip(path, module_name, mode_single=None):
         """
         Zip pattern files in path.
+        :param mode_single: Zip files in folder or only one file.
         :param module_name: Name of pattern or its folder to create zip with its name.
         :param path: Path where tpl files are ready to be zipped.
         :return: zip path to ready zip file.
         """
 
-        norm_path = os.path.normpath(path+os.sep)
-        path = norm_path+os.sep
+        if not mode_single:
+            norm_path = os.path.normpath(path+os.sep)
+            path = norm_path+os.sep
+            log.debug("ZIP: Making zip of all .tpl in folder:"  + norm_path)
+            zip_filename = module_name + '.zip'
+            zip_path = path + zip_filename
 
-        log.debug("ZIP: Making zip of all .tpl in folder:"  + norm_path)
+            try:
+                patterns_zip = zipfile.ZipFile(zip_path, 'w')
+                log.debug("ZIP: zip_filename:" + zip_filename)
 
-        zip_filename = module_name + '.zip'
+                for foldername, subfolders, filenames in os.walk(norm_path):
+                    for filename in filenames:
+                        if filename != zip_filename:
 
-        zip_path = path + zip_filename
+                            patterns_zip.write(os.path.join(norm_path, filename), arcname=filename)
+                            log.debug("ZIP: Adding pattern:" + filename)
 
-        try:
-            patterns_zip = zipfile.ZipFile(zip_path, 'w')
-            log.debug("ZIP: zip_filename:" + zip_filename)
+                patterns_zip.close()
+                log.debug("ZIP: zip_path: " + zip_path)
+                return zip_path
 
-            for foldername, subfolders, filenames in os.walk(norm_path):
-                for filename in filenames:
-                    if filename != zip_filename:
+            except FileNotFoundError as e:
+                log.error("Patterns cannot be zipped because file path does not exist: "+str(e))
+                return False
+        else:
+            norm_path = os.path.normpath(path)
+            tpl_path = norm_path + '.tpl'
+            zip_path = norm_path + '.zip'
+            log.debug("ZIP: Zipping single file: " + tpl_path)
+            zip_filename = module_name + '.zip'
 
-                        # check if file mod date is recent:
-                        # TODO: Check current file or folder mod time?
-                        # file_time = os.path.getmtime(path+module_name)
-                        # now = datetime.datetime.now()
-                        # ago = now - datetime.timedelta(minutes=15)
-                        # file_time_stamp = datetime.datetime.fromtimestamp(file_time)
-                        #
-                        # if file_time_stamp < ago:
-                        #
-                        #     log.warning("ZIP: TPLPreprocessor result files looks like older that 15 min. "
-                        #              "Please check: " + str(file_time_stamp))
-                        #
-                        # if file_time_stamp > ago:
-                        #
-                        #     log.debug("ZIP: TPLPreprocessor result files are recent: " + str(file_time_stamp))
+            try:
+                with zipfile.ZipFile(zip_path, 'w') as zip_pattern:
+                    zip_pattern.write(tpl_path, arcname=module_name+'.tpl')
 
-                        patterns_zip.write(os.path.join(norm_path, filename), arcname=filename)
-                        log.debug("ZIP: Adding pattern:" + filename)
-            patterns_zip.close()
-            log.debug("ZIP: zip_path: " + zip_path)
-            return zip_path
+                log.debug("ZIP: zip_filename:" + zip_filename)
+                log.debug("ZIP: Adding pattern:" + tpl_path)
+                log.debug("ZIP: zip_path: " + zip_path)
 
-        except FileNotFoundError as e:
-            log.error("Patterns cannot be zipped because file path does not exist: "+str(e))
-            return False
+                return zip_path
+
+            except FileNotFoundError as e:
+                log.error("Patterns cannot be zipped because file path does not exist: "+str(e))
+                return False
 
     def file_path_decisions(self, full_file_path):
         """
@@ -389,7 +393,7 @@ class LocalLogic:
 
                     # Check if this is a tpl file from: PatternFolder\tpl110\PatternName.tpl
                     elif re.match('tpl', file_ext):
-                        log.debug("File extension matched tpl pattern. DEV in progress...")
+                        log.info("File extension matched tpl pattern. DEV in progress...")
 
                         path_parse     = self.tpl_path_parse_re.match(full_file_path)
                         pattern_folder = path_parse.group('pattern_folder')
@@ -397,13 +401,19 @@ class LocalLogic:
                         file_ext       = path_parse.group('file_ext')
                         tpl_folder     = path_parse.group('tpl_folder')
 
+                        # pattern working dir, where pattern file is really lies:
+                        # 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystemtp\\l114\\check.log
+                        working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder+os.sep+tpl_folder
+                        # Making prognosable place to test.py - but check if exist in global logic mod
+                        pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
+
                         args_dict = dict(
                                          environment_condition    = 'developer_tpl',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
                                          file_ext                 = file_ext,
-                                         working_dir              = tpl_folder,
+                                         working_dir              = working_dir,
                                          full_path                = full_file_path,
                                          tkn_main_t               = tkn_main_t,
                                          tku_patterns_t           = tku_patterns_t,
@@ -417,7 +427,8 @@ class LocalLogic:
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
                                          STORAGE_t                = STORAGE_t,
                                          SYSTEM_t                 = SYSTEM_t,
-                                         tkn_sandbox_t            = tkn_sandbox_t
+                                         tkn_sandbox_t            = tkn_sandbox_t,
+                                         pattern_test_t           = pattern_test_t
                                         )
                         log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("TPL: File extension mach .tpl and dev_path_check is found, "
@@ -427,7 +438,6 @@ class LocalLogic:
                     # Check if this is a dml file from: ..\tests\dml\DML_DATA.dml
                     elif re.match('dml', file_ext):
                         log.debug("File extension matched dml pattern. DEV in progress...")
-
                         # TODO: Add pattern folder based on regex path to dml
                         log.debug("This is DML file.")
                         args_dict = dict(
@@ -455,7 +465,8 @@ class LocalLogic:
                         log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("DML: File extension mach .dml and dev_path_check is found, "
                                   "options will be set based on it's path.")
-                        return args_dict
+                        # return args_dict
+                        raise Exception("DML Files is not supported yet.")
 
                     # Check if this is a model file from: \tests\actuals\SI_MODEL.model
                     elif re.match('model', file_ext):
@@ -488,7 +499,8 @@ class LocalLogic:
                         log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("MODEL: File extension mach .model and dev_path_check is found, "
                                   "options will be set based on it's path.")
-                        return args_dict
+                        # return args_dict
+                        raise Exception("MODEL Files is not supported yet.")
 
                     # Check if this is a py file from: ..\tests\test.py
                     elif re.match('py', file_ext):
@@ -520,16 +532,16 @@ class LocalLogic:
                         log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("PY: File extension mach .py and dev_path_check is found, "
                                   "options will be set based on it's path.")
-                        return args_dict
+                        # return args_dict
+                        raise Exception("PY Files is not supported yet.")
 
                     # If this file has an extension I do not support:
                     else:
-                        log.warning("FILE: Did not match any file extension "
-                                    "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
-                    log.debug("Path matched and parsed.")
+                        raise Exception("FILE: Did not match any file extension "
+                                        "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
                 else:
-                    log.warning("Did not match TKU DEV pattern path tree! Will use another way to parse.")
-                    log.debug("I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
+                    raise Exception("Did not match TKU DEV pattern path tree! Will use another way to parse."
+                                    "I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
 
             elif tku_path_check:
                 log.info("Found Technology-Knowledge-Update path.")
@@ -571,30 +583,6 @@ class LocalLogic:
                     pattern_folder       = tku_pack_parse.group('pattern_folder')
                     file_name            = tku_pack_parse.group('file_name')
                     file_ext             = tku_pack_parse.group('file_ext')
-
-                    # print("working_dir: '{}' "
-                    #       "tku_update_path: '{}' "
-                    #       "workspace: '{}' "
-                    #       "tku_package: '{}' "
-                    #       "tku_package_year: '{}' "
-                    #       "tku_package_month: '{}' "
-                    #       "tku_package_day: '{}' "
-                    #       "tku_package_ADDM_ver: '{}' "
-                    #       "tku_package_name: '{}' "
-                    #       "pattern_folder: '{}' "
-                    #       "file_name: '{}' "
-                    #       "file_ext: '{}' ". format(working_dir,
-                    #                              tku_update_path,
-                    #                              workspace,
-                    #                              tku_package,
-                    #                              tku_package_year,
-                    #                              tku_package_month,
-                    #                              tku_package_day,
-                    #                              tku_package_ADDM_ver,
-                    #                              tku_package_name,
-                    #                              pattern_folder,
-                    #                              file_name,
-                    #                              file_ext))
 
                     log.debug("I found following TKU Package details:"
                               " tku_update_path: "                      + str(tku_update_path)      +
@@ -832,11 +820,12 @@ class LocalLogic:
                             log.warning("This path did not match any suitable pattern and probably not a tpl file"
                                         " Or path has superfluous symbols or spaces")
                 else:
-                    log.debug("FILE: Cannot match file path for alone pattern. "
-                              "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
+                    raise FileNotFoundError("FILE: Cannot match file path for alone pattern. "
+                                            "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
 
         else:
-            log.critical("No '-full_path' argument was set. Or this path is not exist!")
+            # log.critical("No '-full_path' argument was set. Or this path is not exist!")
+            raise FileNotFoundError("No '-full_path' argument was set. Or this path is not exist!")
 
     def workspace_find_p4_env(self):
         """

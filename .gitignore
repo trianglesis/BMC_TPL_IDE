@@ -31,3 +31,5 @@ bmc_tplpre/DEV_TEST/test_executor.py
 bmc_tplpre/DEV_TEST/tests_init.json
 bmc_tplpre/DEV_TEST/test_executor.py
 bmc_tplpre/DEV_TEST/test_executor.py
+bmc_tplpre/DEV_TEST/dev_progressbar.py
+bmc_tplpre/DEV_TEST/progress_examples.py

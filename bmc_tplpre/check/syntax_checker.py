@@ -5,36 +5,34 @@ Syntax checking is based on BMC code and not included in this public version due
 Allows you to automate usual routine in pattern development.
 """
 
-import subprocess
-import re
-import sys
-import os
+import itertools
 import logging
+import os
+import re
+import subprocess
+import sys
 import time
 
 try:
     import progressbar
 except ModuleNotFoundError:
-    progressbar = ''
+    progressbar = False
     pass
 except ImportError:
-    progressbar = ''
+    progressbar = False
     pass
 
 log = logging.getLogger("check.logger")
 
-'''
-1. Use working dir and tpl ver and run syntax check (input)
-2. Save syntax check result
-2.1 If pass - update var with syntax_passed = True
-2.2 If fail syntax_passed = Fail
-3. Return syntax check results
-'''
-# TODO: Make another syntax checking procedure maybe on python AST.
-
 
 class SyntaxCheck:
     """
+        1. Use working dir and tpl ver and run syntax check (input)
+        2. Save syntax check result
+        2.1 If pass - update var with syntax_passed = True
+        2.2 If fail syntax_passed = Fail
+        3. Return syntax check results
+
         Verify if tplint is present on current system.
         If not - use something another to check common errors and typos in tpl\\tplpre files.
         to be continued...
@@ -71,11 +69,16 @@ class SyntaxCheck:
         :return:
         """
 
-        # TODO: Add progressbar:
+        # progressbar = False
         if progressbar:
             progressbar.streams.flush()
-            progressbar.streams.wrap_stderr()
-            bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+            progressbar.streams.wrap_stdout()
+            widgets = [progressbar.AnimatedMarker(),
+                       ' Checking syntax. ',
+                       progressbar.Timer()]
+            bar = progressbar.ProgressBar(widgets=widgets,
+                                          max_value=progressbar.UnknownLength,
+                                          redirect_stdout=True)
         else:
             log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
             pass
@@ -85,7 +88,6 @@ class SyntaxCheck:
 
         # errors_re = re.compile("\s+Errors:\s+(.+)")
         # mod_re = re.compile("Module:\s+(.+)")
-
         match_result = re.compile("(?P<error>\w+\s\w+) at or near '(?P<near>\S+)', "
                                   "line (?P<line>\d+), in (?P<module>\S+)")
 
@@ -96,43 +98,63 @@ class SyntaxCheck:
                      "so we can use only version which is not greater then 11.0")
             disco_ver = 11.0
 
-        # noinspection PyBroadException
-        try:
-            log.debug("Syntax: Checking syntax. Options: --discovery-versions="+str(disco_ver) +
-                      " --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
+        # Lines will be collected in list:
+        result_out = []
+        spinner = itertools.cycle(['-', '/', '|', '\\'])
 
+        # noinspection PyBroadException
+        log.debug("Syntax: Checking syntax. Options: --discovery-versions="+str(disco_ver) +
+                  " --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
+        try:
             open_path = subprocess.Popen('"' + tpl_mod_dir + '\\tplint\\tplint.exe"'
                                                              ' --discovery-versions='+str(disco_ver) +
                                          ' --loglevel=WARN'
                                          ' -t "'+tpl_mod_dir+'\\taxonomy\\00taxonomy.xml"',
-                                         cwd=working_dir,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE)
+                                         cwd=working_dir, stdout=subprocess.PIPE)
+            # Show progress with fancy progressbar:
+            if progressbar:
+                while open_path.stdout is not None:
+                    bar.update()
+                    out = open_path.stdout.readline()
+                    result_out.append(out.decode('UTF-8').rstrip('\r'))
+                    if not out:
+                        break
+                    time.sleep(0.1)
+            # There is no progressbar - show just simple spinner:
+            else:
+                while open_path.stdout is not None:
+                    sys.stdout.write(next(spinner))
+                    sys.stdout.flush()
+                    sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
 
-            stdout, stderr = open_path.communicate()
-            open_path.wait()  # wait until command finished
-
-            result = stdout.decode('UTF-8').rstrip('\r|\n')
-            err_result = stderr.decode('UTF-8').rstrip('\r|\n')
-
-            # result = open_path.stdout.read().decode()
+                    out = open_path.stdout.readline()
+                    result_out.append(out.decode('UTF-8').rstrip('\r'))
+                    if not out:
+                        sys.stdout.flush()  # Remove spinner from output.
+                        break
+                    time.sleep(0.1)
+            # Final result:
+            result = ''.join(result_out)
             if "No issues found!" in result:
-                log.info("\t\tBuild OK: Syntax: PASSED!")
+                # Close bar, do not forget to.
+                if progressbar:
+                    bar.finish()
+                log.info("Build OK: Syntax: PASSED!")
                 syntax_passed = True
+
             elif match_result.findall(result):
+                # Close bar, do not forget to.
+                if progressbar:
+                    bar.finish()
                 # error_modules = mod_re.findall(result)
                 # errors = errors_re.findall(result)
                 log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
             else:
                 log.error("Syntax: Something is not OK \n" + str(result))
-
-            if err_result:
-                log.error("This error occurs while executing syntax check: "+str(err_result))
         except:
             log.error("Syntax: Tplint cannot run, check if working dir is present!")
             log.error("Syntax: Tplint use path: " + tpl_mod_dir)
 
-        # bar.finish()
         return syntax_passed
 
     @staticmethod

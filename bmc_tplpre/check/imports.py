@@ -556,9 +556,15 @@ class TPLimports:
                 log.debug("Step 4. Wiping 'imports' folder before add new imports in it. "+str(path))
                 shutil.rmtree(path, onerror=self._del_rw)
                 # shutil.rmtree(path)
-            except:
+            except TypeError as e:
                 log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
                             "Please check path and permissions and 'AR' attribute in file.")
+                log.error(e)
+                raise
+            except PermissionError as e:
+                log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
+                            "Please check path and permissions and 'AR' attribute in file.")
+                log.error(e)
                 raise
 
     @staticmethod

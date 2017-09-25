@@ -26,6 +26,11 @@ NOTE: syntax tests (require 3rd party [module tplint](https://communities.bmc.co
 - pip install **paramiko**, **progressbar2**
 - use arguments;
 
+**Required**:
+- To use ADDM over SSH commands: [paramiko](https://github.com/paramiko/paramiko)
+
+Optional:
+- To print nice and fancy progress bars for long processes: [progressbar](https://github.com/WoLpH/python-progressbar)
 
 ## Usage: ##
 

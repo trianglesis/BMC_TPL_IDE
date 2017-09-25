@@ -17,6 +17,10 @@ parser = argparse.ArgumentParser(add_help=True)
 common = parser.add_argument_group("Common options")
 developer = parser.add_argument_group("Developer options")
 
+developer.add_argument("-wipe_tku",
+                       action="store_true",
+                       help="Totally wipe knowledge update with "
+                            "tw_pattern_management --remove-all --force.")
 developer.add_argument("-usual_import",
                        action="store_true",
                        help="Option imports patterns which only imported in currently opened pattern "
@@ -109,7 +113,7 @@ common.add_argument("-l",
                     help="Please set log level")  # info, quiet, warning, debug, output, error
 common.add_argument('--version',
                     action='version',
-                    version='%(prog)s 1.0.1')
+                    version='%(prog)s 1.1.0')
 
 known_args, extra_args = parser.parse_known_args()
 # print("Known args: "+str(known_args))
@@ -169,6 +173,13 @@ if callable(conditional_functions['zip_files_f']):
         log.debug("ZIP:\t\tzip_files_f")
         zip_files_f()
 
+# Wiping TKU!:
+if callable(conditional_functions['wipe_tku_f']):
+    wipe_tku_f = conditional_functions['wipe_tku_f']
+    if wipe_tku_f:
+        log.debug("UPLOAD:\t\twipe_tku_f")
+        wipe_tku_f()
+
 # Executing pattern upload:
 if callable(conditional_functions['upload_f']):
     upload_f = conditional_functions['upload_f']
@@ -189,7 +200,7 @@ if callable(conditional_functions['scan_f']):
     scan_f = conditional_functions['scan_f']
     if scan_f:
         log.debug("SCAN:\t\tscan_f")
-        # scan_f()
+        scan_f()
 
 if callable(conditional_functions['test_executor_f']):
     test_executor = conditional_functions['test_executor_f']

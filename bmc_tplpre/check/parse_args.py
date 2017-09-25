@@ -286,10 +286,12 @@ class ArgsParse:
         """
 
         oper_args_set = dict(
-                             imports = dict(recursive_imports=False, usual_imports=False, read_test=False
-                                            ),
-                             tests = dict(related_tests=False, run_test=False
-                                          )
+                             imports = dict(recursive_imports=False,
+                                            usual_imports=False,
+                                            read_test=False),
+                             tests = dict(related_tests=False,
+                                          run_test=False),
+                             tku_operations = dict(wipe_tku=False)
                              )
 
         if known_args.read_test and known_args.recursive_import:
@@ -326,5 +328,10 @@ class ArgsParse:
             # When situation is not implemented - use false by default.
             oper_args_set['tests'] = False
             oper_args_set['imports'] = False
+
+        if known_args.wipe_tku:
+            oper_args_set['tku_operations']['wipe_tku'] = True
+        else:
+            oper_args_set['tku_operations']['wipe_tku'] = False
 
         return oper_args_set

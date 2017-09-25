@@ -347,6 +347,10 @@ class GlobalLogic:
 
         import_conditions      = operational_args['imports']
         test_conditions        = operational_args['tests']
+        tku_operations         = operational_args['tku_operations']
+        # Wipe TKU?
+        tku_wipe_flag          = tku_operations['wipe_tku']
+
 
         # Set operational option for dev or customer:
         environment_condition = local_conditions['environment_condition']
@@ -369,11 +373,12 @@ class GlobalLogic:
         upload_scan                 = False
         local_proceed_for_addm      = False
         upload_only                 = False
+        wipe_tku_f                  = False
         import_preproc_syntax_local = False
         tests_run                   = False
 
-        import json
-        from pprint import pformat
+        # import json
+        # from pprint import pformat
         # print(json.dumps(addm_conditions, indent=4, ensure_ascii=False, default=pformat))
         # print(json.dumps(local_conditions, indent=4, ensure_ascii=False, default=pformat))
         # print(json.dumps(operational_args, indent=4, ensure_ascii=False, default=pformat))
@@ -459,7 +464,7 @@ class GlobalLogic:
                                           local_conditions  = local_conditions)
 
             # Run syntax check based on cond args:
-            syntax_check_f = self.syntax_cond(import_conditions = import_conditions,
+            syntax_check_f = self.syntax_cond(operational_args = operational_args,
                                               tpl_version       = addm_conditions['addm_ver'],
                                               local_conditions  = local_conditions)
 
@@ -472,6 +477,11 @@ class GlobalLogic:
                                                                       import_conditions = import_conditions,
                                                                       addm_working_dir  = addm_working_dir,
                                                                       local_conditions  = local_conditions)
+            # If you want to wipe all TKU before:
+            if tku_wipe_flag:
+                wipe_tku_f = self.make_tku_wiping(system_user=addm_conditions['system_user'],
+                                                  system_password=addm_conditions['system_password'])
+
 
             # Using path to zip result from above - activate it in ADDM
             upload_f, addm_activate_f = self.zip_activ_cond(addm_conditions  = addm_conditions,
@@ -496,8 +506,9 @@ class GlobalLogic:
                                           local_conditions  = local_conditions)
 
             # Run syntax check based on cond args:
-            syntax_check_f = self.syntax_cond(import_conditions = import_conditions,
-                                              tpl_version       = addm_conditions['addm_ver'])
+            syntax_check_f = self.syntax_cond(operational_args = operational_args,
+                                              tpl_version       = addm_conditions['addm_ver'],
+                                              local_conditions  = local_conditions)
 
             # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
             addm_working_dir = 'Null'
@@ -522,7 +533,7 @@ class GlobalLogic:
                                           local_conditions  = local_conditions)
 
             # Run syntax check based on cond args:
-            syntax_check_f = self.syntax_cond(import_conditions = import_conditions,
+            syntax_check_f = self.syntax_cond(operational_args = operational_args,
                                               tpl_version       = addm_conditions['addm_ver'],
                                               local_conditions  = local_conditions)
 
@@ -535,6 +546,11 @@ class GlobalLogic:
                                                                       import_conditions = import_conditions,
                                                                       addm_working_dir  = addm_working_dir,
                                                                       local_conditions  = local_conditions)
+
+            # If you want to wipe all TKU before:
+            if tku_wipe_flag:
+                wipe_tku_f = self.make_tku_wiping(system_user=addm_conditions['system_user'],
+                                                  system_password=addm_conditions['system_password'])
 
             # Using path to zip result from above - activate it in ADDM
             upload_f, addm_activate_f = self.zip_activ_cond(addm_conditions = addm_conditions,
@@ -562,7 +578,7 @@ class GlobalLogic:
 
             # Run syntax check based on cond args:
             # Maybe I can add tpl_version for offline checks but what for?
-            syntax_check_f = self.syntax_cond(import_conditions = import_conditions,
+            syntax_check_f = self.syntax_cond(operational_args = operational_args,
                                               tpl_version       = '',
                                               local_conditions  = local_conditions)
 
@@ -583,10 +599,12 @@ class GlobalLogic:
                         "\naddm_args_set: "+str(addm_args_set)+
                         "\nfull_path_args: "+str(full_path_args))
 
+        # TODO: Better update each key in correspond tree?
         conditional_functions = dict(imports_f       = imports_f,
                                      preproc_f       = preproc_f,
                                      syntax_check_f  = syntax_check_f,
                                      zip_files_f     = zip_files_f,
+                                     wipe_tku_f      = wipe_tku_f,
                                      upload_f        = upload_f,
                                      addm_activate_f = addm_activate_f,
                                      scan_f          = scan_f,
@@ -795,15 +813,56 @@ class GlobalLogic:
 
         By default - results printed in raw mode. Further execution continues.
 
+        {
+            "operational_args": {
+                "tku_operations": {
+                    "wipe_tku": false
+                },
+                "tests": false,
+                "imports": false
+            },
+            "tpl_version": "11.1",
+            "local_conditions": {
+                "STORAGE_t": "",
+                "buildscripts_t": "",
+                "tkn_sandbox_t": "",
+                "environment_condition": "customer_tku",
+                "full_path": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+\\BMCRemedyARSystem.tpl",
+                "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
+                "DBDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+",
+                "CORE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+",
+                "LOAD_BALANCER_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-LoadBalancer-2017-07-1-ADDM-11.1+",
+                "workspace": "D:\\TKU",
+                "MANAGEMENT_CONTROLLERS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+",
+                "tku_patterns_t": "",
+                "CLOUD_t": "",
+                "working_dir": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+",
+                "MIDDLEWAREDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+",
+                "file_name": "BMCRemedyARSystem",
+                "BLADE_ENCLOSURE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
+                "tkn_main_t": "",
+                "file_ext": "tpl",
+                "SYSTEM_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-System-2017-07-1-ADDM-11.1+"
+            }
+        }
+
         :param logical_conditions: set
         :return: func
         """
         # TODO: Check condition groups
         assert isinstance(logical_conditions, dict)
 
+        # DEBUG
+        # import json
+        # from pprint import pformat
+        # print(json.dumps(logical_conditions, indent=4, ensure_ascii=False, default=pformat))
+
         # Set examples in __init__ docstrings:
-        import_conditions = logical_conditions['import_conditions']
         tpl_version       = logical_conditions['tpl_version']
+        import_conditions = logical_conditions['operational_args']['imports']
+        environment_condition = logical_conditions['local_conditions']['environment_condition']
+
+        syntax_check_f = False
 
         if isinstance(import_conditions, dict):
             # Preproc on NORMAL IMPORTS
@@ -816,8 +875,6 @@ class GlobalLogic:
                 # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
                 syntax_check_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
 
-                return syntax_check_f
-
             # Preproc will run on all files from folder 'imports'
             elif import_conditions['recursive_imports'] or import_conditions['read_test']:
 
@@ -829,18 +886,23 @@ class GlobalLogic:
                 syntax_check_f = self.make_syntax_check(self.working_dir+os.sep+"imports",
                                                         disco_ver=tpl_version)
 
-                return syntax_check_f
         else:
-            log.info("1/1 Syntax check solo file.")
-            log.debug("1/2 Imports was already created just checking syntax for active pattern. "
-                      "(not read_test not recursive_imports not usual_imports)")
+            if environment_condition == 'developer_tplpre':
+                log.info("1/1 Syntax check solo file.")
+                log.debug("1/2 Imports was already created just checking syntax for active pattern. "
+                          "(not read_test not recursive_imports not usual_imports)")
+                # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+                # In this condition syntax check will hope that imports are already in folder after previous runs.
+                syntax_check_f = self.make_syntax_check(self.working_dir,
+                                                        disco_ver=tpl_version)
 
-            # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
-            # In this condition syntax check will hope that imports are already in folder after previous runs.
-            syntax_check_f = self.make_syntax_check(self.working_dir,
-                                                    disco_ver=tpl_version)
+            elif environment_condition == 'customer_tku':
+                log.warning("TPLint cannot checl syntax for single tpl file!"
+                            "On other way it will check syntax for whole CORE folder and this can take muck time."
+                            "To check syntax please choose usual imports option, "
+                            "so TPLLint will run it only for 'imports' folder!")
 
-            return syntax_check_f
+        return syntax_check_f
 
     def addm_dev_cond(self, addm_vm_condition, environment_condition):
         """
@@ -1000,9 +1062,16 @@ class GlobalLogic:
             log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip with one active file.")
 
             # Path of active pattern to ZIP:
-            # 'working_dir': 'd:\\workspace\\addm\\tkn_main\\tku_patterns\\CORE\\PatternName',
-            # path_to_result: d:\workspace\addm\tkn_main\tku_patterns\CORE\PatternName\tpl113\
-            path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
+            # Path of active pattern folder + imports dir + tpl<version dir>(or not is customer):
+            # In dev mode I have pattern folder as name and result path to tpl after Preproc:
+            if environment_condition == 'developer_tplpre':
+                path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
+                path_to_file = path_to_result + os.sep + self.full_path_args['file_name']
+
+            # In customer mode I have just only imports folder and pattern name for module naming:
+            elif environment_condition == 'customer_tku':
+                path_to_result = self.full_path_args['working_dir']+os.sep
+                path_to_file = path_to_result + self.full_path_args['file_name']
 
             # Pattern remote path in ADDM FS:
             # addm_zip_path = addm_working_dir+"/"+self.tpl_folder+"/"+self.full_path_args['file_name']+".tpl"
@@ -1019,19 +1088,21 @@ class GlobalLogic:
                 # addm_result_folder: /usr/tideway/TKU/Tpl_DEV
                 addm_result_folder = addm_working_dir
                 # local_zip: d:\workspace\addm\tkn_main\tku_patterns\CORE\PatternName\tpl113\PatternName.zip
-                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                local_zip = path_to_result+self.full_path_args['file_name'] + '.zip'
                 log.debug("local_zip: "+str(local_zip))
             else:
                 # I don not use this, because I want to zip files without uploading:
                 addm_result_folder = addm_working_dir
                 # Just make zip on local files and don't move it:
-                local_zip = path_to_result+self.full_path_args['pattern_folder'] + '.zip'
+                local_zip = path_to_result+self.full_path_args['file_name'] + '.zip'
                 log.debug("local_zip: "+str(local_zip))
 
             # Making function obj for ZIP
-            zip_remote = addm_result_folder+"/"+self.full_path_args['pattern_folder'] + '.zip'
-            addm_zip_f = self.make_zip(path_to_result=path_to_result,
-                                       active_folder=self.full_path_args['pattern_folder'])
+            zip_remote = addm_result_folder+"/"+self.full_path_args['file_name']+ '.zip'
+
+            addm_zip_f = self.make_zip(path_to_result=path_to_file,
+                                       active_folder=self.full_path_args['file_name'],
+                                       mode_single="Yes")
 
             # Path to zip with single pattern included:
             # addm_zip: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternName/tpl113/PatternName.zip
@@ -1253,7 +1324,7 @@ class GlobalLogic:
 
         return syntax_check
 
-    def make_zip(self, path_to_result, active_folder):
+    def make_zip(self, path_to_result, active_folder, mode_single=None):
         """
         Closure for zipper function.
         Make zip for local folder!
@@ -1265,9 +1336,17 @@ class GlobalLogic:
         def zipper():
             local_logic = LocalLogic()
             # Zip local processed files and return path to zip on local and name if zip for addm mirror FS:
-            local_logic.make_zip(path_to_result, active_folder)
+            local_logic.make_zip(path_to_result, active_folder, mode_single)
 
         return zipper
+
+    def make_tku_wiping(self, system_user, system_password):
+        def wipe_tku():
+            addm = AddmOperations(self.ssh)
+            # Totally wipe knowledge update with tw_pattern_management --remove-all --force.
+            addm.wipe_tku(system_user=system_user, system_password=system_password)
+
+        return wipe_tku
 
     def make_upload_remote(self, zip_on_local, zip_on_remote):
         """
@@ -1354,6 +1433,7 @@ class GlobalLogic:
             addm.tests_executor(tests_list)
 
         return test_run
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
