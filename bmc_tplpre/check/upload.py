@@ -326,12 +326,21 @@ class AddmOperations:
 
         return file_ok
 
-    def tests_executor(self, tests_list):
+    def tests_executor(self, tests_list, test_conditions):
         """
         Placeholder for tests run
         :param tests_list: list
         :return:
         """
+
+        test_verbose_arg = ''
+        test_failfast_arg = ''
+        if test_conditions['test_verbose']:
+            test_verbose_arg = ' --failfast'
+        if test_conditions['test_failfast']:
+            test_failfast_arg = ' --verbose'
+        test_args = test_verbose_arg+test_failfast_arg
+
         tests_len = len(tests_list)
 
         # Run test: 0 of 10 | - should be fixed, but I have no workaround.
@@ -387,7 +396,8 @@ class AddmOperations:
 
             pre_cmd = ". ~/.bash_profile;"
             wd_cmd = "cd "+test['rem_test_wd']+";"
-            cmd_test = "/usr/tideway/bin/python -u "+test['rem_test_path']+" --verbose"
+            # TODO: Add verbose and failfast as args:
+            cmd_test = "/usr/tideway/bin/python -u "+test['rem_test_path']+test_args
             cmd = pre_cmd + wd_cmd + cmd_test
             log.debug("Run: "+str(cmd))
 

@@ -43,6 +43,9 @@ class GlobalLogic:
         :rtype: func
         :param kwargs:
         """
+        # TODO: assign most args here, no need to re-assign them each time in func().
+        # Anyway this class should initialize with all available options or throw an exception
+
 
 
         # Get all available arguments in three sets based on its type:
@@ -1214,6 +1217,7 @@ class GlobalLogic:
         :param test_conditions:
         :return: function from make_test_run
         """
+
         # Lets declare here some variables to see what we have:
         local_tests_path = self.full_path_args['pattern_test_t']
         active_pattern = self.full_path_args['file_name']+'.'+self.full_path_args['file_ext']
@@ -1221,6 +1225,7 @@ class GlobalLogic:
         workspace = self.full_path_args['workspace']
         addm_wd = addm_conditions['dev_vm_path']
         test_wd = self.working_dir+os.sep+'tests'
+
 
         # TODO: Check if related test run also an initial test? Do we need it run, or better leave in separate modes?
         if test_conditions['run_test']:
@@ -1242,7 +1247,8 @@ class GlobalLogic:
                 # print(related_tests)
 
                 if related_tests:
-                    test_executor_f = self.make_test_run(related_tests)
+                    test_executor_f = self.make_test_run(tests_list=related_tests,
+                                                         test_conditions=test_conditions)
                 # log.debug("Test file path to run: "+str(remote_tests_path))
 
                     return test_executor_f
@@ -1253,7 +1259,8 @@ class GlobalLogic:
             related_tests = LocalLogic.get_related_tests(local_conditions=self.full_path_args,
                                                          dev_vm_path=addm_wd)
             # print(related_tests)
-            test_executor_f = self.make_test_run(related_tests)
+            test_executor_f = self.make_test_run(tests_list=related_tests,
+                                                 test_conditions=test_conditions)
 
             return test_executor_f
 
@@ -1421,7 +1428,7 @@ class GlobalLogic:
 
         return scan
 
-    def make_test_run(self, tests_list):
+    def make_test_run(self, tests_list, test_conditions):
         """
         Closure placeholder for tests run
         :param tests_list: list
@@ -1430,7 +1437,7 @@ class GlobalLogic:
         def test_run():
             addm = AddmOperations(self.ssh)
             # Activate local zip package using remote mirror path to it:
-            addm.tests_executor(tests_list)
+            addm.tests_executor(tests_list, test_conditions)
 
         return test_run
 

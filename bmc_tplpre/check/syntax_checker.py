@@ -83,8 +83,10 @@ class SyntaxCheck:
             log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
             pass
 
-        tpl_mod_dir = os.path.abspath(os.path.join(__file__ , "../.."))
-        syntax_passed = False
+        tpl_mod_dir     = os.path.abspath(os.path.join(__file__ , "../.."))
+        tplint_exe_path = tpl_mod_dir + '\\tplint\\tplint.exe'
+        tplint_tax_path = tpl_mod_dir+'\\taxonomy\\00taxonomy.xml'
+        syntax_passed   = False
 
         # errors_re = re.compile("\s+Errors:\s+(.+)")
         # mod_re = re.compile("Module:\s+(.+)")
@@ -102,58 +104,61 @@ class SyntaxCheck:
         result_out = []
         spinner = itertools.cycle(['-', '/', '|', '\\'])
 
-        # noinspection PyBroadException
-        log.debug("Syntax: Checking syntax. Options: --discovery-versions="+str(disco_ver) +
-                  " --loglevel=WARN"+" -t "+tpl_mod_dir+" in: "+str(working_dir))
-        try:
-            open_path = subprocess.Popen('"' + tpl_mod_dir + '\\tplint\\tplint.exe"'
-                                                             ' --discovery-versions='+str(disco_ver) +
-                                         ' --loglevel=WARN'
-                                         ' -t "'+tpl_mod_dir+'\\taxonomy\\00taxonomy.xml"',
-                                         cwd=working_dir, stdout=subprocess.PIPE)
-            # Show progress with fancy progressbar:
-            if progressbar:
-                while open_path.stdout is not None:
-                    bar.update()
-                    out = open_path.stdout.readline()
-                    result_out.append(out.decode('UTF-8').rstrip('\r'))
-                    if not out:
-                        break
-                    time.sleep(0.1)
-            # There is no progressbar - show just simple spinner:
-            else:
-                while open_path.stdout is not None:
-                    sys.stdout.write(next(spinner))
-                    sys.stdout.flush()
-                    sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
-
-                    out = open_path.stdout.readline()
-                    result_out.append(out.decode('UTF-8').rstrip('\r'))
-                    if not out:
-                        sys.stdout.flush()  # Remove spinner from output.
-                        break
-                    time.sleep(0.1)
-            # Final result:
-            result = ''.join(result_out)
-            if "No issues found!" in result:
-                # Close bar, do not forget to.
+        if os.path.exists(tplint_exe_path) and os.path.exists(tplint_tax_path):
+            try:
+                open_path = subprocess.Popen(tplint_exe_path+' --discovery-versions='+str(disco_ver) +
+                                             ' --loglevel=WARN' ' -t "'+tplint_tax_path,
+                                             cwd=working_dir,
+                                             stdout=subprocess.PIPE)
+                # Show progress with fancy progressbar:
                 if progressbar:
-                    bar.finish()
-                log.info("Build OK: Syntax: PASSED!")
-                syntax_passed = True
+                    while open_path.stdout is not None:
+                        bar.update()
+                        out = open_path.stdout.readline()
+                        result_out.append(out.decode('UTF-8').rstrip('\r'))
+                        if not out:
+                            break
+                        time.sleep(0.1)
+                # There is no progressbar - show just simple spinner:
+                else:
+                    while open_path.stdout is not None:
+                        sys.stdout.write(next(spinner))
+                        sys.stdout.flush()
+                        sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
 
-            elif match_result.findall(result):
-                # Close bar, do not forget to.
-                if progressbar:
-                    bar.finish()
-                # error_modules = mod_re.findall(result)
-                # errors = errors_re.findall(result)
-                log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
-            else:
-                log.error("Syntax: Something is not OK \n" + str(result))
-        except:
-            log.error("Syntax: Tplint cannot run, check if working dir is present!")
-            log.error("Syntax: Tplint use path: " + tpl_mod_dir)
+                        out = open_path.stdout.readline()
+                        result_out.append(out.decode('UTF-8').rstrip('\r'))
+                        if not out:
+                            sys.stdout.flush()  # Remove spinner from output.
+                            break
+                        time.sleep(0.1)
+                # Final result:
+                result = ''.join(result_out)
+                if "No issues found!" in result:
+                    # Close bar, do not forget to.
+                    if progressbar:
+                        bar.finish()
+                    log.info("Build OK: Syntax: PASSED!")
+                    syntax_passed = True
+
+                elif match_result.findall(result):
+                    # Close bar, do not forget to.
+                    if progressbar:
+                        bar.finish()
+                    # error_modules = mod_re.findall(result)
+                    # errors = errors_re.findall(result)
+                    log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
+                else:
+                    log.error("Syntax: Something is not OK \n" + str(result))
+            except:
+                log.error("Syntax: Tplint cannot run, check if working dir is present!")
+                log.error("Syntax: Tplint use path: " + tpl_mod_dir)
+        else:
+            log.warning("Path to tplint module is not exist. Please check this: "
+                        "https://github.com/trianglesis/BMC_TPL_IDE#syntax-check")
+            log.debug("Those paths expected: "
+                      "\ntplint_exe_path - "+str(tplint_exe_path)+
+                      "\ntplint_tax_path - "+str(tplint_tax_path))
 
         return syntax_passed
 

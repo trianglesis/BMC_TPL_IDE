@@ -290,7 +290,10 @@ class ArgsParse:
                                             usual_imports=False,
                                             read_test=False),
                              tests = dict(related_tests=False,
-                                          run_test=False),
+                                          run_test=False,
+                                          test_verbose=False,
+                                          test_failfast=False
+                                          ),
                              tku_operations = dict(wipe_tku=False)
                              )
 
@@ -326,12 +329,17 @@ class ArgsParse:
 
         else:
             # When situation is not implemented - use false by default.
-            oper_args_set['tests'] = False
-            oper_args_set['imports'] = False
+            log.warning("Operation mode cannot be set from current arguments.")
 
         if known_args.wipe_tku:
             oper_args_set['tku_operations']['wipe_tku'] = True
         else:
             oper_args_set['tku_operations']['wipe_tku'] = False
+
+        if known_args.test_verbose:
+            oper_args_set['tests']['test_verbose'] = True
+
+        if known_args.test_failfast:
+            oper_args_set['tests']['test_failfast'] = True
 
         return oper_args_set

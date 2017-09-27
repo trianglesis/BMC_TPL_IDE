@@ -39,14 +39,18 @@ developer.add_argument("-read_test",
 developer.add_argument("-run_test",
                        action="store_true",
                        help="Run test which is related to current patten if test.py exist."
-                            "Save result in log and in current working directory."
-                            "In progress...")
+                            "Save result in log and in current working directory.")
 developer.add_argument("-related_tests",
                        action="store_true",
                        help="Read each test.py file in tku_patterns and compose set of pattern:tests where active"
                             "pattern is used. Execute each test starting from main pattern's test one by one"
-                            "and save result log in current pattern folder."
-                            "In progress...")
+                            "and save result log in current pattern folder.")
+developer.add_argument("-test_verbose",
+                       action="store_true",
+                       help="Using --verbose can also be useful to see progress in a little more detail")
+developer.add_argument("-test_failfast",
+                       action="store_true",
+                       help="Using --failfast can be useful as the tests will stop at the first failure.")
 developer.add_argument("-tpl",
                        type=str,
                        action='store',

@@ -16,6 +16,12 @@ This is IDE and automation program for [BMC Discovery (ADDM)](https://discovery.
 
 NOTE: syntax tests (require 3rd party [module tplint](https://communities.bmc.com/docs/DOC-42313) by Ladkau, Matthias)
 
+To use syntax check functions:
+
+- Download [module tplint](https://communities.bmc.com/docs/DOC-42313)
+- Unzip
+- Copy folders (from 'tpledit_v0.4\tpledit' ): **taxonomy** and **tplint** in 'bmc_tplpre' (where check.py lies)
+
 
 ### Install: ###
 
