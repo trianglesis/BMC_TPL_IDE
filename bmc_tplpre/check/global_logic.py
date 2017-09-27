@@ -900,9 +900,6 @@ class GlobalLogic:
         addm_wd = ''
         test_path = ''
 
-        assert isinstance(addm_vm_condition, str)
-        assert isinstance(environment_condition, str)
-
         # Set examples in __init__ docstrings:
         if environment_condition == 'developer_tplpre':
             if addm_vm_condition:
