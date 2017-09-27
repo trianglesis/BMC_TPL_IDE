@@ -57,7 +57,7 @@ class TPLimports:
             Step 3.1: Show list of found modules and path to patterns in log debug.
 
             Step 4: Wiping 'imports' folder before add new imports in it.
-                Step 4.1 If folder cannot be wiped - show warninging log.
+                Step 4.1 If folder cannot be wiped - show warning log.
 
             Step 5: Create 'imports' folder if isn't exist.
             Step 5.1: Copy pattern to imports folder and show debug log with path to copied pattern.

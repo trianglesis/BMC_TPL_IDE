@@ -70,6 +70,7 @@ class SyntaxCheck:
         """
 
         # progressbar = False
+        bar = ''
         if progressbar:
             progressbar.streams.flush()
             progressbar.streams.wrap_stdout()
@@ -105,6 +106,7 @@ class SyntaxCheck:
         spinner = itertools.cycle(['-', '/', '|', '\\'])
 
         if os.path.exists(tplint_exe_path) and os.path.exists(tplint_tax_path):
+            # noinspection PyBroadException
             try:
                 open_path = subprocess.Popen(tplint_exe_path+' --discovery-versions='+str(disco_ver) +
                                              ' --loglevel=WARN' ' -t "'+tplint_tax_path,
@@ -156,6 +158,7 @@ class SyntaxCheck:
         else:
             log.warning("Path to tplint module is not exist. Please check this: "
                         "https://github.com/trianglesis/BMC_TPL_IDE#syntax-check")
+            # noinspection PyPep8
             log.debug("Those paths expected: "
                       "\ntplint_exe_path - "+str(tplint_exe_path)+
                       "\ntplint_tax_path - "+str(tplint_tax_path))

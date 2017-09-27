@@ -30,7 +30,8 @@ class Preproc:
         self.sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
         # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
 
-    def find_tplpreprocessor(self, workspace):
+    @staticmethod
+    def find_tplpreprocessor(workspace):
         """
         This will find //addm/tkn_main/buildscripts/TPLPreprocessor.py
 
@@ -89,7 +90,7 @@ class Preproc:
                     stdout, stderr = run_preproc.communicate()
                     run_preproc.wait()  # wait until command finished
 
-                    result = stdout.decode('UTF-8').rstrip('\r|\n')
+                    # result = stdout.decode('UTF-8').rstrip('\r|\n')
                     err_result = stderr.decode('UTF-8').rstrip('\r|\n')
 
                     folder_content = os.listdir(output_path)
@@ -106,7 +107,7 @@ class Preproc:
 
                                 if file_time_stamp < ago:
                                     log.warning("TPLPreprocessor result files looks like older that 5 min. "
-                                             "Please check: " + str(file) + " time: " + str(file_time_stamp))
+                                                "Please check: " + str(file) + " time: " + str(file_time_stamp))
 
                                 if file_time_stamp > ago:
                                     log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
@@ -136,7 +137,7 @@ class Preproc:
                     stdout, stderr = run_preproc.communicate()
                     run_preproc.wait()  # wait until command finished
 
-                    result = stdout.decode('UTF-8').rstrip('\r|\n')
+                    # result = stdout.decode('UTF-8').rstrip('\r|\n')
                     err_result = stderr.decode('UTF-8').rstrip('\r|\n')
 
                     folder_content = os.listdir(output_path)
@@ -154,7 +155,7 @@ class Preproc:
                                 if file_time_stamp < ago:
 
                                     log.warning("TPLPreprocessor result files looks like older that 5 min. "
-                                             "Please check: " + str(file) + " time: " + str(file_time_stamp))
+                                                "Please check: " + str(file) + " time: " + str(file_time_stamp))
 
                                 if file_time_stamp > ago:
 
@@ -185,7 +186,7 @@ class Preproc:
                     stdout, stderr = run_preproc.communicate()
                     run_preproc.wait()  # wait until command finished
 
-                    result = stdout.decode('UTF-8').rstrip('\r|\n')
+                    # result = stdout.decode('UTF-8').rstrip('\r|\n')
                     err_result = stderr.decode('UTF-8').rstrip('\r|\n')
 
                     folder_content = os.listdir(output_path)

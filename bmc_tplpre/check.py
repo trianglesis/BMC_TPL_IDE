@@ -153,7 +153,7 @@ if conditional_functions['imports_f']:
     if callable(imports_f['import_patterns']):
         import_patterns = imports_f['import_patterns']
         if import_patterns:
-            log.debug("IMPORTS:\t\timport_patternsrns")
+            log.debug("IMPORTS:\t\timport_patterns")
             import_patterns()
 
 # # Executing preprocessor:

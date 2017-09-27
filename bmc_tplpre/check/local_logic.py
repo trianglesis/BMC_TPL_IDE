@@ -204,7 +204,7 @@ class LocalLogic:
     def addm_compose_paths(dev_vm_path, pattern_folder):
         """
         Local path will be used to compose same path in remote vm if HGFS shares confirmed.
-        To further usega I also compose path to remote test.py
+        To further usage I also compose path to remote test.py
         :return:
         """
         # Paths from local to remote:
@@ -312,7 +312,6 @@ class LocalLogic:
         STORAGE_t                = ''
         SYSTEM_t                 = ''
         tkn_sandbox_t            = ''
-        pattern_test_t           = ''
 
         if os.path.exists(full_file_path):
             # log.debug("-full_file_path is: " + full_file_path)
@@ -359,7 +358,7 @@ class LocalLogic:
                     if re.match('tplpre', file_ext):
                         # pattern working dir, where pattern file is really lies:
                         working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder
-                        # Making prognosable place to test.py - but check if exist in global logic mod
+                        # Making prognoses place to test.py - but check if exist in global logic mod
                         pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
 
                         # Set of arguments, conditional options and paths to pattern libs:
@@ -402,7 +401,6 @@ class LocalLogic:
                         tpl_folder     = path_parse.group('tpl_folder')
 
                         # pattern working dir, where pattern file is really lies:
-                        # 'd:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystemtp\\l114\\check.log
                         working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder+os.sep+tpl_folder
                         # Making prognosable place to test.py - but check if exist in global logic mod
                         pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
@@ -536,6 +534,7 @@ class LocalLogic:
                     else:
                         raise Exception("FILE: Did not match any file extension "
                                         "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
+
                 else:
                     raise Exception("Did not match TKU DEV pattern path tree! Will use another way to parse."
                                     "I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
@@ -816,6 +815,7 @@ class LocalLogic:
                         else:
                             log.warning("This path did not match any suitable pattern and probably not a tpl file"
                                         " Or path has superfluous symbols or spaces")
+
                 else:
                     raise FileNotFoundError("FILE: Cannot match file path for alone pattern. "
                                             "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
@@ -872,6 +872,7 @@ class LocalLogic:
         except:
             log.error("CMD for p4 workspace won't run.")
 
+    # noinspection PyBroadException
     def check_addm_tpl_ver(self, ssh):
         """
         Run command "tw_pattern_management -v"
@@ -908,6 +909,7 @@ class LocalLogic:
 
         return tpl_vers, addm_prod, addm_ver, tpl_folder
 
+    # noinspection PyBroadException
     def check_hgfs(self, ssh):
         """
         Check if ADDM VM is using mount FS
@@ -970,6 +972,7 @@ class LocalLogic:
 
         return dev_vm_check, vm_dev_path
 
+    # noinspection PyBroadException
     @staticmethod
     def check_folders(ssh, path):
         """
@@ -1025,7 +1028,7 @@ class LocalLogic:
         UPDATE:
 
         During search of recursive patterns + test, also check each test.py where active pattern also used,
-        then compose dict with name of patern_directory: test_path which will be used for further run to validate
+        then compose dict with name of pattern_directory: test_path which will be used for further run to validate
         each related test.
 
         :return: dict
@@ -1102,15 +1105,6 @@ class LocalLogic:
                         # Now copy released file:
                         related_tests.append(current_pattern_dict)
 
-        # {'rem_test_path': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/WebsphereAppServer/tests/test.py',
-        # 'rem_test_wd': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/WebsphereAppServer/tests',
-        # 'test_path': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\WebsphereAppServer\\tests\\test.py',
-        # 'test_wd': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\WebsphereAppServer\\tests',
-        # 'pattern': 'MicrosoftSQLServer.tplpre'}
-
-        # print(related_tests)
-        # for test in related_tests:
-        #     print(test)
         return related_tests
 
     @staticmethod

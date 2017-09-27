@@ -62,6 +62,7 @@ class AddmOperations:
         self.upload_activated_check = re.compile('(\d+\sknowledge\supload\sactivated)')
         self.upload_num_item = re.compile('Uploaded\s+\S+\s+as\s\"([^"]+)\"')
 
+    # noinspection PyBroadException
     def upload_knowledge(self, zip_on_local, zip_on_remote):
         """
         Use local path to zip file and remote path where to download.
@@ -101,6 +102,7 @@ class AddmOperations:
 
         # return file_check
 
+    # noinspection PyBroadException
     def activate_knowledge(self, zip_path, module_name, system_user, system_password):
         """
         Give it path where zip folder can be:
@@ -129,6 +131,7 @@ class AddmOperations:
         """
 
         # progressbar = False
+        bar = ''
         if progressbar:
             progressbar.streams.flush()
             progressbar.streams.wrap_stdout()
@@ -193,7 +196,7 @@ class AddmOperations:
                             bar.finish()
                         uploaded_activated = True
                         log.info("Upload activating: " + "PASSED!")
-                        log.info("Upload successfully. Module: " + str(module_name)+
+                        log.info("Upload successfully. Module: " + str(module_name) +
                                  " as "+str(item[0]))
                     else:
                         if progressbar:
@@ -207,6 +210,7 @@ class AddmOperations:
 
         return uploaded_activated
 
+    # noinspection PyBroadException
     def wipe_tku(self, system_user, system_password):
         """
         IDEA - run deactivate and removals if requested - before activate new.
@@ -216,6 +220,7 @@ class AddmOperations:
         :return:
         """
 
+        bar = ''
         # progressbar = False
         if progressbar:
             progressbar.streams.flush()
@@ -326,9 +331,11 @@ class AddmOperations:
 
         return file_ok
 
+    # noinspection PyBroadException
     def tests_executor(self, tests_list, test_conditions):
         """
         Placeholder for tests run
+        :param test_conditions:
         :param tests_list: list
         :return:
         """
@@ -371,21 +378,10 @@ class AddmOperations:
 
         for i, test in enumerate(tests_list):
             """
-            Remote run: 
-            ssh://tideway@192.168.5.11:22/usr/bin/python -u /usr/tideway/TKU/addm/tkn_main/buildscripts/test_executor.py
-            ssh://tideway@192.168.5.11:22/usr/tideway/bin/python -u /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/MicrosoftAppFabric/tests/test.py TestStandalone.test2_Windows_main
-            
+                        
             export TKN_MAIN=/usr/tideway/TKU/addm/tkn_main/
             export TKN_CORE=$TKN_MAIN/tku_patterns/CORE
             export PYTHONPATH=$PYTHONPATH:$TKN_MAIN/python
-
-            # cmd = "cd "+test['rem_test_wd']+"; ls; python -u "+test['rem_test_path']+" --verbose"
-            # cmd = "cd "+test['rem_test_wd']+"; /usr/tideway/bin/python --version"
-            # cmd = "cd "+test['rem_test_wd']+"; python --version"
-            # cmd = "cd "+test['rem_test_wd']+"; echo $TKN_MAIN"
-            # cmd = "cd "+test['rem_test_wd']+"; echo $TKN_CORE"
-            # cmd = "cd "+test['rem_test_wd']+"; echo $PYTHONPATH"
-            # cmd = "cd "+test['rem_test_wd']+"; ls"
 
             Local run: ?
             """

@@ -18,9 +18,10 @@ from check.scan import AddmScan
 import logging
 log = logging.getLogger("check.logger")
 
+
 class GlobalLogic:
 
-    def __init__(self, extra_args, known_args, **kwargs):
+    def __init__(self, extra_args, known_args):
         """
         Initialize with options for logical operations.
         Check arg sets and output messages for different option scenarios.
@@ -41,16 +42,13 @@ class GlobalLogic:
                 - generate used query file (args based)
 
         :rtype: func
-        :param kwargs:
         """
         # TODO: assign most args here, no need to re-assign them each time in func().
         # Anyway this class should initialize with all available options or throw an exception
 
         # Get all available arguments in three sets based on its type:
-        self.full_path_args, \
-        self.operational_args, \
-        self.addm_args_set = self.check_args_set(known_args =known_args,
-                                                 extra_args =extra_args)
+        self.full_path_args, self.operational_args, self.addm_args_set = self.check_args_set(known_args=known_args,
+                                                                                             extra_args=extra_args)
 
         # DEBUG
         # import json
@@ -63,62 +61,62 @@ class GlobalLogic:
             '''
                 Examples of arg sets
         
-                    PATH ARGS: {
-                        "BLADE_ENCLOSURE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
-                        "SYSTEM_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-System-2017-07-1-ADDM-11.1+",
-                        "tkn_main_t": "",
-                        "tku_patterns_t": "",
-                        "MIDDLEWAREDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+",
-                        "workspace": "D:\\TKU",
-                        "file_name": "PatternName",
-                        "CLOUD_t": "",
-                        "full_path": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-Core-2017-07-1-ADDM-11.1+\\PatternName.tpl",
-                        "DBDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+",
-                        "working_dir": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-Core-2017-07-1-ADDM-11.1+",
-                        "CORE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-Core-2017-07-1-ADDM-11.1+",
-                        "file_ext": "tpl",
-                        "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
-                        "MANAGEMENT_CONTROLLERS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-ManagementControllers-2017-07-1-ADDM-11.1+",
-                        "STORAGE_t": "",
-                        "buildscripts_t": "",
-                        "environment_condition": "customer_tku",
-                        "LOAD_BALANCER_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
-                                                            TKU-LoadBalancer-2017-07-1-ADDM-11.1+",
-                        "tkn_sandbox_t": ""
-                    }
+    PATH ARGS: {
+        "BLADE_ENCLOSURE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
+        "SYSTEM_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-System-2017-07-1-ADDM-11.1+",
+        "tkn_main_t": "",
+        "tku_patterns_t": "",
+        "MIDDLEWAREDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+",
+        "workspace": "D:\\TKU",
+        "file_name": "PatternName",
+        "CLOUD_t": "",
+        "full_path": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-Core-2017-07-1-ADDM-11.1+\\PatternName.tpl",
+        "DBDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+",
+        "working_dir": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-Core-2017-07-1-ADDM-11.1+",
+        "CORE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-Core-2017-07-1-ADDM-11.1+",
+        "file_ext": "tpl",
+        "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
+        "MANAGEMENT_CONTROLLERS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-ManagementControllers-2017-07-1-ADDM-11.1+",
+        "STORAGE_t": "",
+        "buildscripts_t": "",
+        "environment_condition": "customer_tku",
+        "LOAD_BALANCER_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
+                                            TKU-LoadBalancer-2017-07-1-ADDM-11.1+",
+        "tkn_sandbox_t": ""
+    }
         
-                    PATH ARGS:
-                            {
-                            "MANAGEMENT_CONTROLLERS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\MANAGEMENT_CONTROLLERS",
-                            "CLOUD_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CLOUD",
-                            "BLADE_ENCLOSURE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\BLADE_ENCLOSURE",
-                            "file_name": "BMCRemedyARSystem",
-                            "tkn_sandbox_t": "d:\\perforce\\addm\\tkn_sandbox",
-                            "tku_patterns_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns",
-                            "LOAD_BALANCER_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\LOAD_BALANCER",
-                            "CORE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE",
-                            "SYSTEM_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\SYSTEM",
-                            "STORAGE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\STORAGE",
-                            "working_dir": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem",
-                            "DBDETAILS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\DBDETAILS",
-                            "pattern_folder": "BMCRemedyARSystem",
-                            "file_ext": "tplpre",
-                            "environment_condition": "developer_tplpre",
-                            "tkn_main_t": "d:\\perforce\\addm\\tkn_main",
-                            "pattern_test_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py",
-                            "buildscripts_t": "d:\\perforce\\addm\\tkn_main\\buildscripts",
-                            "full_path": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\BMCRemedyARSystem.tplpre",
-                            "workspace": "d:\\perforce",
-                            "MIDDLEWAREDETAILS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\MIDDLEWAREDETAILS"
-                            }
+    PATH ARGS:
+    {
+        "MANAGEMENT_CONTROLLERS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\MANAGEMENT_CONTROLLERS",
+        "CLOUD_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CLOUD",
+        "BLADE_ENCLOSURE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\BLADE_ENCLOSURE",
+        "file_name": "BMCRemedyARSystem",
+        "tkn_sandbox_t": "d:\\perforce\\addm\\tkn_sandbox",
+        "tku_patterns_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns",
+        "LOAD_BALANCER_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\LOAD_BALANCER",
+        "CORE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE",
+        "SYSTEM_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\SYSTEM",
+        "STORAGE_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\STORAGE",
+        "working_dir": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem",
+        "DBDETAILS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\DBDETAILS",
+        "pattern_folder": "BMCRemedyARSystem",
+        "file_ext": "tplpre",
+        "environment_condition": "developer_tplpre",
+        "tkn_main_t": "d:\\perforce\\addm\\tkn_main",
+        "pattern_test_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\tests\\test.py",
+        "buildscripts_t": "d:\\perforce\\addm\\tkn_main\\buildscripts",
+        "full_path": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\BMCRemedyARSystem.tplpre",
+        "workspace": "d:\\perforce",
+        "MIDDLEWAREDETAILS_t": "d:\\perforce\\addm\\tkn_main\\tku_patterns\\MIDDLEWAREDETAILS"
+    }
 
             '''
 
@@ -415,7 +413,7 @@ class GlobalLogic:
         # import_conditions = import_conditions_debug
 
         # Addm args for scan
-        # TODO: What if declare each this if AS functional dict splitted for each situation?
+        # TODO: What if declare each this if AS functional dict split for each situation?
 
         # TODO: Maybe better to use IFs in separate function jus for if, and declare modes. Or this can be over-minded?
         if addm_conditions['scan_hosts'] \
@@ -480,15 +478,14 @@ class GlobalLogic:
                                                               environment_condition)
 
             # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
-            zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_vm_condition = addm_conditions['dev_vm_check'],
-                                                                      import_conditions = import_conditions,
-                                                                      addm_working_dir  = addm_working_dir,
-                                                                      local_conditions  = local_conditions)
+            zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_vm_condition=addm_conditions['dev_vm_check'],
+                                                                      import_conditions=import_conditions,
+                                                                      addm_working_dir=addm_working_dir,
+                                                                      local_conditions=local_conditions)
             # If you want to wipe all TKU before:
             if tku_wipe_flag:
                 wipe_tku_f = self.make_tku_wiping(system_user=addm_conditions['system_user'],
                                                   system_password=addm_conditions['system_password'])
-
 
             # Using path to zip result from above - activate it in ADDM
             upload_f, addm_activate_f = self.zip_activ_cond(addm_conditions  = addm_conditions,
@@ -526,8 +523,8 @@ class GlobalLogic:
                                                                       addm_working_dir  = addm_working_dir,
                                                                       local_conditions  = local_conditions)
             # tpl_vers addm_prod addm_ver
-            log.info("Zipped for ADDM: "+str(addm_conditions['addm_prod'])+
-                     " Ver. "+str(addm_conditions['addm_ver'])+
+            log.info("Zipped for ADDM: "+str(addm_conditions['addm_prod']) +
+                     " Ver. "+str(addm_conditions['addm_ver']) +
                      " Tpl v. "+str(addm_conditions['tpl_vers']))
 
         # When I have NO args for Scan, but have args for ADDM status and disco - will start upload only.
@@ -552,10 +549,10 @@ class GlobalLogic:
                                                               environment_condition)
 
             # Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
-            zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_vm_condition = addm_conditions['dev_vm_check'],
-                                                                      import_conditions = import_conditions,
-                                                                      addm_working_dir  = addm_working_dir,
-                                                                      local_conditions  = local_conditions)
+            zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_vm_condition=addm_conditions['dev_vm_check'],
+                                                                      import_conditions=import_conditions,
+                                                                      addm_working_dir=addm_working_dir,
+                                                                      local_conditions=local_conditions)
 
             # If you want to wipe all TKU before:
             if tku_wipe_flag:
@@ -567,8 +564,8 @@ class GlobalLogic:
                                                             addm_zip        = addm_zip,
                                                             local_zip       = local_zip,
                                                             local_conditions = local_conditions)
-            log.info("Zipped for ADDM: "+str(addm_conditions['addm_prod'])+
-                     " Ver. "+str(addm_conditions['addm_ver'])+
+            log.info("Zipped for ADDM: "+str(addm_conditions['addm_prod']) +
+                     " Ver. "+str(addm_conditions['addm_ver']) +
                      " Tpl v. "+str(addm_conditions['tpl_vers']))
             # No Scan action because: not addm_conditions['scan_hosts'] just upload and activate.
 
@@ -601,14 +598,13 @@ class GlobalLogic:
             log.info("Run tests for current pattern.")
             log.debug("ADDM connection is present and test options used.")
             test_executor_f = self.test_run_cond(test_conditions=test_conditions,
-                                                 addm_conditions=addm_conditions,
-                                                 environment_condition=environment_condition)
+                                                 addm_conditions=addm_conditions)
 
         # I don't know:
         else:
             log.warning("I can't understand the logic of current set of options. More in debug.")
-            log.debug("\naddm_conditions: "+addm_conditions_sort+
-                      "\nlocal_conditions: "+local_conditions_sort+
+            log.debug("\naddm_conditions: "+addm_conditions_sort +
+                      "\nlocal_conditions: "+local_conditions_sort +
                       "\noperational_args: "+operational_args_sort)
 
         # TODO: IS IT Better update each key in correspond tree?
@@ -709,7 +705,9 @@ class GlobalLogic:
                     return import_cond_dict
 
                 # SOLO MODE:
-                elif not (import_conditions['read_test'] and import_conditions['recursive_imports'] and import_conditions['usual_imports']):
+                elif not (import_conditions['read_test']
+                          and import_conditions['recursive_imports']
+                          and import_conditions['usual_imports']):
                     log.debug("There are no dev arguments found for Test read, or imports, or recursive imports.")
                     log.info("Using as standalone pattern file tplpre.")
                     import_cond_dict = dict(parse_tests_patterns = False,
@@ -751,7 +749,6 @@ class GlobalLogic:
         else:
             log.debug("No import options passed.")
 
-
         return import_cond_dict
 
     def preproc_cond(self, **logical_conditions):
@@ -768,7 +765,7 @@ class GlobalLogic:
         # TODO: Check condition groups
         assert isinstance(logical_conditions, dict)
         # Assign
-        preproc_f = False
+        # preproc_f = False
 
         # Set examples in __init__ docstrings:
         import_conditions = logical_conditions['import_conditions']
@@ -793,7 +790,8 @@ class GlobalLogic:
                         not import_conditions['usual_imports']:
 
                     log.info("TPLPreprocessor run on imports folder.")
-                    log.debug("TPLPreprocessor will run on imports folder after my recursive importing logic. (recursive_imports)")
+                    log.debug("TPLPreprocessor will run on imports folder after my recursive importing logic. "
+                              "(recursive_imports)")
                     # After R imports are finish its work - run TPLPreprocessor on it
                     preproc_f = self.make_preproc(workspace   = self.workspace,
                                                   input_path  = self.working_dir+os.sep+"imports",
@@ -858,7 +856,8 @@ class GlobalLogic:
             elif import_conditions['recursive_imports'] or import_conditions['read_test']:
 
                 log.info("Syntax check on imports.")
-                log.debug("Syntax check will run on imports folder after my importing logic. (recursive_imports or read_test)")
+                log.debug("Syntax check will run on imports folder after my importing logic. "
+                          "(recursive_imports or read_test)")
 
                 # After TPLPreprocessor finished its work - run Syntax Check on folder imports
                 # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
@@ -870,14 +869,15 @@ class GlobalLogic:
                     log.info("1/1 Syntax check solo file.")
                     log.debug("1/2 Imports was already created just checking syntax for active pattern. "
                               "(not read_test not recursive_imports not usual_imports)")
-                    # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+                    # If no addm version - it will use empty string as arg and run syntax check for all versions.
                     # In this condition syntax check will hope that imports are already in folder after previous runs.
                     syntax_check_f = self.make_syntax_check(self.working_dir,
                                                             disco_ver=tpl_version)
 
                 elif environment_condition == 'customer_tku':
                     log.warning("TPLint cannot check syntax for single tpl file!"
-                                "On other way it will check syntax for whole CORE folder and this can take too much time."
+                                "On other way it will check syntax for whole CORE "
+                                "folder and this can take too much time."
                                 "To check syntax please choose usual imports option, "
                                 "so TPLLint will run it only for 'imports' folder!")
 
@@ -909,8 +909,9 @@ class GlobalLogic:
                 log.info("DEV ADDM - files activating in mirrored filesystem.")
                 # Compose paths:
                 local_logic = LocalLogic()
-                addm_wd, test_path = local_logic.addm_compose_paths(dev_vm_path    = self.dev_vm_path,
-                                                                    pattern_folder = self.full_path_args['pattern_folder'])
+                addm_wd, test_path = \
+                    local_logic.addm_compose_paths(dev_vm_path    = self.dev_vm_path,
+                                                   pattern_folder = self.full_path_args['pattern_folder'])
             elif not addm_vm_condition:
                 log.info("Usual ADDM - files uploading: '/usr/tideway/TKU/Tpl_DEV/'")
                 addm_wd = '/usr/tideway/TKU/Tpl_DEV'
@@ -926,7 +927,7 @@ class GlobalLogic:
 
     def pattern_path_cond(self, addm_vm_condition, **logical_conditions):
         """
-        NOTE: addm_vm_condition - shoulbe be only in sep arg with ability to input None in var.
+        NOTE: addm_vm_condition - should be be only in sep arg with ability to input None in var.
 
         Based on operational conditions - decide which path to use for patterns zip and upload \ activate
 
@@ -967,8 +968,9 @@ class GlobalLogic:
         path_to_result = ''
         zip_mirror     = ''
         addm_zip_f     = ''
-        addm_zip       = ''
-        local_zip      = ''
+        # addm_zip       = ''
+        # local_zip      = ''
+        path_to_file      = ''
 
         # Set examples in __init__ docstrings:
         import_conditions     = logical_conditions['import_conditions']
@@ -1086,7 +1088,7 @@ class GlobalLogic:
                 log.debug("local_zip: "+str(local_zip))
 
             # Making function obj for ZIP
-            zip_remote = addm_result_folder+"/"+self.full_path_args['file_name']+ '.zip'
+            zip_remote = addm_result_folder+"/"+self.full_path_args['file_name'] + '.zip'
 
             addm_zip_f = self.make_zip(path_to_result=path_to_file,
                                        active_folder=self.full_path_args['file_name'],
@@ -1194,7 +1196,7 @@ class GlobalLogic:
         else:
             log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
 
-    def test_run_cond(self, test_conditions, addm_conditions, environment_condition):
+    def test_run_cond(self, test_conditions, addm_conditions):
         """
         Placeholder
 
@@ -1205,6 +1207,7 @@ class GlobalLogic:
         'pattern': 'MicrosoftSQLServer.tplpre'}]
 
 
+        :param addm_conditions:
         :param test_conditions:
         :return: function from make_test_run
         """
@@ -1288,7 +1291,8 @@ class GlobalLogic:
             tpl_imports.import_modules(conditions=condition_kwargs)
         return importer
 
-    def make_preproc(self, workspace, input_path, output_path, mode):
+    @staticmethod
+    def make_preproc(workspace, input_path, output_path, mode):
         """
         Closure for preproc function.
 
@@ -1305,7 +1309,8 @@ class GlobalLogic:
             preproc.tpl_preprocessor(workspace, input_path, output_path, mode)
         return pre_processing
 
-    def make_syntax_check(self, working_dir, disco_ver):
+    @staticmethod
+    def make_syntax_check(working_dir, disco_ver):
         """
         Closure for syntax check function.
 
@@ -1325,10 +1330,12 @@ class GlobalLogic:
 
         return syntax_check
 
-    def make_zip(self, path_to_result, active_folder, mode_single=None):
+    @staticmethod
+    def make_zip(path_to_result, active_folder, mode_single=None):
         """
         Closure for zipper function.
         Make zip for local folder!
+        :param mode_single:
         :type active_folder: str - folder where pattern lies and ready to zip
         :type path_to_result: str - path to zip with patterns
         :return: func zipper
@@ -1425,6 +1432,7 @@ class GlobalLogic:
     def make_test_run(self, tests_list, test_conditions):
         """
         Closure placeholder for tests run
+        :param test_conditions:
         :param tests_list: list
         :return:
         """

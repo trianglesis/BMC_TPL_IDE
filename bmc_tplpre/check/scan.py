@@ -7,6 +7,7 @@ Allows you to automate usual routine in pattern development.
 import logging
 log = logging.getLogger("check.logger")
 
+
 class AddmScan:
 
     def __init__(self, ssh):
@@ -132,7 +133,8 @@ class AddmScan:
             if result:
                 log.error("Scan has not been added:\n"+result)
 
-    def addm_scan_check(self, ssh, scan_id):
+    @staticmethod
+    def addm_scan_check(ssh, scan_id):
         """
         Check scan status.
         Return when scan is finished.
@@ -146,7 +148,8 @@ class AddmScan:
             if scan_id:
                 log.debug('scan_id')
 
-    def addm_scan_reasoning_on_off(self, ssh, reasoning_flag):
+    @staticmethod
+    def addm_scan_reasoning_on_off(ssh, reasoning_flag):
         """
         Start/Stop reasoning.
 

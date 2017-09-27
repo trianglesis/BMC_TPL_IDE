@@ -11,6 +11,7 @@ import re
 import logging
 log = logging.getLogger("check.logger")
 
+
 class TestRead:
 
     def __init__(self):
@@ -99,7 +100,7 @@ class TestRead:
                 return full_test_patterns_path
         else:
             log.warning("Cannot get test patterns. "
-                     "File test.py is not found or not readable in this path: "+str(working_dir))
+                        "File test.py is not found or not readable in this path: "+str(working_dir))
 
     def query_pattern_tests(self, working_dir):
         """
