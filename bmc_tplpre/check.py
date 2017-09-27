@@ -117,7 +117,7 @@ common.add_argument("-l",
                     help="Please set log level")  # info, quiet, warning, debug, output, error
 common.add_argument('--version',
                     action='version',
-                    version='%(prog)s 1.1.0')
+                    version='%(prog)s 1.1.1')
 
 known_args, extra_args = parser.parse_known_args()
 # print("Known args: "+str(known_args))

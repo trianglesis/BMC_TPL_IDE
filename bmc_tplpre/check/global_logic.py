@@ -46,8 +46,6 @@ class GlobalLogic:
         # TODO: assign most args here, no need to re-assign them each time in func().
         # Anyway this class should initialize with all available options or throw an exception
 
-
-
         # Get all available arguments in three sets based on its type:
         self.full_path_args, \
         self.operational_args, \
@@ -132,14 +130,14 @@ class GlobalLogic:
             if not self.working_dir:
                 log.error("File working dir is not extracted - I cannot proceed any function.")
 
-            log.debug("Full path arguments are set. It will be used to choose program working scenario.")
+            log.debug("Full path args OK.")
         else:
             log.critical("No full path arguments were set. I can do nothing with this.")
             msg = "There is no -full_path argument set or it cannot be parsed."
             raise Error(msg)
 
         assert isinstance(self.addm_args_set, dict)
-        if self.addm_args_set:
+        if self.addm_args_set['ssh_connection']:
             '''
             ADDM VM ARGS: {
                             "scan_hosts": false,
@@ -163,7 +161,7 @@ class GlobalLogic:
             log.debug("ADDM arguments are gathered from addm host. "
                       "It will be used to choose program working scenario.")
         else:
-            log.debug("ADDM arguments are gathered or wasn't set. Program will work on local mode.")
+            log.debug("ADDM arguments wasn't set. Local run.")
 
         assert isinstance(self.operational_args, dict)
 
@@ -195,7 +193,7 @@ class GlobalLogic:
                 log.debug("No imports will be run but test.py will be parsed to use it's arguments in further process.")
 
             else:
-                log.debug("Import arguments was not set: "+str(self.operational_args['imports']))
+                log.debug("No Imports: "+str(self.operational_args['imports']))
         else:
             log.debug("Import arguments was not set: "+str(self.operational_args['imports']))
             log.debug("Import arguments are set to False.")
@@ -213,13 +211,14 @@ class GlobalLogic:
             elif self.run_test and not self.related_tests:
                 log.debug("Will run test for this pattern.")
             else:
-                log.debug("No tests will run. "+str(self.operational_args['tests']))
+                log.debug("No tests: "+str(self.operational_args['tests']))
         else:
             log.debug("No test runs.")
             self.related_tests = False
             self.run_test      = False
 
-    def check_args_set(self, **args_from_cmd):
+    @staticmethod
+    def check_args_set(**args_from_cmd):
         """
         This will check args set in input.
         Based on set of args - it will compose another set of functions.
@@ -260,7 +259,6 @@ class GlobalLogic:
         return parse_args.gather_args(known_args=args_from_cmd['known_args'],
                                       extra_args=args_from_cmd['extra_args'])
 
-
     def make_function_set(self) -> object:
         """
         Output:
@@ -293,7 +291,6 @@ class GlobalLogic:
         conditional_functions, conditional_results = self.cond_args(addm_args_set    = self.addm_args_set,
                                                                     full_path_args   = self.full_path_args,
                                                                     operational_args = self.operational_args)
-
 
         return conditional_functions, conditional_results
 
@@ -354,10 +351,16 @@ class GlobalLogic:
         # Wipe TKU?
         tku_wipe_flag          = tku_operations['wipe_tku']
 
+        # Bad way to use logic here. WIll change after some re-thinking.
+        if not (test_conditions['run_test']
+                and test_conditions['related_tests']
+                and test_conditions['test_verbose']
+                and test_conditions['test_failfast']):
+            test_conditions = False
 
         # Set operational option for dev or customer:
         environment_condition = local_conditions['environment_condition']
-        log.debug("Program's global logic module operating in: '"+str(environment_condition)+"' mode.")
+        log.debug("Program is operating in: '"+str(environment_condition)+"' mode.")
 
         # This will be re-write if success:
         imports_f                   = False
@@ -380,70 +383,72 @@ class GlobalLogic:
         import_preproc_syntax_local = False
         tests_run                   = False
 
-        # import json
-        # from pprint import pformat
-        # print(json.dumps(addm_conditions, indent=4, ensure_ascii=False, default=pformat))
-        # print(json.dumps(local_conditions, indent=4, ensure_ascii=False, default=pformat))
-        # print(json.dumps(operational_args, indent=4, ensure_ascii=False, default=pformat))
-        # print(json.dumps(import_conditions, indent=4, ensure_ascii=False, default=pformat))
+        import json
+        from pprint import pformat
+        addm_conditions_sort = json.dumps(addm_conditions, indent=2, ensure_ascii=False, default=pformat)
+        local_conditions_sort = json.dumps(local_conditions, indent=2, ensure_ascii=False, default=pformat)
+        operational_args_sort = json.dumps(operational_args, indent=2, ensure_ascii=False, default=pformat)
 
         # TODO: Debug disable:
         # noinspection PyUnusedLocal
-        import_conditions_debug = dict(read_test         = False,
-                                       recursive_imports = True,
-                                       usual_imports     = False)
+        # import_conditions_debug = dict(read_test         = False,
+        #                                recursive_imports = True,
+        #                                usual_imports     = False)
 
         # noinspection PyUnusedLocal
-        addm_conditions_debug = dict(
-                                    disco_mode      = "record",
-                                    system_password = "system",
-                                    tpl_vers        = "1.13",
-                                    addm_prod       = "Bobblehat",
-                                    tpl_folder      = "tpl113",
-                                    addm_ver        = "11.1",
-                                    system_user     = "system",
-                                    # dev_vm_path     = "/usr/tideway/TKU",
-                                    dev_vm_path     = "/usr/tideway/TKU/Tpl_DEV/",
-                                    dev_vm_check    = True,
-                                    ssh_connection  = addm_conditions['ssh_connection'],
-                                    scan_hosts      = False
-                                    )
+        # addm_conditions_debug = dict(
+        #                              disco_mode      = "record",
+        #                              system_password = "system",
+        #                              tpl_vers        = "1.13",
+        #                              addm_prod       = "Bobblehat",
+        #                              tpl_folder      = "tpl113",
+        #                              addm_ver        = "11.1",
+        #                              system_user     = "system",
+        #                              # dev_vm_path     = "/usr/tideway/TKU",
+        #                              dev_vm_path     = "/usr/tideway/TKU/Tpl_DEV/",
+        #                              dev_vm_check    = True,
+        #                              ssh_connection  = addm_conditions['ssh_connection'],
+        #                              scan_hosts      = False
+        #                             )
 
         # addm_conditions = addm_conditions_debug
         # import_conditions = import_conditions_debug
 
         # Addm args for scan
         # TODO: What if declare each this if AS functional dict splitted for each situation?
-        if addm_conditions['scan_hosts'] and addm_conditions['disco_mode'] and addm_conditions['ssh_connection'] \
+
+        # TODO: Maybe better to use IFs in separate function jus for if, and declare modes. Or this can be over-minded?
+        if addm_conditions['scan_hosts'] \
+                and addm_conditions['disco_mode'] \
+                and addm_conditions['ssh_connection'] \
                 and not test_conditions:
 
-            log.info("ADDM Scan action.")
             log.debug("ADDM Scan args are present, current files will be uploaded to ADDM and Scan will be started.")
-
             upload_scan = True
 
-        elif not addm_conditions['disco_mode'] and not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder'] \
+        elif not addm_conditions['disco_mode'] \
+                and not addm_conditions['scan_hosts'] \
+                and addm_conditions['tpl_folder'] \
                 and addm_conditions['ssh_connection'] \
                 and not test_conditions:
 
-            log.info("No ADDM action. Local processing")
             log.debug("No ADDM Scan and discovery args are present. "
                       "Local processing with tpl version gathered from live ADDM.")
-
             local_proceed_for_addm = True
 
-        elif not addm_conditions['scan_hosts'] and addm_conditions['tpl_folder'] and addm_conditions['disco_mode'] \
+        elif not addm_conditions['scan_hosts'] \
+                and addm_conditions['tpl_folder'] \
+                and addm_conditions['disco_mode'] \
                 and addm_conditions['ssh_connection'] \
                 and not test_conditions:
 
-            log.info("ADDM Upload. No scan.")
             log.debug("ADDM Upload args are present, current files will be uploaded to ADDM. No scan.")
-
             upload_only = True
 
-        elif not addm_conditions['ssh_connection'] and not test_conditions:
+        elif not addm_conditions['ssh_connection'] \
+                and not test_conditions:
 
-            log.info("Local processing. No ADDM connection.")
+            log.debug("No ADDM addm_conditions['ssh_connection'] and no test_conditions")
             import_preproc_syntax_local = True
 
         elif addm_conditions['ssh_connection'] and test_conditions:
@@ -454,10 +459,9 @@ class GlobalLogic:
         else:
             log.info("This set of conditional arguments is not supported by my logic, Please read docs.")
 
-
-        # TODO: Maybe better to use IFs in separate function jus for if, and declare modes. Or this can be over-minded?
         if upload_scan:
-            log.info("Upload and scan.")
+            log.info("ADDM Scan action.")
+            log.debug("Operational mode: upload_scan")
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions  = local_conditions)
@@ -499,7 +503,9 @@ class GlobalLogic:
         # When I have no args for scan AND NO args for ADDM disco,
         # but have arg for tpl_vers - proceed files locally with that version.
         elif local_proceed_for_addm:
-            log.info("Local processing based on args from ADDM.")
+            log.info("No ADDM action. Local processing")
+            log.debug("Operational mode: local_proceed_for_addm")
+
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions  = local_conditions)
@@ -526,7 +532,8 @@ class GlobalLogic:
 
         # When I have NO args for Scan, but have args for ADDM status and disco - will start upload only.
         elif upload_only:
-            log.info("Upload only.")
+            log.info("ADDM Upload. No scan.")
+            log.debug("Operational mode: upload_only")
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
                                           local_conditions = local_conditions)
@@ -567,9 +574,10 @@ class GlobalLogic:
 
         # No addm args:
         elif import_preproc_syntax_local:
+            log.info("Local processing, no ADDM connection.")
+            log.debug("Operational mode: import_preproc_syntax_local")
             # I have no active connection to ADDM so I don't know about tpl version to generate and zip
             #  - SO I will just import, Preproc and check syntax
-
 
             # Import patterns if needed on mode set in import_conditions
             imports_f = self.imports_cond(import_conditions = import_conditions,
@@ -584,25 +592,26 @@ class GlobalLogic:
             syntax_check_f = self.syntax_cond(operational_args = operational_args,
                                               tpl_version       = '',
                                               local_conditions  = local_conditions)
-
             addm_zip         = 'There is no ADDM connection, program is running in local mode.'
             local_zip        = 'There is no ADDM connection, program is running in local mode.'
             addm_working_dir = 'There is no ADDM connection, program is running in local mode.'
 
         # When ADDM connection is present and test options used:
         elif tests_run:
+            log.info("Run tests for current pattern.")
+            log.debug("ADDM connection is present and test options used.")
             test_executor_f = self.test_run_cond(test_conditions=test_conditions,
                                                  addm_conditions=addm_conditions,
                                                  environment_condition=environment_condition)
 
         # I don't know:
         else:
-            log.warning("I can't understand the logic of current set of options. Printing "
-                        "\noperational_args: "+str(operational_args)+
-                        "\naddm_args_set: "+str(addm_args_set)+
-                        "\nfull_path_args: "+str(full_path_args))
+            log.warning("I can't understand the logic of current set of options. More in debug.")
+            log.debug("\naddm_conditions: "+addm_conditions_sort+
+                      "\nlocal_conditions: "+local_conditions_sort+
+                      "\noperational_args: "+operational_args_sort)
 
-        # TODO: Better update each key in correspond tree?
+        # TODO: IS IT Better update each key in correspond tree?
         conditional_functions = dict(imports_f       = imports_f,
                                      preproc_f       = preproc_f,
                                      syntax_check_f  = syntax_check_f,
@@ -647,7 +656,6 @@ class GlobalLogic:
         :return:
         """
 
-        assert isinstance(logical_conditions, dict)
         # Set examples in __init__ docstrings:
         import_conditions      = logical_conditions['import_conditions']
         environment_condition  = logical_conditions['local_conditions']['environment_condition']
@@ -661,70 +669,70 @@ class GlobalLogic:
         assert isinstance(local_conditions, dict)
 
         if isinstance(import_conditions, dict):
+
             if environment_condition == 'developer_tplpre':
+                log.debug("Running in 'developer_tplpre'.")
                 # NORMAL IMPORTS
                 if import_conditions['usual_imports']:
                     log.info("No extra imports. TPLPreprocessor will import.")
-
                     import_cond_dict = dict(parse_tests_patterns=False,
                                             parse_tests_queries=False,
                                             import_patterns=False)
-
                     return import_cond_dict
 
                 # RECURSIVE MODE:
-                elif import_conditions['recursive_imports'] and \
-                        not import_conditions['read_test']:
+                elif import_conditions['recursive_imports'] and not import_conditions['read_test']:
                     log.info("Run recursive imports mode.")
-
                     # Import tplpre's in recursive mode:
                     imports_f = self.make_imports(local_conditions = local_conditions,
                                                   extra_patterns   = None)
-
                     import_cond_dict = dict(parse_tests_patterns = False,
                                             parse_tests_queries  = False,
                                             import_patterns      = imports_f)
-
                     return import_cond_dict
 
                 # TESTs + RECURSIVE MODE:
                 elif import_conditions['read_test'] and import_conditions['recursive_imports']:
                     log.info("Run test+recursive imports mode.")
-
                     # Read test.py and extract query for future validation after addm scan and save model:
                     # Later if -T in arg - use this, if no - just ignore.
                     query_t = self.make_test_read_query()
-
                     # Read test.py and extract list of patterns from self.setupPatterns
                     # This is list of patterns I need to import from test.py.
                     imports_t = TestRead().import_pattern_tests(self.working_dir)
-
                     # Import tplpre's in recursive mode with extras from test.py:
                     imports_f = self.make_imports(local_conditions = local_conditions,
                                                   extra_patterns   = imports_t)
-
                     import_cond_dict = dict(parse_tests_patterns = False,
                                             parse_tests_queries  = query_t,
                                             import_patterns      = imports_f)
-
                     return import_cond_dict
 
                 # SOLO MODE:
-                elif not import_conditions['read_test'] and \
-                        not import_conditions['recursive_imports'] and \
-                        not import_conditions['usual_imports']:
-
+                elif not (import_conditions['read_test'] and import_conditions['recursive_imports'] and import_conditions['usual_imports']):
                     log.debug("There are no dev arguments found for Test read, or imports, or recursive imports.")
-                    log.info("Using as standalone tplpre.")
-
+                    log.info("Using as standalone pattern file tplpre.")
                     import_cond_dict = dict(parse_tests_patterns = False,
                                             parse_tests_queries  = False,
                                             import_patterns      = False)
 
                     return import_cond_dict
 
-            elif environment_condition == 'customer_tku':
+                else:
+                    log.debug("This 'import_conditions' is not operable: "+str(import_conditions))
 
+            elif environment_condition == 'developer_tpl':
+                log.debug("Running in 'developer_tpl' mode. No imports, tests can be used here.")
+                log.info("Using as standalone pattern file tpl.")
+                import_cond_dict = dict(parse_tests_patterns = False,
+                                        parse_tests_queries  = False,
+                                        import_patterns      = False)
+
+                return import_cond_dict
+
+            elif environment_condition == 'customer_tku':
+                log.debug("Running in 'customer_tku'.")
+                # TODO: Check imports and no imports args?
                 if import_conditions['recursive_imports']:
                     log.info("Imports logic working in customer mode.")
 
@@ -738,6 +746,8 @@ class GlobalLogic:
                     return import_cond_dict
                 else:
                     log.info("Working in customer mode, all other importing option will be ignored.")
+            else:
+                log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
         else:
             log.debug("No import options passed.")
 
@@ -767,7 +777,6 @@ class GlobalLogic:
         if environment_condition == 'developer_tplpre':
             if isinstance(import_conditions, dict):
                 # Preproc on NORMAL IMPORTS
-                # TODO: Make decisional functions and move all those decisions to them, so I can just call it and know wnat mode to run!
                 if import_conditions['usual_imports'] and not import_conditions['recursive_imports'] and \
                         not import_conditions['read_test']:
 
@@ -791,6 +800,9 @@ class GlobalLogic:
                                                   output_path = self.working_dir+os.sep+"imports",
                                                   mode        = "recursive_imports")
                     return preproc_f
+
+                else:
+                    log.debug("This 'import_conditions' is not operable: "+str(import_conditions))
             # SOLO mode:
             else:
                 log.info("TPLPreprocessor run on pattern without imports.")
@@ -806,6 +818,10 @@ class GlobalLogic:
         elif environment_condition == 'customer_tku':
             log.debug("Ignoring TPLPreprocessor on customer_tku environment execution. All files should be tpl.")
             return False
+        elif environment_condition == 'developer_tpl':
+            return False
+        else:
+            log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
 
     def syntax_cond(self, **logical_conditions):
         """
@@ -816,60 +832,20 @@ class GlobalLogic:
 
         By default - results printed in raw mode. Further execution continues.
 
-        {
-            "operational_args": {
-                "tku_operations": {
-                    "wipe_tku": false
-                },
-                "tests": false,
-                "imports": false
-            },
-            "tpl_version": "11.1",
-            "local_conditions": {
-                "STORAGE_t": "",
-                "buildscripts_t": "",
-                "tkn_sandbox_t": "",
-                "environment_condition": "customer_tku",
-                "full_path": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+\\BMCRemedyARSystem.tpl",
-                "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
-                "DBDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+",
-                "CORE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+",
-                "LOAD_BALANCER_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-LoadBalancer-2017-07-1-ADDM-11.1+",
-                "workspace": "D:\\TKU",
-                "MANAGEMENT_CONTROLLERS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+",
-                "tku_patterns_t": "",
-                "CLOUD_t": "",
-                "working_dir": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Core-2017-07-1-ADDM-11.1+",
-                "MIDDLEWAREDETAILS_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+",
-                "file_name": "BMCRemedyARSystem",
-                "BLADE_ENCLOSURE_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
-                "tkn_main_t": "",
-                "file_ext": "tpl",
-                "SYSTEM_t": "D:\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\TKU-System-2017-07-1-ADDM-11.1+"
-            }
-        }
-
         :param logical_conditions: set
         :return: func
         """
-        # TODO: Check condition groups
-        assert isinstance(logical_conditions, dict)
-
-        # DEBUG
-        # import json
-        # from pprint import pformat
-        # print(json.dumps(logical_conditions, indent=4, ensure_ascii=False, default=pformat))
 
         # Set examples in __init__ docstrings:
-        tpl_version       = logical_conditions['tpl_version']
-        import_conditions = logical_conditions['operational_args']['imports']
+        tpl_version           = logical_conditions['tpl_version']
+        import_conditions     = logical_conditions['operational_args']['imports']
         environment_condition = logical_conditions['local_conditions']['environment_condition']
 
         syntax_check_f = False
 
         if isinstance(import_conditions, dict):
+
             # Preproc on NORMAL IMPORTS
-            # TODO: Make decisional functions and move all those decisions to them, so I can just call it and know wnat mode to run!
             if import_conditions['usual_imports']:
 
                 log.info("Syntax check TPLPreprocessor output.")
@@ -889,21 +865,26 @@ class GlobalLogic:
                 syntax_check_f = self.make_syntax_check(self.working_dir+os.sep+"imports",
                                                         disco_ver=tpl_version)
 
-        else:
-            if environment_condition == 'developer_tplpre':
-                log.info("1/1 Syntax check solo file.")
-                log.debug("1/2 Imports was already created just checking syntax for active pattern. "
-                          "(not read_test not recursive_imports not usual_imports)")
-                # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
-                # In this condition syntax check will hope that imports are already in folder after previous runs.
-                syntax_check_f = self.make_syntax_check(self.working_dir,
-                                                        disco_ver=tpl_version)
+            else:
+                if environment_condition == 'developer_tplpre' or environment_condition == 'developer_tpl':
+                    log.info("1/1 Syntax check solo file.")
+                    log.debug("1/2 Imports was already created just checking syntax for active pattern. "
+                              "(not read_test not recursive_imports not usual_imports)")
+                    # If no addm version - it will use empty string as arg and run syntax check for all supported versions.
+                    # In this condition syntax check will hope that imports are already in folder after previous runs.
+                    syntax_check_f = self.make_syntax_check(self.working_dir,
+                                                            disco_ver=tpl_version)
 
-            elif environment_condition == 'customer_tku':
-                log.warning("TPLint cannot checl syntax for single tpl file!"
-                            "On other way it will check syntax for whole CORE folder and this can take muck time."
-                            "To check syntax please choose usual imports option, "
-                            "so TPLLint will run it only for 'imports' folder!")
+                elif environment_condition == 'customer_tku':
+                    log.warning("TPLint cannot check syntax for single tpl file!"
+                                "On other way it will check syntax for whole CORE folder and this can take too much time."
+                                "To check syntax please choose usual imports option, "
+                                "so TPLLint will run it only for 'imports' folder!")
+
+                else:
+                    log.debug("This mode is not operational: "+str(environment_condition))
+        else:
+            log.debug("This 'import_conditions' is not operable: "+str(import_conditions))
 
         return syntax_check_f
 
@@ -919,22 +900,27 @@ class GlobalLogic:
         addm_wd = ''
         test_path = ''
 
+        assert isinstance(addm_vm_condition, str)
+        assert isinstance(environment_condition, str)
+
         # Set examples in __init__ docstrings:
         if environment_condition == 'developer_tplpre':
             if addm_vm_condition:
                 log.info("DEV ADDM - files activating in mirrored filesystem.")
-
                 # Compose paths:
                 local_logic = LocalLogic()
                 addm_wd, test_path = local_logic.addm_compose_paths(dev_vm_path    = self.dev_vm_path,
                                                                     pattern_folder = self.full_path_args['pattern_folder'])
-
             elif not addm_vm_condition:
                 log.info("Usual ADDM - files uploading: '/usr/tideway/TKU/Tpl_DEV/'")
                 addm_wd = '/usr/tideway/TKU/Tpl_DEV'
+            else:
+                log.debug("This 'addm_vm_condition' is not operable: "+str(addm_vm_condition))
         elif environment_condition == 'customer_tku':
             addm_wd = '/usr/tideway/TKU/Tpl_DEV'
             log.debug("This is a customer mode, files will be uploaded to hardcoded path: "+str(addm_wd))
+        else:
+            log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
 
         return addm_wd, test_path
 
@@ -984,10 +970,8 @@ class GlobalLogic:
         addm_zip       = ''
         local_zip      = ''
 
-        assert isinstance(logical_conditions, dict)
         # Set examples in __init__ docstrings:
         import_conditions     = logical_conditions['import_conditions']
-
         addm_working_dir      = logical_conditions['addm_working_dir']
         local_conditions      = logical_conditions['local_conditions']
         environment_condition = local_conditions['environment_condition']
@@ -1004,16 +988,15 @@ class GlobalLogic:
 
             # Include 'imports' dir into the path:
             imports_dir = os.sep+"imports"+os.sep
-
             # Path of active pattern folder + imports dir + tpl<version dir>(or not is customer):
             # In dev mode I have pattern folder as name and result path to tpl after Preproc:
             if environment_condition == 'developer_tplpre':
                 path_to_result = self.full_path_args['working_dir']+imports_dir+self.tpl_folder+os.sep
-
             # In customer mode I have just only imports folder and pattern name for module naming:
             elif environment_condition == 'customer_tku':
                 path_to_result = self.full_path_args['working_dir']+imports_dir
-
+            else:
+                log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
 
             # Pattern remote path in ADDM FS:
             if addm_vm_condition:
@@ -1052,6 +1035,8 @@ class GlobalLogic:
                 # Rewrite addm zip path to hardcoded:
                 zip_mirror = addm_working_dir + "/" + local_conditions['file_name'] + '.zip'
                 addm_result_folder = 'Ignore HGFS on customer mode.'
+            else:
+                log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
 
             # Path to zip with import included:
             # path_to_zip: /usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/PatternName/imports/tpl113/PatternName.zip
@@ -1063,18 +1048,18 @@ class GlobalLogic:
 
         else:
             log.debug("Imports condition - NOT DEV IMPORTS to addm: Making zip with one active file.")
-
             # Path of active pattern to ZIP:
             # Path of active pattern folder + imports dir + tpl<version dir>(or not is customer):
             # In dev mode I have pattern folder as name and result path to tpl after Preproc:
             if environment_condition == 'developer_tplpre':
                 path_to_result = self.full_path_args['working_dir']+os.sep+self.tpl_folder+os.sep
                 path_to_file = path_to_result + os.sep + self.full_path_args['file_name']
-
             # In customer mode I have just only imports folder and pattern name for module naming:
             elif environment_condition == 'customer_tku':
                 path_to_result = self.full_path_args['working_dir']+os.sep
                 path_to_file = path_to_result + self.full_path_args['file_name']
+            else:
+                log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
 
             # Pattern remote path in ADDM FS:
             # addm_zip_path = addm_working_dir+"/"+self.tpl_folder+"/"+self.full_path_args['file_name']+".tpl"
@@ -1145,7 +1130,6 @@ class GlobalLogic:
         :return: upload_f, addm_activate_f
         """
 
-        assert isinstance(zipping_conditions, dict)
         # Set examples in __init__ docstrings:
         addm_conditions   = zipping_conditions['addm_conditions']
         addm_zip          = zipping_conditions['addm_zip']
@@ -1188,6 +1172,8 @@ class GlobalLogic:
                                                          system_user     = system_user,
                                                          system_password = system_password)
                 return upload_f, addm_activate_f
+            else:
+                log.debug("This 'addm_vm_condition' is not operable: "+str(addm_vm_condition))
 
         elif environment_condition == 'customer_tku':
             log.info("Uploading: '/usr/tideway/TKU/Tpl_DEV/'")
@@ -1202,6 +1188,11 @@ class GlobalLogic:
                                                      system_password = system_password)
 
             return upload_f, addm_activate_f
+
+        elif environment_condition == 'developer_tpl':
+            pass
+        else:
+            log.debug("This 'environment_condition' is not operable: "+str(environment_condition))
 
     def test_run_cond(self, test_conditions, addm_conditions, environment_condition):
         """
@@ -1226,8 +1217,6 @@ class GlobalLogic:
         addm_wd = addm_conditions['dev_vm_path']
         test_wd = self.working_dir+os.sep+'tests'
 
-
-        # TODO: Check if related test run also an initial test? Do we need it run, or better leave in separate modes?
         if test_conditions['run_test']:
             log.debug("Will run single test for active pattern: "+str(local_tests_path))
 
@@ -1252,6 +1241,8 @@ class GlobalLogic:
                 # log.debug("Test file path to run: "+str(remote_tests_path))
 
                     return test_executor_f
+            else:
+                log.warning("Path is not exist: "+str(local_tests_path))
 
         elif test_conditions['related_tests']:
             log.debug("Will run related tests where active pattern is used: "+str(self.full_path_args['file_name']))
@@ -1263,6 +1254,9 @@ class GlobalLogic:
                                                  test_conditions=test_conditions)
 
             return test_executor_f
+        else:
+            log.debug("This 'test_conditions' is not operable: "+str(test_conditions))
+
 
 # Functions to create closures for all related options:
 
@@ -1445,6 +1439,7 @@ class GlobalLogic:
 class Error(Exception):
     """Base class for exceptions in this module."""
     pass
+
 
 class InputError(Error):
     """Exception raised for errors in the input.

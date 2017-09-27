@@ -346,27 +346,26 @@ class AddmOperations:
         # Run test: 0 of 10 | - should be fixed, but I have no workaround.
         if progressbar:
             widgets = [
-                       'Run test: ',
-                       progressbar.SimpleProgress(),
-                       ' ', progressbar.Bar(),
-                       ' ', progressbar.Timer(),
-                       ' ', progressbar.Percentage(), ' ',
-                       ' ', progressbar.ETA(),
-                       ' Calculated ', progressbar.AdaptiveETA(),
-                       ' ', progressbar.AbsoluteETA(),
-                       '.'
-                       ]
+                       'Run test: ', progressbar.SimpleProgress(), ' ',
+                       progressbar.Percentage(), ' ',
+                       progressbar.Bar('#'),
+                       progressbar.Timer(), ' ',
+                       progressbar.ETA(), ' ',
+                       # ' Calculated ',
+                       # progressbar.AdaptiveETA(), ' ',
+                       progressbar.AbsoluteETA(),
+                       '.\n']
             bar = progressbar.ProgressBar(widgets=widgets,
                                           max_value=tests_len,
-                                          # redirect_stdout=True,
+                                          redirect_stdout=True,
                                           redirect_stderr=True
                                           )
         else:
             log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
             pass
 
-        log.info("-==== START RELATED TESTS EXECUTION ====-")
-        log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
+        log.info("-==== START TESTS EXECUTION ====-")
+        # TODO: log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
         log.info("Tests related to: "+str(tests_list[0]['pattern']))
         log.info("All tests len: "+str(tests_len))
 
@@ -392,7 +391,7 @@ class AddmOperations:
             """
 
             i = i + 1
-            log.info("Start test: " + str(test['rem_test_path']))
+            log.info("Start test: " + str(test['rem_test_path'])+test_args)
 
             pre_cmd = ". ~/.bash_profile;"
             wd_cmd = "cd "+test['rem_test_wd']+";"
@@ -416,19 +415,22 @@ class AddmOperations:
                     output = stdout.readlines()
                     raw_out = "".join(output)
                     log.debug("-==== DETAILED LOG ====-")
+                    sys.stdout.write('\b')
                     log.debug("\n"+raw_out)
                 # This pipe of for unittest output only:
                 if stderr:
                     output = stderr.readlines()
                     raw_out = "".join(output)
+                    sys.stdout.write('\b')
                     log.info("-==== UNITTEST LOG ====-")
                     log.info("\n\n"+raw_out)
             except:
                 log.error("Test execution command cannot run: "+str(cmd))
             # For debug:
-            if i == 3:
-                break
+            # TODO: WARNING - UNCOMMENT!
+            # if i == 3:
+            #     break
         # Close bar, do not forget to.
         if progressbar:
             bar.finish()
-        log.info("-==== END OF RELATED TESTS EXECUTION ====-")
+        log.info("-==== END OF TESTS EXECUTION ====-")

@@ -1,6 +1,9 @@
 ## 1.1.1 2017-09-27
 - Add args for test framework options: --verbose; --failfast - see help.
 - Add check for tplint module with reference to doc.
+- Fix logical behaviour for solo syntax check.
+- Add default stubs for any unsupported condition.
+- wipe extra log messages
 
 ## 1.1.0 2017-09-25
 - Fix bugs with solo uploading for Customer\Dev logics.

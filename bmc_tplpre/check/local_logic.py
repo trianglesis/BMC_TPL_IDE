@@ -315,7 +315,7 @@ class LocalLogic:
         pattern_test_t           = ''
 
         if os.path.exists(full_file_path):
-            log.debug("-full_file_path is: " + full_file_path)
+            # log.debug("-full_file_path is: " + full_file_path)
 
             # Checking for different paths logic
             dev_path_check = self.dev_path_re.match(full_file_path)
@@ -327,7 +327,7 @@ class LocalLogic:
                 # Check full arguments:
                 path_parse = self.path_parse_re.match(full_file_path)
                 if path_parse:
-                    log.debug("Parsing path for options.")
+                    # log.debug("Parsing path for options.")
 
                     # This should be always extracted if above checks passed:
                     workspace      = path_parse.group('workspace')
@@ -393,7 +393,7 @@ class LocalLogic:
 
                     # Check if this is a tpl file from: PatternFolder\tpl110\PatternName.tpl
                     elif re.match('tpl', file_ext):
-                        log.info("File extension matched tpl pattern. DEV in progress...")
+                        log.info("File extension matched tpl pattern.")
 
                         path_parse     = self.tpl_path_parse_re.match(full_file_path)
                         pattern_folder = path_parse.group('pattern_folder')
@@ -430,9 +430,6 @@ class LocalLogic:
                                          tkn_sandbox_t            = tkn_sandbox_t,
                                          pattern_test_t           = pattern_test_t
                                         )
-                        log.debug("Arguments from file path: " + str(args_dict))
-                        log.debug("TPL: File extension mach .tpl and dev_path_check is found, "
-                                  "options will be set based on it's path.")
                         return args_dict
 
                     # Check if this is a dml file from: ..\tests\dml\DML_DATA.dml
@@ -566,7 +563,7 @@ class LocalLogic:
                 # Check full arguments:
                 tku_pack_parse = self.tku_package_re.match(full_file_path)
                 if tku_pack_parse:
-                    log.debug("Parsing path for options.")
+                    # log.debug("Parsing path for options.")
 
                     # Paths to TKU Update package tree:
                     working_dir          = tku_pack_parse.group('working_dir')

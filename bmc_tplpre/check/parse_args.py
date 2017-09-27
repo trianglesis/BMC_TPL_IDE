@@ -133,9 +133,6 @@ class ArgsParse:
                         log.debug("Development path is found on this ADDM and "
                                   "will be used for upload patterns and tests.")
 
-        else:
-            log.info("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
-
         addm_args_set = dict(ssh_connection  = ssh,
                              disco_mode      = disco,
                              system_password = system_password,
@@ -220,8 +217,6 @@ class ArgsParse:
                     # raise
             else:
                 log.error("There is no ADDM user and password found in args! I cannot connect ADDM.")
-        else:
-            log.debug("There is no ADDM IP in args!")
 
         return ssh
 
@@ -237,8 +232,6 @@ class ArgsParse:
             if check:
                 disco_mode = disco_mode  # Discovery mode is:         standard
                 log.info("Discovery mode is: " + str(disco_mode))
-        else:
-            log.debug("Discovery mode not set or not used.")
 
         return disco_mode
 
@@ -261,7 +254,7 @@ class ArgsParse:
                 log.warning("Host list for scan should consist of IPs.")
         else:
             if host_list != 'None':
-                log.debug("Please specify some hosts to scan for ADDM!")
+                pass
             else:
                 log.info("Pattern upload only.")
 
@@ -300,41 +293,33 @@ class ArgsParse:
         if known_args.read_test and known_args.recursive_import:
             oper_args_set['imports']['recursive_imports'] = True
             oper_args_set['imports']['read_test'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.usual_import and not known_args.recursive_import:
             oper_args_set['imports']['usual_imports'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.recursive_import and not known_args.usual_import:
             oper_args_set['imports']['recursive_imports'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.usual_import and known_args.recursive_import:
             log.warning("You cannot add two import scenarios in one run. Please choose only one. "
                         "But I will run usual_imports by default.")
             oper_args_set['imports']['usual_imports'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.related_tests and not known_args.run_test:
             log.info("Related test run option. I will search for all related "
                      "tests which use current active pattern and run them.")
             oper_args_set['tests']['related_tests'] = True
-            oper_args_set['imports'] = False
 
         elif known_args.run_test and not known_args.related_tests:
             log.info("Single test run options. I will run only test for current pattern in its tests folder.")
             oper_args_set['tests']['run_test'] = True
-            oper_args_set['imports'] = False
 
         else:
             # When situation is not implemented - use false by default.
-            log.warning("Operation mode cannot be set from current arguments.")
+            log.info("Operation mode is simple, no imports, no tests.")
 
         if known_args.wipe_tku:
             oper_args_set['tku_operations']['wipe_tku'] = True
-        else:
-            oper_args_set['tku_operations']['wipe_tku'] = False
 
         if known_args.test_verbose:
             oper_args_set['tests']['test_verbose'] = True
