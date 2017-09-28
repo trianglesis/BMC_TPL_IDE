@@ -94,44 +94,53 @@ class AddmScan:
         :param dir_label: Name of folder where pattern executed.
         """
 
+        # To add as option.
+        scan_log_lvl = "debug"
+
+        disco_control = "/usr/tideway/bin/tw_disco_control -u " + system_user + " -p " + system_password
+        scan_control = "/usr/tideway/bin/tw_scan_control -u " + system_user + " -p " + system_password
+        add_scan = " --add --label=" + dir_label + " --loglevel=" + scan_log_lvl + " --list " + host_list
+
         if disco_mode:
-            stdin, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_disco_control"
-                                                               " -u " + system_user +
-                                                               " -p " + system_password +
-                                                               " --"+disco_mode)
+            _, stdout, stderr = self.ssh_cons.exec_command(disco_control+" --"+disco_mode)
+            log.debug("Disco: "+str(disco_control+" --"+disco_mode))
         else:
-            stdin, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_disco_control"
-                                                               " -u " + system_user +
-                                                               " -p " + system_password +
-                                                               " --standard")
+            _, stdout, stderr = self.ssh_cons.exec_command(disco_control+" --standard")
+            log.debug("Disco: "+str(disco_control+" --standard"))
 
+        # TODO: Add some parse:
         if stdout:
-            result = stdout.readlines()
-            log.debug("Discovery mode is: " + result[0]+" Discovery status:" + result[1])
-            log.info("Discovery started")
-
-        log.info("Host(s) to scan: " + host_list)
-        log.info("Scan named as: " + dir_label)
-
-        self.ssh_cons.exec_command("/usr/tideway/bin/tw_scan_control"
-                                   " -u " + system_user +
-                                   " -p " + system_password +
-                                   " --start")
-        stdin, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_scan_control"
-                                                           " -u " + system_user +
-                                                           " -p " + system_password +
-                                                           " --add"
-                                                           " --label="+dir_label+""
-                                                           " --loglevel=debug"
-                                                           " --list "+host_list)
-        if stdout:
-            result = stdout.read().decode()
-            if result:
-                log.info("Scan been added:\n"+result)
+            output = stdout.readlines()
+            raw_out = "".join(output)
+            if raw_out:
+                log.debug("Discovery mode is: " + raw_out)
+                log.info("Discovery started")
         if stderr:
-            result = stdout.read().decode()
-            if result:
-                log.error("Scan has not been added:\n"+result)
+            output = stderr.readlines()
+            raw_out = "".join(output)
+            if raw_out:
+                log.error("tw_disco_control error: "+str(raw_out))
+
+        if host_list:
+            log.info("Host(s) to scan: " + host_list)
+            log.info("Scan named as: " + dir_label)
+
+            log.debug("Run: "+str(scan_control+" --start"))
+            self.ssh_cons.exec_command(scan_control+" --start")
+
+            log.debug("Run: "+str(scan_control + add_scan))
+            stdin, stdout, stderr = self.ssh_cons.exec_command(scan_control + add_scan)
+            # TODO: Add some parse:
+            if stdout:
+                output = stdout.readlines()
+                raw_out = "".join(output)
+                if raw_out:
+                    log.info("Scan been added:\n"+raw_out)
+            if stderr:
+                output = stdout.readlines()
+                raw_out = "".join(output)
+                if raw_out:
+                    log.error("Scan has not been added:\n"+raw_out)
 
     @staticmethod
     def addm_scan_check(ssh, scan_id):

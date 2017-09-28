@@ -1,3 +1,9 @@
+## 1.1.2 2017-09-28
+- Additional fixes for logic;
+- Simplifying function calls;
+- Working on code cleanup;
+
+
 ## 1.1.1 2017-09-27
 - Add args for test framework options: --verbose; --failfast - see help.
 - Add check for tplint module with reference to doc.

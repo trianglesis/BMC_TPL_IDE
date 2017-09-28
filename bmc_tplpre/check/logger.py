@@ -29,7 +29,7 @@ def log_define(args):
         log_path = path_args['working_dir']
     except TypeError as e:
         log_path = ""
-        print("Working dir cannot be obtained. WIll save log to module folder in dir 'ERROR'.")
+        print("Working dir cannot be obtained. WIll save log to module folder: bmc_tplpre/")
         print(e)
 
     if log_lvl:

@@ -11,6 +11,7 @@ import os
 import shutil
 import stat
 import logging
+from check.local_logic import LocalLogic
 
 log = logging.getLogger("check.logger")
 
@@ -67,7 +68,7 @@ class TPLimports:
 
             Example:
                 conditions: {
-                    "local_conditions": {
+                    "local_cond": {
                         "BLADE_ENCLOSURE_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
                         TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
                         "buildscripts_t": "",
@@ -81,7 +82,7 @@ class TPLimports:
                         "CLOUD_t": "",
                         "STORAGE_t": "",
                         "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
-                        "environment_condition": "customer_tku",
+                        "env_cond": "customer_tku",
                         "SYSTEM_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
                         TKU-System-2017-07-1-ADDM-11.1+",
                         # "SupportingFiles_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
@@ -124,47 +125,24 @@ class TPLimports:
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import\s+\S+\s+\d+')
         self.pattern_module_name_r = re.compile('tpl\s+(?:\$\$TPLVERSION\$\$|\d+\.\d+)\s+module\s+(\S+);')
 
-    def import_modules(self, **conditions):
+    def import_modules(self, full_path_args, extra_patterns):
         """
         Import modules.
         Based on conditional args it can import tpl for customer or tplre for dev.
         Get full paths to each extra folders from args.
+        :param extra_patterns:
+        :type full_path_args: dict
 
-        :param conditions: set - this is set of options from full_paths parse. Example above.
-        :return: nothing - just execute imports.
         """
 
-        local_cond = conditions['conditions']['local_conditions']
-        env_mode   = conditions['conditions']['local_conditions']['environment_condition']
+        local_cond = full_path_args
+        env_mode   = full_path_args['env_cond']
 
         log.debug("Step 1. Starting import functions. Read pattern: "+str(local_cond['file_name']))
 
         # Get extra folders from previous parse in full_path_args.
-        extra_folders = []
-        extra_folders_keys = ['BLADE_ENCLOSURE_t',
-                              'CLOUD_t',
-                              'CORE_t',
-                              'DBDETAILS_t',
-                              'LOAD_BALANCER_t',
-                              'MANAGEMENT_CONTROLLERS_t',
-                              'MIDDLEWAREDETAILS_t',
-                              'SYSTEM_t',
-                              'STORAGE_t']
-
-        # Extracting matched folders from 'local_conditions':
-        # Making list of all possible pattern paths and then search through them all for imports.
-        for folder_key in extra_folders_keys:
-            if local_cond[folder_key]:
-                extra_folder = local_cond[folder_key]
-                # Add only unique folders:
-                if extra_folder not in extra_folders:
-                    # To be sure I can read files in folder - check folder existence.
-                    if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
-                        extra_folders.append(extra_folder)
-                    else:
-                        log.warning("Step 1.1 This path is not exist: "+str(extra_folder))
-            else:
-                log.info("Be aware that this folder key is not exist: "+str(folder_key))
+        local_logic = LocalLogic()
+        extra_folders = local_logic.check_extra_folders(local_cond)
 
         current_modules_name = []  # Modules from KNOWN and FOUND and CURRENT.
         find_importing_modules = []  # Modules which I should found.
@@ -173,9 +151,6 @@ class TPLimports:
 
         # This mode executes only when I working in tplre development paths:
         if env_mode == 'developer_tplpre':
-
-            # Arg for tplre search when test.py read:
-            extra_patterns = conditions['conditions']['extra_patterns']
 
             # Step 1 - Find pattern files in current pattern folder:
             pattern_path_list = self.list_folder(self.working_dir)
@@ -334,6 +309,8 @@ class TPLimports:
                     read_file = f.read(2024)  # About 60+ lines from the beginning of pattern
 
                 pattern_import = self.pattern_import_all_r.findall(read_file)
+
+                # Check imports for pattern we found to add it to next search:
                 current_pattern_module = self.pattern_module_name_r.findall(read_file)
 
                 # When any imports were found in pattern file - add each to list and later find them:

@@ -160,7 +160,7 @@ class SyntaxCheck:
                         "https://github.com/trianglesis/BMC_TPL_IDE#syntax-check")
             # noinspection PyPep8
             log.debug("Those paths expected: "
-                      "\ntplint_exe_path - "+str(tplint_exe_path)+
+                      "\ntplint_exe_path - "+str(tplint_exe_path) +
                       "\ntplint_tax_path - "+str(tplint_tax_path))
 
         return syntax_passed

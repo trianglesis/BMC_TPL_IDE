@@ -84,23 +84,12 @@ class AddmOperations:
             log.info("Patterns upload:" + "PASSED!")
         except:
             log.error("Something goes wrong with sftp connection or zip file! Check if file path or folder exists")
+            raise FileNotFoundError
 
         if zip_on_local:
-            file_check = self.check_file_pattern(local_file=zip_on_local, remote_file=zip_on_remote)
-            if file_check:
-                log.debug("File was found on ADDM file system.")
-            else:
-                log.error("File was found or not uploaded on ADDM file system.")
-                raise FileNotFoundError
+            self.file_check(zip_on_local, zip_on_remote)
         else:
-            file_check = self.check_file_pattern(local_file=zip_on_remote, remote_file=zip_on_local)
-            if file_check:
-                log.debug("File was found on ADDM file system.")
-            else:
-                log.error("File was found or not uploaded on ADDM file system.")
-                raise FileNotFoundError
-
-        # return file_check
+            self.file_check(zip_on_remote, zip_on_local)
 
     # noinspection PyBroadException
     def activate_knowledge(self, zip_path, module_name, system_user, system_password):
@@ -129,43 +118,28 @@ class AddmOperations:
         :param zip_path: Path to zip with patterns uploaded or mirrored
         :param module_name: Name of pattern folder
         """
-
-        # progressbar = False
-        bar = ''
-        if progressbar:
-            progressbar.streams.flush()
-            progressbar.streams.wrap_stdout()
-            widgets = [progressbar.AnimatedMarker(),
-                       ' Activating knowledge update. ',
-                       progressbar.Timer()]
-            bar = progressbar.ProgressBar(widgets=widgets,
-                                          max_value=progressbar.UnknownLength,
-                                          redirect_stdout=True,
-                                          redirect_stderr=True)
-        else:
-            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
-            pass
+        result_out = []
 
         uploaded_activated = False  # 1 knowledge upload activated
         log.debug("Activate local zip: ensure we have rights of 777 on this file: "+str(zip_path))
         log.info("Installing and activating modules.")
 
         # Lines will be collected in list:
-        result_out = []
-        spinner = itertools.cycle(['-', '/', '|', '\\'])
+        tw_pattern_management = "/usr/tideway/bin/tw_pattern_management -u " + system_user + " -p " + system_password
+        install_activ_progress = " --show-progress " + " --install-activate "+str(zip_path)
 
         try:
             self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
             try:
-                _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management"
-                                                               " -u " + system_user +
-                                                               " -p " + system_password +
-                                                               " --show-progress " +
-                                                               " --install-activate "+str(zip_path))
+                _, stdout, stderr = self.ssh_cons.exec_command(tw_pattern_management + install_activ_progress)
+                # Show progress with fancy progressbar:
+                msg = ' Activating knowledge update. '
+                baring = self.progress_bar(msg)
+
                 # Show progress with fancy progressbar:
                 if progressbar:
                     while stdout is not None:
-                        bar.update()
+                        baring.update()
                         out = stdout.readlines()
                         raw_out = "".join(out)
                         result_out.append(raw_out.rstrip('\r'))
@@ -175,7 +149,7 @@ class AddmOperations:
                 # There is no progressbar - show just simple spinner:
                 else:
                     while stdout is not None:
-                        sys.stdout.write(next(spinner))
+                        sys.stdout.write(next(baring))
                         sys.stdout.flush()
                         sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
 
@@ -189,28 +163,28 @@ class AddmOperations:
                         time.sleep(0.1)
                 # Final result:
                 result = ''.join(result_out)
+
                 if result:
                     item = self.upload_num_item.findall(result)
                     if self.upload_activated_check.findall(result):
                         if progressbar:
-                            bar.finish()
+                            baring.finish()
                         uploaded_activated = True
                         log.info("Upload activating: " + "PASSED!")
                         log.info("Upload successfully. Module: " + str(module_name) +
                                  " as "+str(item[0]))
                     else:
                         if progressbar:
-                            bar.finish()
+                            baring.finish()
                         log.critical("Pattern activation run with errors or warnings!")
                         log.critical("Detailed description from ADDM: \n"+result)
             except:
-                log.warning("Activation tw_pattern_management command cannot run!")
+                raise Exception("Activation tw_pattern_management command cannot run!")
         except:
-            log.warning("Command 'chmod 777' cannot run on path: "+str(zip_path))
+            raise Exception("Command 'chmod 777' cannot run on path: "+str(zip_path))
 
         return uploaded_activated
 
-    # noinspection PyBroadException
     def wipe_tku(self, system_user, system_password):
         """
         IDEA - run deactivate and removals if requested - before activate new.
@@ -219,40 +193,26 @@ class AddmOperations:
 
         :return:
         """
-
-        bar = ''
-        # progressbar = False
-        if progressbar:
-            progressbar.streams.flush()
-            progressbar.streams.wrap_stdout()
-            widgets = [progressbar.AnimatedMarker(),
-                       ' Wiping TKU. ',
-                       progressbar.Timer()]
-            bar = progressbar.ProgressBar(widgets=widgets,
-                                          max_value=progressbar.UnknownLength,
-                                          redirect_stdout=True,
-                                          redirect_stderr=True)
-        else:
-            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
-            pass
+        result_out = []
 
         log.debug("Func to deactivate previous or old TKU updates.")
         is_tkn_wiped = False
         log.info("CAUTION: Wiping all installed TKU in addm!")
 
-        # Lines will be collected in list:
-        result_out = []
-        spinner = itertools.cycle(['-', '/', '|', '\\'])
+        tw_pattern_management = "/usr/tideway/bin/tw_pattern_management -u " + system_user + " -p " + system_password
+        remove_all_force = " --remove-all --force"
 
         try:
-            _, stdout, stderr = self.ssh_cons.exec_command("/usr/tideway/bin/tw_pattern_management"
-                                                           " -u " + system_user +
-                                                           " -p " + system_password +
-                                                           " --remove-all --force")
+            _, stdout, stderr = self.ssh_cons.exec_command(tw_pattern_management + remove_all_force)
+
+            # Show progress with fancy progressbar:
+            msg = " Wiping all pattern modules. "
+            baring = self.progress_bar(msg)
+
             # Show progress with fancy progressbar:
             if progressbar:
                 while stdout is not None:
-                    bar.update()
+                    baring.update()
                     out = stdout.readlines()
                     raw_out = "".join(out)
                     result_out.append(raw_out.rstrip('\r'))
@@ -262,7 +222,7 @@ class AddmOperations:
             # There is no progressbar - show just simple spinner:
             else:
                 while stdout is not None:
-                    sys.stdout.write(next(spinner))
+                    sys.stdout.write(next(baring))
                     sys.stdout.flush()
                     sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
 
@@ -273,21 +233,28 @@ class AddmOperations:
                         sys.stdout.flush()  # Remove spinner from output.
                         break
                     time.sleep(0.1)
+
             # Final result:
             result = ''.join(result_out)
             if "Removed all pattern modules" in result:
                 # Close bar, do not forget to.
                 if progressbar:
-                    bar.finish()
+                    baring.finish()
                 is_tkn_wiped = True
                 log.info("All TKU modules were wiped!")
+            elif "No pattern modules to remove" in result:
+                # Close bar, do not forget to.
+                if progressbar:
+                    baring.finish()
+                is_tkn_wiped = True
+                log.info("No pattern modules to remove.")
             else:
                 # Close bar, do not forget to.
                 if progressbar:
-                    bar.finish()
+                    baring.finish()
                 log.warning("Command 'tw_pattern_management --remove-all --force' cannot run:\n"+str(result))
         except:
-            log.warning("Wiping tw_pattern_management command cannot run!")
+            raise Exception("Wiping tw_pattern_management command cannot run!")
 
         return is_tkn_wiped
 
@@ -332,19 +299,19 @@ class AddmOperations:
         return file_ok
 
     # noinspection PyBroadException
-    def tests_executor(self, tests_list, test_conditions):
+    def tests_executor(self, tests_list, tst_cond):
         """
         Placeholder for tests run
-        :param test_conditions:
+        :param tst_cond:
         :param tests_list: list
         :return:
         """
 
         test_verbose_arg = ''
         test_failfast_arg = ''
-        if test_conditions['test_verbose']:
+        if tst_cond['test_verbose']:
             test_verbose_arg = ' --failfast'
-        if test_conditions['test_failfast']:
+        if tst_cond['test_failfast']:
             test_failfast_arg = ' --verbose'
         test_args = test_verbose_arg+test_failfast_arg
 
@@ -372,26 +339,24 @@ class AddmOperations:
             pass
 
         log.info("-==== START TESTS EXECUTION ====-")
+
         # TODO: log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
         log.info("Tests related to: "+str(tests_list[0]['pattern']))
         log.info("All tests len: "+str(tests_len))
 
         for i, test in enumerate(tests_list):
             """
-                        
             export TKN_MAIN=/usr/tideway/TKU/addm/tkn_main/
             export TKN_CORE=$TKN_MAIN/tku_patterns/CORE
             export PYTHONPATH=$PYTHONPATH:$TKN_MAIN/python
-
-            Local run: ?
             """
-
             i = i + 1
             log.info("Start test: " + str(test['rem_test_path'])+test_args)
 
             pre_cmd = ". ~/.bash_profile;"
+
             wd_cmd = "cd "+test['rem_test_wd']+";"
-            # TODO: Add verbose and failfast as args:
+
             cmd_test = "/usr/tideway/bin/python -u "+test['rem_test_path']+test_args
             cmd = pre_cmd + wd_cmd + cmd_test
             log.debug("Run: "+str(cmd))
@@ -421,6 +386,7 @@ class AddmOperations:
                     log.info("-==== UNITTEST LOG ====-")
                     log.info("\n\n"+raw_out)
             except:
+                # Not raise - see what happen with others:
                 log.error("Test execution command cannot run: "+str(cmd))
             # For debug:
             # TODO: WARNING - UNCOMMENT!
@@ -430,3 +396,40 @@ class AddmOperations:
         if progressbar:
             bar.finish()
         log.info("-==== END OF TESTS EXECUTION ====-")
+
+    @staticmethod
+    def progress_bar(msg):
+        """
+
+        :param msg:
+        :return:
+        """
+        # progressbar = False
+        if progressbar:
+            progressbar.streams.flush()
+            progressbar.streams.wrap_stdout()
+            widgets = [progressbar.AnimatedMarker(),
+                       msg,
+                       progressbar.Timer()]
+            bar = progressbar.ProgressBar(widgets=widgets,
+                                          max_value=progressbar.UnknownLength,
+                                          redirect_stdout=True,
+                                          redirect_stderr=True)
+            return bar
+
+        else:
+            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
+            spinner = itertools.cycle(['-', '/', '|', '\\'])
+            return spinner
+
+    def file_check(self, zip_on_local, zip_on_remote):
+        """
+
+        :return:
+        """
+        file_check = self.check_file_pattern(local_file=zip_on_local, remote_file=zip_on_remote)
+        if file_check:
+            log.debug("File was found on ADDM file system.")
+        else:
+            log.error("File was found or not uploaded on ADDM file system.")
+            raise FileNotFoundError

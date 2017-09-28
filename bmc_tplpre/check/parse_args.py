@@ -35,12 +35,12 @@ class ArgsParse:
         """
 
         # Args dedicated to local paths from full path extracted:
-        local_arguments_set = self.full_path_parse(known_args.full_path)
-        assert isinstance(local_arguments_set, dict)
+        local_args_set = self.full_path_parse(known_args.full_path)
+        assert isinstance(local_args_set, dict)
 
         # Args dedicated to imports logic from args parse:
-        operational_args_set = self.oper_mode(known_args)
-        assert isinstance(operational_args_set, dict)
+        oper_args_set = self.oper_mode(known_args)
+        assert isinstance(oper_args_set, dict)
 
         # Args dedicated to addm actions - gathered from addm ssh connection if available:
         addm_args_set = self.addm_args(known_args)
@@ -49,7 +49,7 @@ class ArgsParse:
         if extra_args:
             log.warning("HEY, you forgot some arguments:" + str(extra_args))
 
-        return local_arguments_set, operational_args_set, addm_args_set
+        return local_args_set, oper_args_set, addm_args_set
 
     def addm_args(self, known_args):
         """
@@ -199,7 +199,7 @@ class ArgsParse:
             else:
                 log.error("Your ADDM password is empty!")
 
-            log.info("INFO: ADDM host is: " + addm_host)
+            log.info("ADDM host: " + addm_host)
             # Open SSH session if ADDM IP and USER and PASSWORD are present
             if user and password:
                 log.debug("Trying to connect ADDM " + addm_host + " via SSH as user: " + user)
@@ -231,7 +231,7 @@ class ArgsParse:
             check = self.disco_mode_check.match(disco_mode)
             if check:
                 disco_mode = disco_mode  # Discovery mode is:         standard
-                log.info("Discovery mode is: " + str(disco_mode))
+                log.info("Discovery mode: " + str(disco_mode))
 
         return disco_mode
 
@@ -268,11 +268,22 @@ class ArgsParse:
         If imports used - than no test run!
         I test run used - than no imports!
 
-        {'run_test': True,
-        'related_tests': False,
-        'usual_imports': False,
-        'read_test': False,
-        'recursive_imports': False}
+        {
+            "tests": {
+                "related_tests": false,
+                "test_failfast": false,
+                "run_test": false,
+                "test_verbose": false
+            },
+            "imports": {
+                "recursive_imports": false,
+                "usual_imports": false,
+                "read_test": false
+            },
+            "tku_oper": {
+                "wipe_tku": false
+            }
+        }
 
         :param known_args:
         :return: dict of Bool actions
@@ -287,7 +298,7 @@ class ArgsParse:
                                           test_verbose=False,
                                           test_failfast=False
                                           ),
-                             tku_operations = dict(wipe_tku=False)
+                             tku_oper = dict(wipe_tku=False)
                              )
 
         if known_args.read_test and known_args.recursive_import:
@@ -319,7 +330,7 @@ class ArgsParse:
             log.info("Operation mode is simple, no imports, no tests.")
 
         if known_args.wipe_tku:
-            oper_args_set['tku_operations']['wipe_tku'] = True
+            oper_args_set['tku_oper']['wipe_tku'] = True
 
         if known_args.test_verbose:
             oper_args_set['tests']['test_verbose'] = True

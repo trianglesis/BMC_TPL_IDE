@@ -363,7 +363,7 @@ class LocalLogic:
 
                         # Set of arguments, conditional options and paths to pattern libs:
                         args_dict = dict(
-                                         environment_condition    = 'developer_tplpre',
+                                         env_cond                 = 'developer_tplpre',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -406,7 +406,7 @@ class LocalLogic:
                         pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
 
                         args_dict = dict(
-                                         environment_condition    = 'developer_tpl',
+                                         env_cond                 = 'developer_tpl',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -436,7 +436,7 @@ class LocalLogic:
                         # TODO: Add pattern folder based on regex path to dml
                         log.debug("This is DML file.")
                         args_dict = dict(
-                                         environment_condition    = 'developer_dml',
+                                         env_cond    = 'developer_dml',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -470,7 +470,7 @@ class LocalLogic:
                         # TODO: Add pattern folder based on regex path to model
                         log.debug("This is model file.")
                         args_dict = dict(
-                                         environment_condition    = 'developer_model',
+                                         env_cond    = 'developer_model',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -503,7 +503,7 @@ class LocalLogic:
                         # TODO: Add pattern folder based on regex path to model
                         log.debug("This is py file. Will check if this is a 'test.py'")
                         args_dict = dict(
-                                         environment_condition    = 'developer_py',
+                                         env_cond    = 'developer_py',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -676,7 +676,7 @@ class LocalLogic:
                     # Compose arguments based on previous extractions:
                     # noinspection PyTypeChecker
                     args_dict = dict(
-                             environment_condition    = 'customer_tku',
+                             env_cond    = 'customer_tku',
                              workspace                = workspace,
                              pattern_folder           = pattern_folder,
                              file_name                = file_name,
@@ -751,7 +751,7 @@ class LocalLogic:
                                   "To run TPLPreproc or Syntax check - p4_path should be configured.")
                         # Set of arguments, conditional options and paths to pattern libs:
                         args_dict = dict(
-                                         environment_condition    = 'developer_tplpre',
+                                         env_cond    = 'developer_tplpre',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -790,7 +790,7 @@ class LocalLogic:
                                       "Upload to ADDM and scan could be started if arguments was set.")
                             # Set of arguments, conditional options and paths to pattern libs:
                             args_dict = dict(
-                                             environment_condition    = 'developer_tplpre',
+                                             env_cond    = 'developer_tplpre',
                                              workspace                = workspace,
                                              pattern_folder           = pattern_folder,
                                              file_name                = file_name,
@@ -942,10 +942,9 @@ class LocalLogic:
         :return:
         """
 
-        # TODO: ../TKU/.. folder should somehow documented as really MUST HAVE parameter in any ENV.
-        # TODO: Why this function is in the local logic? move to parse args or AddmOperations, maybe.
         dev_vm_check = False
         vm_dev_path = ''
+        err = ''
         try:
             _, stdout, stderr = ssh.exec_command("df -h")
             if stdout:
@@ -961,9 +960,10 @@ class LocalLogic:
             if stderr:
                 err = stderr.readlines()
                 if err:
-                    print(err)
+                    raise Exception("ADDM VM command 'df -h' Error:" + str(err))
         except:
-            log.error("Cannot run 'df -h' command on ADDM!")
+            log.error("Error during run 'df -h' command on ADDM!")
+            raise Exception("ADDM VM command 'df -h' Error:" + str(err))
 
         if vm_dev_path:
             dev_vm_check = True
@@ -1022,27 +1022,11 @@ class LocalLogic:
         return folders
 
     @staticmethod
-    def get_related_tests(**conditions):
+    def check_extra_folders(local_cond):
         """
 
-        UPDATE:
-
-        During search of recursive patterns + test, also check each test.py where active pattern also used,
-        then compose dict with name of pattern_directory: test_path which will be used for further run to validate
-        each related test.
-
-        :return: dict
+        :return:
         """
-
-        local_cond = conditions['local_conditions']
-        # print(local_cond)
-
-        dev_vm_path = conditions['dev_vm_path']
-        active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
-        workspace = local_cond['workspace']
-
-        log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
-
         # Get extra folders from previous parse in full_path_args.
         extra_folders = []
         extra_folders_keys = ['BLADE_ENCLOSURE_t',
@@ -1055,7 +1039,7 @@ class LocalLogic:
                               'SYSTEM_t',
                               'STORAGE_t']
 
-        # Extracting matched folders from 'local_conditions':
+        # Extracting matched folders from 'local_cond':
         # Making list of all possible pattern paths and then search through them all for imports.
         for folder_key in extra_folders_keys:
             if local_cond[folder_key]:
@@ -1069,6 +1053,28 @@ class LocalLogic:
                         log.warning("Step 1.1 This path is not exist: "+str(extra_folder))
             else:
                 log.info("Be aware that this folder key is not exist: "+str(folder_key))
+        return extra_folders
+
+    def get_related_tests(self, **conditions):
+        """
+        During search of recursive patterns + test, also check each test.py where active pattern also used,
+        then compose dict with name of pattern_directory: test_path which will be used for further run to validate
+        each related test.
+
+        :return: dict
+        """
+
+        local_cond = conditions['local_cond']
+        # print(local_cond)
+
+        dev_vm_path = conditions['dev_vm_path']
+        active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
+        workspace = local_cond['workspace']
+
+        log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
+
+        # Get extra folders from previous parse in full_path_args.
+        extra_folders = self.check_extra_folders(local_cond)
 
         # Make list of all test.py in extra folders, like in files_to_read()
         exclude_dirs = ['imports'
@@ -1110,9 +1116,11 @@ class LocalLogic:
     @staticmethod
     def tests_to_read(search_path, exclude_dirs, dev_vm_path, workspace):
         """
+        Read test.py - find pattern load.
 
         :return:
         """
+
         file_candidates = []
         # Extra construction for test.py search.
         log.debug("Step 2 - Composing list of all test files in tkn path.")

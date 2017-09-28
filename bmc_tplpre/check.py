@@ -117,10 +117,9 @@ common.add_argument("-l",
                     help="Please set log level")  # info, quiet, warning, debug, output, error
 common.add_argument('--version',
                     action='version',
-                    version='%(prog)s 1.1.1')
+                    version='%(prog)s 1.1.2')
 
 known_args, extra_args = parser.parse_known_args()
-# print("Known args: "+str(known_args))
 
 log = log_define(known_args)
 log.debug("Start: "+__name__)
@@ -130,7 +129,6 @@ conditional_functions, conditional_results = funcs_run.make_function_set()
 
 # Manual functions execution:
 assert isinstance(conditional_functions, dict)
-# TODO: Can separate this on logical blocks based on cond. operations, later.
 
 if conditional_functions['imports_f']:
     imports_f = conditional_functions['imports_f']
