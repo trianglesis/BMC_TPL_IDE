@@ -800,14 +800,12 @@ class GlobalLogic:
 
         # IMPORTS DICT:
         if isinstance(import_cond, dict):
-
             # Preproc on NORMAL IMPORTS
             if self.usual_imports:
                 """
                     - If no addm version - 
                     it will use empty string as arg and run syntax check for all supported versions.
                 """
-
                 log.info("Syntax check TPLPreprocessor result.")
                 log.debug("Syntax check will run on tpl folders after usual TPLPreproc output. (usual_imports)")
                 syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
@@ -824,30 +822,31 @@ class GlobalLogic:
                           "(recursive_imports or read_test)")
                 syntax_check_cond_f = self.make_syntax_check(self.working_dir+os.sep+"imports", disco_ver=tpl_version)
 
-            # SOLO RUNS:
             else:
-                """
-                    - If no addm version - it will use empty string as arg and run syntax check for all versions.
-                    - In this condition syntax check will hope that imports are already in folder after previous runs.
-                """
-                if self.env_cond == 'developer_tplpre' or self.env_cond == 'developer_tpl':
-                    log.info("1/1 Syntax check solo file.")
-                    log.debug("1/2 Imports was already created just checking syntax for active pattern. "
-                              "(not read_test not recursive_imports not usual_imports)")
-                    syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
+                log.debug("This mode is not operational: "+str(self.import_cond))
 
-                elif self.env_cond == 'customer_tku':
-
-                    log.warning("TPLint cannot check syntax for single tpl file!"
-                                "On other way it will check syntax for whole CORE "
-                                "folder and this can take too much time."
-                                "To check syntax please choose usual imports option, "
-                                "so TPLint will run it only for 'imports' folder!")
-
-                else:
-                    log.debug("This mode is not operational: "+str(self.env_cond))
+        # SOLO RUNS:
         else:
-            log.debug("This 'import_cond' is not operable: "+str(import_cond))
+            """
+                - If no addm version - it will use empty string as arg and run syntax check for all versions.
+                - In this condition syntax check will hope that imports are already in folder after previous runs.
+            """
+            if self.env_cond == 'developer_tplpre' or self.env_cond == 'developer_tpl':
+                log.info("1/1 Syntax check solo file.")
+                log.debug("1/2 Imports was already created just checking syntax for active pattern. "
+                          "(not read_test not recursive_imports not usual_imports)")
+                syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
+
+            elif self.env_cond == 'customer_tku':
+
+                log.warning("TPLint cannot check syntax for single tpl file!"
+                            "On other way it will check syntax for whole CORE "
+                            "folder and this can take too much time."
+                            "To check syntax please choose usual imports option, "
+                            "so TPLint will run it only for 'imports' folder!")
+
+            else:
+                log.debug("This mode is not operational: "+str(self.env_cond))
 
         return syntax_check_cond_f
 

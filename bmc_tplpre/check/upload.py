@@ -29,11 +29,9 @@ class AddmOperations:
 
     def __init__(self, ssh):
         """
+        Class should be init with active SSH function.
+        If no SSH - no work will done here.
 
-        1. If syntax_passed = True AND tpl_preproc = True AND addm_host ip in args - start this (input)
-        2. If there is no pattern file situated BUT working dir - make zip of dir content *.tpl
-            with correspond tpl ver from Tplpreproc folders
-        3. Open SSH session \ Save opened
 
         IF not 'dev_vm_check': True:
             Program will try to upload package via SFTP
@@ -55,7 +53,6 @@ class AddmOperations:
 
         :param ssh: func
         """
-        # TODO: Plan to upload other files (or use as DEV VM) - dml, py, etc.
         self.ssh_cons = ssh
 
         # noinspection SpellCheckingInspection
@@ -301,7 +298,12 @@ class AddmOperations:
     # noinspection PyBroadException
     def tests_executor(self, tests_list, tst_cond):
         """
-        Placeholder for tests run
+        This function execute tests for patterns.
+        For test run - test list should be used, even with 1 element.
+
+        Before run it will load bash_profile to activate paths to python, tideway, core etc.
+        Progress will be shown if progressbar2 installed in local python libs.
+
         :param tst_cond:
         :param tests_list: list
         :return:
@@ -388,18 +390,16 @@ class AddmOperations:
             except:
                 # Not raise - see what happen with others:
                 log.error("Test execution command cannot run: "+str(cmd))
-            # For debug:
-            # TODO: WARNING - UNCOMMENT!
-            # if i == 3:
-            #     break
-        # Close bar, do not forget to.
         if progressbar:
-            bar.finish()
+            bar.finish()  # Close bar, do not forget to.
         log.info("-==== END OF TESTS EXECUTION ====-")
 
     @staticmethod
     def progress_bar(msg):
         """
+        Show progress.
+        Input message string.
+        Output bar or spinner.
 
         :param msg:
         :return:
@@ -424,6 +424,7 @@ class AddmOperations:
 
     def file_check(self, zip_on_local, zip_on_remote):
         """
+        Run MD5 sum check function. Raise error when sum not equal.
 
         :return:
         """

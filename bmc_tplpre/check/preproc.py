@@ -26,9 +26,11 @@ log = logging.getLogger("check.logger")
 class Preproc:
 
     def __init__(self):
+        """
+            This could initialize some vars here. Later.
 
-        self.sublime_working_dir = os.path.dirname(os.path.abspath(__file__))
-        # sublime_working_dir = "C:\\Users\\o.danylchenko\\AppData\\Roaming\\Sublime Text 3\\Packages\\bmc_tplpre"
+        """
+        log.debug("Starting Preprocessor.")
 
     @staticmethod
     def find_tplpreprocessor(workspace):
@@ -40,10 +42,9 @@ class Preproc:
         """
 
         if workspace:
-            log.debug("Got the p4 workspace path from 'full_path_parse()' "
-                      "and will try to locate TPLPreprocessor: " + workspace)
-
+            # log.debug("Got p4 workspace path from 'full_path_parse()' try to locate TPLPreprocessor: " + workspace)
             # tpl_preproc_location = workspace + "\\addm\\tkn_main\\buildscripts\\TPLPreprocessor.py"
+
             tpl_preproc_dir = workspace + "\\addm\\tkn_main\\buildscripts\\"
             tpl_preproc_py = workspace + "\\addm\\tkn_main\\buildscripts" + os.sep + "TPLPreprocessor.py"
             tpl_preproc_py_check = tpl_preproc_dir + os.sep + "TPLPreprocessor.py"
@@ -59,8 +60,9 @@ class Preproc:
         return tpl_preproc_dir, tpl_preproc_py
 
     @staticmethod
-    def results_parse(run_preproc, output_path, tpl_preproc):
+    def results_parse(cmd, run_preproc, output_path, tpl_preproc):
         """
+        Check timestamp of files after Preproc. If older than 5 min - log error.
 
         :return:
         """
@@ -96,13 +98,105 @@ class Preproc:
         if tpl_preproc:
             log.debug("TPLPreprocessor success: " + output_path)
         if err_result:
-            log.error("While TPLPreproc - this error occurs: "+str(err_result))
+            log.debug("Preproc cmd: "+str(cmd))
+            raise Exception("Preproc cannot run, please check input args and paths. More info in debug mode."
+                            "While TPLPreproc - this error occurs: "+str(err_result))
+
+    def run_preproc_cmd(self, cmd, output_path):
+        """
+        Input cmd string.
+        Execute subprocess.
+        Parse results.
+
+        :param output_path: str
+        :param cmd: str
+        :return:
+        """
+        tpl_preproc = False
+        try:
+            run_preproc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.results_parse(cmd, run_preproc, output_path, tpl_preproc)
+            tpl_preproc = True
+
+        except IOError as e:
+            raise IOError("TPL Preproc cannot run with current options: "+str(cmd)+" with error: "+str(e))
+
+        except:
+            raise Exception("TPL_Preprocessor won't run! "
+                            "Check paths, user rights and logs. Try to execute preproc from cmd.")
+        return tpl_preproc
 
     def tpl_preprocessor(self, workspace, input_path, output_path, mode):
         """
         Run TPLPreprocessor in two scenarios:
         1. If IMPORT or RECURSIVE_IMPORT - then run in folder passed as arg.
         2. If NOT - run only on current file.
+
+        # Active tests:
+        Run mode and result True
+        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
+        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre",
+        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\",
+        ...                            mode="usual_imports")
+        True
+
+        Run mode and result True
+        NOTE: This test should have imports folder after imports run, in othr way it fails.
+        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
+        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\imports",
+        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\imports",
+        ...                            mode="recursive_imports")
+        True
+
+        Run mode and result True
+        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
+        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre",
+        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\",
+        ...                            mode="solo_mode")
+        True
+
+        # Fail tests
+        Run unsupported args and Traceback:
+        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
+        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tpl",
+        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\",
+        ...                            mode="usual_imports")
+        ... # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+            ...
+        Exception: This is not a tplpre file. TPLPreprocessor won't run! - d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\BMCRemedyARSystem.tpl
+
+        Run unsupported args and Traceback:
+        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
+        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\",
+        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\",
+        ...                            mode="recursive_imports")
+        ... # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+            ...
+        Exception: This is not a tplpre file. TPLPreprocessor won't run! - d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\BMCRemedyARSystem.tpl
+
+        Run unsupported args and Traceback:
+        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
+        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tpl",
+        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
+        ...                            "BMCRemedyARSystem\\\\",
+        ...                            mode="solo_mode")
+        ... # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+            ...
+        Exception: This is not a tplpre file. TPLPreprocessor won't run! - d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\BMCRemedyARSystem.tpl
 
 
         :param workspace: str
@@ -111,63 +205,49 @@ class Preproc:
         :param mode: imports \ recursive imports
         :return: True\False
         """
-        _, t_pre = self.find_tplpreprocessor(workspace)
-        # print(t_pre)
-
-        log.debug("Using script path as: " + t_pre)
-
         tpl_preproc = False
+
         python_v = "C:\\Python27\\python.exe"
-        # log.debug("Using TPLPreprocessor from: " + str(t_pre))
+        _, t_pre = self.find_tplpreprocessor(workspace)
+        pre_cmd = "cmd /c " + python_v + " " + t_pre + " -q "
+        output_arg = ' -o "'+output_path+'"'
 
         if mode == "usual_imports":
-            log.info("python2.7 : TPLPreprocessor run on one file: " + input_path)
-            log.debug("Running in usual_imports mode!")
-            if os.path.exists(input_path):
-                try:
-                    run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "'
-                                                   + t_pre + '" -q -o "' + output_path + '" -f "' + input_path + '"',
-                                                   stdout=subprocess.PIPE,
-                                                   stderr=subprocess.PIPE)
-                    self.results_parse(run_preproc, output_path, tpl_preproc)
+            log.debug("python2.7 : TPLPreprocessor file: " + input_path)
+            log.info("Running in usual_imports mode!")
 
-                except:
-                    raise Exception("TPL_Preprocessor won't run! "
-                                    "Check paths, user rights and logs. Try to execute preproc from cmd.")
+            if os.path.isfile(input_path) and input_path.endswith('.tplpre'):
+                # Single file and output with imports:
+                input_arg = ' -f "'+input_path+'"'
+                cmd = pre_cmd+output_arg+input_arg
+                tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
-                raise Exception("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
+                raise Exception("This is not a tplpre file. TPLPreprocessor won't run! - " + str(input_path))
 
         elif mode == "recursive_imports":
             # NO IMPORTS - run on folder
-            log.debug("python2.7 : TPLPreprocessor run all on all files in directory: " + input_path)
-            log.debug("Running in recursive_imports mode! "
-                      "It means - will process all files found in working folder.")
-            if os.path.exists(input_path):
-                try:
-                    run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -d "' + input_path + '"',
-                                                   stdout=subprocess.PIPE,
-                                                   stderr=subprocess.PIPE)
-                    self.results_parse(run_preproc, output_path, tpl_preproc)
-                except:
-                    raise Exception("TPL_Preprocessor won't run! "
-                                    "Check paths, user rights and logs. Try to execute preproc from cmd.")
+            log.debug("python2.7 : TPLPreprocessor all files in: " + input_path)
+            log.info("Running in recursive_imports mode!")
+
+            if os.path.isdir(input_path) and input_path.endswith('imports'):
+                # All files in active or imports folder:
+                input_arg = ' -d "'+input_path+'"'
+                cmd = pre_cmd+input_arg
+                tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
-                raise Exception("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
+                raise Exception("This is not an 'imports' folder. TPLPreprocessor won't run! - " + str(input_path))
 
         elif mode == "solo_mode":
             # SOLO MODE - nothing will be processed - only active pattern.
-            log.debug("python2.7 : TPLPreprocessor run all on one file " + input_path)
-            log.debug("Solo mode - only active file will be processed!")
-            if os.path.exists(input_path):
-                try:
-                    run_preproc = subprocess.Popen('cmd /c ' + python_v + ' "' + t_pre + '" -q -f "' + input_path + '"',
-                                                   stdout=subprocess.PIPE,
-                                                   stderr=subprocess.PIPE)
-                    self.results_parse(run_preproc, output_path, tpl_preproc)
-                except:
-                    raise Exception("TPL_Preprocessor won't run! "
-                                    "Check paths, user rights and logs. Try to execute preproc from cmd.")
+            log.debug("python2.7 : TPLPreprocessor single file: " + input_path)
+            log.info("Solo mode!")
+
+            if os.path.isfile(input_path) and input_path.endswith('.tplpre'):
+                # Only active file in active folder.
+                input_arg = ' -f "'+input_path+'"'
+                cmd = pre_cmd+input_arg
+                tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
-                raise Exception("Path is not exist. TPLPreprocessor won't run! " + str(input_path))
+                raise Exception("This is not a tplpre file. TPLPreprocessor won't run! - " + str(input_path))
 
         return tpl_preproc
