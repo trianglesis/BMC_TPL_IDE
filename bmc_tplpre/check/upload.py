@@ -304,7 +304,6 @@ class AddmOperations:
         Before run it will load bash_profile to activate paths to python, tideway, core etc.
         Progress will be shown if progressbar2 installed in local python libs.
 
-
         :param tst_cond:
         :param tests_list: list
         :return:
@@ -391,7 +390,6 @@ class AddmOperations:
             except:
                 # Not raise - see what happen with others:
                 log.error("Test execution command cannot run: "+str(cmd))
-
         if progressbar:
             bar.finish()  # Close bar, do not forget to.
         log.info("-==== END OF TESTS EXECUTION ====-")

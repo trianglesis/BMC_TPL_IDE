@@ -12,7 +12,6 @@ import shutil
 import stat
 import logging
 from check.local_logic import LocalLogic
-from operator import itemgetter
 
 log = logging.getLogger("check.logger")
 
@@ -131,7 +130,6 @@ class TPLimports:
         Import modules.
         Based on conditional args it can import tpl for customer or tplre for dev.
         Get full paths to each extra folders from args.
-
         :param extra_patterns:
         :type full_path_args: dict
 

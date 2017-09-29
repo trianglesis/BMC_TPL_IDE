@@ -806,7 +806,6 @@ class GlobalLogic:
                     - If no addm version - 
                     it will use empty string as arg and run syntax check for all supported versions.
                 """
-
                 log.info("Syntax check TPLPreprocessor result.")
                 log.debug("Syntax check will run on tpl folders after usual TPLPreproc output. (usual_imports)")
                 syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)

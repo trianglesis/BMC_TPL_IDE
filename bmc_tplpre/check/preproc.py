@@ -233,7 +233,6 @@ class Preproc:
                 # All files in active or imports folder:
                 input_arg = ' -d "'+input_path+'"'
                 cmd = pre_cmd+input_arg
-
                 tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
                 raise Exception("This is not an 'imports' folder. TPLPreprocessor won't run! - " + str(input_path))
@@ -247,7 +246,6 @@ class Preproc:
                 # Only active file in active folder.
                 input_arg = ' -f "'+input_path+'"'
                 cmd = pre_cmd+input_arg
-
                 tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
                 raise Exception("This is not a tplpre file. TPLPreprocessor won't run! - " + str(input_path))

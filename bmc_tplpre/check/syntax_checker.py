@@ -126,7 +126,6 @@ class SyntaxCheck:
                     if not out:
                         break
                     time.sleep(0.01)
-
                 # Final result:
                 result = ''.join(result_out)
                 if "No issues found!" in result:
