@@ -120,6 +120,8 @@ common.add_argument('--version',
                     version='%(prog)s 1.1.2')
 
 known_args, extra_args = parser.parse_known_args()
+print(type(known_args))
+print(known_args)
 
 log = log_define(known_args)
 log.debug("Start: "+__name__)

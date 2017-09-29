@@ -27,8 +27,37 @@ class GlobalLogic:
         """
         Initialize with options for logical operations.
         Check arg sets and output messages for different option scenarios.
+
+        >>> class FakeArgs:
+        ...    addm_host=''
+        ...    disco_mode=''
+        ...    full_path='d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre'
+        ...    log_lvl='debug'
+        ...    password=''
+        ...    read_test=False
+        ...    recursive_import=True
+        ...    related_tests=False
+        ...    run_test=False
+        ...    scan_host_list=''
+        ...    system_password=''
+        ...    system_user=''
+        ...    test_failfast=False
+        ...    test_verbose=False
+        ...    user=''
+        ...    usual_import=False
+        ...    version_tpl=''
+        ...    wipe_tku=False
+        >>> known_args = FakeArgs
+        >>> extra_args = []
+        >>> cls_load = GlobalLogic(known_args=known_args, extra_args=extra_args)
+        >>> print(type(cls_load))
+        <class 'global_logic.GlobalLogic'>
+
         :return: func
         """
+        # print(extra_args)
+        # print(type(known_args))
+        # print(known_args)
 
         # FULL PATH ARGS:
         self.tku_patterns_t    = ''
@@ -352,6 +381,68 @@ class GlobalLogic:
             "local_zip": "ADDM is in DEV mode - not need to point to local zip file."
         }
 
+        Draft example for future testing. Try to check types and results.
+        >>> class FakeArgs:
+        ...    addm_host=''
+        ...    disco_mode=''
+        ...    full_path='d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre'
+        ...    log_lvl='debug'
+        ...    password=''
+        ...    read_test=False
+        ...    recursive_import=True
+        ...    related_tests=False
+        ...    run_test=False
+        ...    scan_host_list=''
+        ...    system_password=''
+        ...    system_user=''
+        ...    test_failfast=False
+        ...    test_verbose=False
+        ...    user=''
+        ...    usual_import=False
+        ...    version_tpl=''
+        ...    wipe_tku=False
+        >>> known_args = FakeArgs
+        >>> extra_args = []
+        >>> cls_load = GlobalLogic(known_args=known_args, extra_args=extra_args)
+        >>> conditional_functions, conditional_results = cls_load.make_function_set()
+        >>> addm_working_dir = (conditional_results['addm_working_dir'])
+        >>> addm_zip = (conditional_results['addm_zip'])
+        >>> local_zip = (conditional_results['local_zip'])
+        >>> imports_f = (type(conditional_functions['imports_f']))
+        >>> preproc_f = (type(conditional_functions['preproc_f']))
+        >>> syntax_check_f = (type(conditional_functions['syntax_check_f']))
+        >>> zip_files_f = (conditional_functions['zip_files_f'])
+        >>> wipe_tku_f = (conditional_functions['wipe_tku_f'])
+        >>> upload_f = (conditional_functions['upload_f'])
+        >>> addm_activate_f = (conditional_functions['addm_activate_f'])
+        >>> scan_f = (conditional_functions['scan_f'])
+        >>> test_executor_f = (conditional_functions['test_executor_f'])
+        >>> print(addm_working_dir,
+        ...       addm_zip,
+        ...       local_zip,
+        ...       imports_f,
+        ...       preproc_f,
+        ...       syntax_check_f,
+        ...       zip_files_f,
+        ...       wipe_tku_f,
+        ...       upload_f,
+        ...       addm_activate_f,
+        ...       scan_f,
+        ...       test_executor_f)
+        ... # doctest: +NORMALIZE_WHITESPACE
+        There is no ADDM connection, program is running in local mode.
+        There is no ADDM connection, program is running in local mode.
+        There is no ADDM connection, program is running in local mode.
+        <class 'dict'>
+        <class 'function'>
+        <class 'function'>
+        False
+        False
+        False
+        False
+        False
+        False
+
         :rtype: object
         :return: pair of function sets with conditional functions to execute and result to debug.
         """
@@ -624,6 +715,94 @@ class GlobalLogic:
             "import_patterns": "<function GlobalLogic.make_imports.<locals>.importer at 0x00000000036667B8>",
             "parse_tests_patterns": false
         }
+
+        Test example to cover imports logic, where dict should contain documented set of options for each scenario.
+        # RECURSIVE IMPORTS:
+        >>> class FakeArgs:
+        ...    addm_host=''
+        ...    disco_mode=''
+        ...    full_path='d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre'
+        ...    log_lvl='debug'
+        ...    password=''
+        ...    read_test=False
+        ...    recursive_import=True
+        ...    related_tests=False
+        ...    run_test=False
+        ...    scan_host_list=''
+        ...    system_password=''
+        ...    system_user=''
+        ...    test_failfast=False
+        ...    test_verbose=False
+        ...    user=''
+        ...    usual_import=False
+        ...    version_tpl=''
+        ...    wipe_tku=False
+        >>> known_args = FakeArgs
+        >>> extra_args = []
+        >>> cls_load = GlobalLogic(known_args=known_args, extra_args=extra_args)
+        >>> import_cond_dict = cls_load.imports_cond()
+        >>> print(import_cond_dict['parse_tests_patterns'],
+        ...       import_cond_dict['parse_tests_queries'],
+        ...       type(import_cond_dict['import_patterns']))
+        False False <class 'function'>
+
+        # RECURSIVE + TESTS
+        >>> class FakeArgs:
+        ...    addm_host=''
+        ...    disco_mode=''
+        ...    full_path='d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre'
+        ...    log_lvl='debug'
+        ...    password=''
+        ...    read_test=True
+        ...    recursive_import=True
+        ...    related_tests=False
+        ...    run_test=False
+        ...    scan_host_list=''
+        ...    system_password=''
+        ...    system_user=''
+        ...    test_failfast=False
+        ...    test_verbose=False
+        ...    user=''
+        ...    usual_import=False
+        ...    version_tpl=''
+        ...    wipe_tku=False
+        >>> known_args = FakeArgs
+        >>> extra_args = []
+        >>> cls_load = GlobalLogic(known_args=known_args, extra_args=extra_args)
+        >>> import_cond_dict = cls_load.imports_cond()
+        >>> print(import_cond_dict['parse_tests_patterns'],
+        ...       type(import_cond_dict['parse_tests_queries']),
+        ...       type(import_cond_dict['import_patterns']))
+        False <class 'function'> <class 'function'>
+
+        # USUAL IMPORTS
+        >>> class FakeArgs:
+        ...    addm_host=''
+        ...    disco_mode=''
+        ...    full_path='d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre'
+        ...    log_lvl='debug'
+        ...    password=''
+        ...    read_test=False
+        ...    recursive_import=False
+        ...    related_tests=False
+        ...    run_test=False
+        ...    scan_host_list=''
+        ...    system_password=''
+        ...    system_user=''
+        ...    test_failfast=False
+        ...    test_verbose=False
+        ...    user=''
+        ...    usual_import=True
+        ...    version_tpl=''
+        ...    wipe_tku=False
+        >>> known_args = FakeArgs
+        >>> extra_args = []
+        >>> cls_load = GlobalLogic(known_args=known_args, extra_args=extra_args)
+        >>> import_cond_dict = cls_load.imports_cond()
+        >>> print(import_cond_dict['parse_tests_patterns'],
+        ...       import_cond_dict['parse_tests_queries'],
+        ...       import_cond_dict['import_patterns'])
+        False False False
 
         """
 
