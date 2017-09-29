@@ -24,12 +24,11 @@ def log_define(args):
     path_logic = LocalLogic()
     path_args = path_logic.file_path_decisions(full_file_path=args.full_path)
 
-    # TODO: What to do, if path was not obtained? Use default or detect active folder?
     try:
         log_path = path_args['working_dir']
     except TypeError as e:
         log_path = ""
-        print("Working dir cannot be obtained. WIll save log to module folder in dir 'ERROR'.")
+        print("Working dir cannot be obtained. WIll save log to module folder: bmc_tplpre/")
         print(e)
 
     if log_lvl:
@@ -51,6 +50,8 @@ def log_define(args):
 
 def i_log(level, log_path):
     """
+    Logger settings composer.
+    If log set to debug - use different file for output.
 
     :param level: logging level
     :param log_path: path to working dir

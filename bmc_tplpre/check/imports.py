@@ -11,6 +11,8 @@ import os
 import shutil
 import stat
 import logging
+from check.local_logic import LocalLogic
+from operator import itemgetter
 
 log = logging.getLogger("check.logger")
 
@@ -57,7 +59,7 @@ class TPLimports:
             Step 3.1: Show list of found modules and path to patterns in log debug.
 
             Step 4: Wiping 'imports' folder before add new imports in it.
-                Step 4.1 If folder cannot be wiped - show warninging log.
+                Step 4.1 If folder cannot be wiped - show warning log.
 
             Step 5: Create 'imports' folder if isn't exist.
             Step 5.1: Copy pattern to imports folder and show debug log with path to copied pattern.
@@ -67,7 +69,7 @@ class TPLimports:
 
             Example:
                 conditions: {
-                    "local_conditions": {
+                    "local_cond": {
                         "BLADE_ENCLOSURE_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
                         TKU-BladeEnclosure-2017-07-1-ADDM-11.1+",
                         "buildscripts_t": "",
@@ -81,7 +83,7 @@ class TPLimports:
                         "CLOUD_t": "",
                         "STORAGE_t": "",
                         "pattern_folder": "TKU-Core-2017-07-1-ADDM-11.1+",
-                        "environment_condition": "customer_tku",
+                        "env_cond": "customer_tku",
                         "SYSTEM_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
                         TKU-System-2017-07-1-ADDM-11.1+",
                         # "SupportingFiles_t": "D:\\custom_path\\TKU\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\
@@ -124,47 +126,24 @@ class TPLimports:
         self.pattern_import_all_r = re.compile('from\s+(.+?)\s+import\s+\S+\s+\d+')
         self.pattern_module_name_r = re.compile('tpl\s+(?:\$\$TPLVERSION\$\$|\d+\.\d+)\s+module\s+(\S+);')
 
-    def import_modules(self, **conditions):
+    def import_modules(self, full_path_args, extra_patterns):
         """
         Import modules.
         Based on conditional args it can import tpl for customer or tplre for dev.
         Get full paths to each extra folders from args.
 
-        :param conditions: set - this is set of options from full_paths parse. Example above.
-        :return: nothing - just execute imports.
-        """
+        :param extra_patterns:
+        :type full_path_args: dict
 
-        local_cond = conditions['conditions']['local_conditions']
-        env_mode   = conditions['conditions']['local_conditions']['environment_condition']
+        """
+        local_cond = full_path_args
+        env_mode   = full_path_args['env_cond']
 
         log.debug("Step 1. Starting import functions. Read pattern: "+str(local_cond['file_name']))
 
         # Get extra folders from previous parse in full_path_args.
-        extra_folders = []
-        extra_folders_keys = ['BLADE_ENCLOSURE_t',
-                              'CLOUD_t',
-                              'CORE_t',
-                              'DBDETAILS_t',
-                              'LOAD_BALANCER_t',
-                              'MANAGEMENT_CONTROLLERS_t',
-                              'MIDDLEWAREDETAILS_t',
-                              'SYSTEM_t',
-                              'STORAGE_t']
-
-        # Extracting matched folders from 'local_conditions':
-        # Making list of all possible pattern paths and then search through them all for imports.
-        for folder_key in extra_folders_keys:
-            if local_cond[folder_key]:
-                extra_folder = local_cond[folder_key]
-                # Add only unique folders:
-                if extra_folder not in extra_folders:
-                    # To be sure I can read files in folder - check folder existence.
-                    if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
-                        extra_folders.append(extra_folder)
-                    else:
-                        log.warning("Step 1.1 This path is not exist: "+str(extra_folder))
-            else:
-                log.info("Be aware that this folder key is not exist: "+str(folder_key))
+        local_logic = LocalLogic()
+        extra_folders = local_logic.check_extra_folders(local_cond)
 
         current_modules_name = []  # Modules from KNOWN and FOUND and CURRENT.
         find_importing_modules = []  # Modules which I should found.
@@ -173,9 +152,6 @@ class TPLimports:
 
         # This mode executes only when I working in tplre development paths:
         if env_mode == 'developer_tplpre':
-
-            # Arg for tplre search when test.py read:
-            extra_patterns = conditions['conditions']['extra_patterns']
 
             # Step 1 - Find pattern files in current pattern folder:
             pattern_path_list = self.list_folder(self.working_dir)
@@ -334,6 +310,8 @@ class TPLimports:
                     read_file = f.read(2024)  # About 60+ lines from the beginning of pattern
 
                 pattern_import = self.pattern_import_all_r.findall(read_file)
+
+                # Check imports for pattern we found to add it to next search:
                 current_pattern_module = self.pattern_module_name_r.findall(read_file)
 
                 # When any imports were found in pattern file - add each to list and later find them:
@@ -368,11 +346,93 @@ class TPLimports:
         This function looks odd, but I need to be sure I can walk each 1st level folders for each in tkn tree
         And the same variant should be used for customer - so I can have one module for both scenarios.
 
+        Check if we have more than 1200 tplre files, means that all paths and patterns probably OK:
+        >>> full_path_args = {
+        ... 'STORAGE_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\STORAGE',
+        ... 'BLADE_ENCLOSURE_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\BLADE_ENCLOSURE',
+        ... 'CLOUD_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CLOUD',
+        ... 'pattern_folder': 'BMCRemedyARSystem',
+        ... 'full_path': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre',
+        ... 'MIDDLEWAREDETAILS_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\MIDDLEWAREDETAILS',
+        ... 'buildscripts_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\buildscripts',
+        ... 'file_ext': 'tplpre',
+        ... 'tku_patterns_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns',
+        ... 'DBDETAILS_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\DBDETAILS',
+        ... 'tkn_sandbox_t': 'd:\\\\perforce\\\\addm\\\\tkn_sandbox',
+        ... 'MANAGEMENT_CONTROLLERS_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\MANAGEMENT_CONTROLLERS',
+        ... 'LOAD_BALANCER_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\LOAD_BALANCER',
+        ... 'SYSTEM_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\SYSTEM',
+        ... 'working_dir': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem',
+        ... 'env_cond': 'developer_tplpre',
+        ... 'pattern_test_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\tests\\\\test.py',
+        ... 'file_name': 'BMCRemedyARSystem',
+        ... 'tkn_main_t': 'd:\\\\perforce\\\\addm\\\\tkn_main',
+        ... 'CORE_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE',
+        ... 'workspace': 'd:\\\\perforce'}
+        >>> env_mode = "developer_tplpre"
+        >>> search_path =  [
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\BLADE_ENCLOSURE',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CLOUD',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\DBDETAILS',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\LOAD_BALANCER',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\MANAGEMENT_CONTROLLERS',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\MIDDLEWAREDETAILS',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\SYSTEM',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\STORAGE']
+        >>> exclude_dirs = ['importstests', 'tpl', 'dml', 'expected', 'actuals', 'HarnessFiles']
+        >>> file_candidates = TPLimports(full_path_args).files_to_read(env_mode, search_path, exclude_dirs)
+        >>> if len(file_candidates) > 1200:
+        ...     print("True")
+        ... else:
+        ...     print("False")
+        True
+
+        # Clients test:
+        >>> full_path_args = {
+        ... 'full_path': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Core-2017-07-1-ADDM-11.1+\\\\BMCRemedyARSystem.tpl',
+        ...  'MIDDLEWAREDETAILS_t': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+',
+        ...  'tkn_sandbox_t': '',
+        ...  'DBDETAILS_t': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+',
+        ...  'working_dir': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Core-2017-07-1-ADDM-11.1+',
+        ...  'env_cond': 'customer_tku',
+        ...  'STORAGE_t': '',
+        ...  'BLADE_ENCLOSURE_t': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-BladeEnclosure-2017-07-1-ADDM-11.1+',
+        ...  'file_ext': 'tpl',
+        ...  'tku_patterns_t': '',
+        ...  'LOAD_BALANCER_t': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-LoadBalancer-2017-07-1-ADDM-11.1+',
+        ...  'SYSTEM_t': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-System-2017-07-1-ADDM-11.1+',
+        ...  'file_name': 'BMCRemedyARSystem',
+        ...  'CLOUD_t': '',
+        ...  'MANAGEMENT_CONTROLLERS_t': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+',
+        ...  'buildscripts_t': '',
+        ...  'CORE_t': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Core-2017-07-1-ADDM-11.1+',
+        ...  'pattern_folder': 'TKU-Core-2017-07-1-ADDM-11.1+',
+        ...  'workspace': 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU',
+        ...  'tkn_main_t': ''}
+        >>> env_mode = "customer_tku"
+        >>> search_path =  [
+        ... 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-BladeEnclosure-2017-07-1-ADDM-11.1+',
+        ... 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Core-2017-07-1-ADDM-11.1+',
+        ... 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Extended-DB-Discovery-2017-07-1-ADDM-11.1+',
+        ... 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-LoadBalancer-2017-07-1-ADDM-11.1+',
+        ... 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-ManagementControllers-2017-07-1-ADDM-11.1+',
+        ... 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-Extended-Middleware-Discovery-2017-07-1-ADDM-11.1+',
+        ... 'D:\\\\perforce\\\\addm\\\\tkn_sandbox\\\\o.danylchenko\\\\Jira_fix\\\\TKU\\\\Technology-Knowledge-Update-2017-07-1-ADDM-11.1+\\\\TKU-System-2017-07-1-ADDM-11.1+']
+        >>> exclude_dirs = ['importstests', 'tpl', 'dml', 'expected', 'actuals', 'HarnessFiles']
+        >>> file_candidates = TPLimports(full_path_args).files_to_read(env_mode, search_path, exclude_dirs)
+        >>> if len(file_candidates) >= 1110:
+        ...     print("True")
+        ... else:
+        ...     print("False")
+        True
+
         :param exclude_dirs:
         :param search_path: list
         :type env_mode: str
         :return: list
         """
+        # print(env_mode, search_path, exclude_dirs)
 
         file_candidates = []
 
@@ -429,8 +489,65 @@ class TPLimports:
         Add found patterns to [current_modules_name]
 
         current_modules_name = [{'module': 'module BMC.RemedyARSystem',
-                                 'path': 'D:\\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
+                                 'path': 'D:\\\\FakePattern_folder\\FAKEPatternFileLiesHere.(tplpre|tpl)'},]
         find_importing_modules = ['module Something.Some', 'module Doooooodidoo']
+
+        Check when working in recursive imports without extra patterns.
+        >>> full_path_args = {
+        ... 'STORAGE_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\STORAGE',
+        ... 'BLADE_ENCLOSURE_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\BLADE_ENCLOSURE',
+        ... 'CLOUD_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CLOUD',
+        ... 'pattern_folder': 'BMCRemedyARSystem',
+        ... 'full_path': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre',
+        ... 'MIDDLEWAREDETAILS_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\MIDDLEWAREDETAILS',
+        ... 'buildscripts_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\buildscripts',
+        ... 'file_ext': 'tplpre',
+        ... 'tku_patterns_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns',
+        ... 'DBDETAILS_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\DBDETAILS',
+        ... 'tkn_sandbox_t': 'd:\\\\perforce\\\\addm\\\\tkn_sandbox',
+        ... 'MANAGEMENT_CONTROLLERS_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\MANAGEMENT_CONTROLLERS',
+        ... 'LOAD_BALANCER_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\LOAD_BALANCER',
+        ... 'SYSTEM_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\SYSTEM',
+        ... 'working_dir': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem',
+        ... 'env_cond': 'developer_tplpre',
+        ... 'pattern_test_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\tests\\\\test.py',
+        ... 'file_name': 'BMCRemedyARSystem',
+        ... 'tkn_main_t': 'd:\\\\perforce\\\\addm\\\\tkn_main',
+        ... 'CORE_t': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE',
+        ... 'workspace': 'd:\\\\perforce'}
+        >>> imp = TPLimports(full_path_args).search_in_path(
+        ... file_candidates=[
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\SupportingFiles\\\\'
+        ... 'CDM_Mapping.tplpre',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\SupportingFiles\\\\'
+        ... 'Cluster_Support.tplpre',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\SupportingFiles\\\\'
+        ... 'DiscoveryFunctions.tplpre',
+        ... 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\SupportingFiles\\\\'
+        ... 'SearchFunctions.tplpre' ],
+        ... find_importing_modules=[
+        ... 'module SupportingFiles.CDM_Mapping',
+        ... 'module DiscoveryFunctions',
+        ... 'module SearchFunctions',
+        ... 'module SupportingFiles.Cluster.Support'],
+        ... current_modules_name=[{
+        ... 'path': 'd:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\BMCRemedyARSystem\\\\'
+        ... 'BMCRemedyARSystem.tplpre',
+        ... 'module': 'module BMC.RemedyARSystem'}])
+        >>> for dict in imp[1]:
+        ...     print(dict['module'])
+        ...     print(dict['path'])
+        ... # doctest: +NORMALIZE_WHITESPACE
+        module BMC.RemedyARSystem
+        d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\BMCRemedyARSystem\\BMCRemedyARSystem.tplpre
+        module SupportingFiles.CDM_Mapping
+        d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\CDM_Mapping.tplpre
+        module SupportingFiles.Cluster.Support
+        d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\Cluster_Support.tplpre
+        module DiscoveryFunctions
+        d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\DiscoveryFunctions.tplpre
+        module SearchFunctions
+        d:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\SupportingFiles\\SearchFunctions.tplpre
 
         :param file_candidates: list
         :param current_modules_name: list of module:pattern dicts I found
@@ -461,10 +578,8 @@ class TPLimports:
                         # Clear Readonly flag before copying:
                         # This also will be duplicated in import_tkn() for other places in tkn tree
                         os.chmod(file, stat.S_IWRITE)
-
                         # Now copy released file:
                         current_modules_name.append(current_pattern_dict)
-
                         # Remove module which was found from list, then return list with modules left .
                         find_importing_modules.remove(pattern_module)
 
@@ -556,9 +671,15 @@ class TPLimports:
                 log.debug("Step 4. Wiping 'imports' folder before add new imports in it. "+str(path))
                 shutil.rmtree(path, onerror=self._del_rw)
                 # shutil.rmtree(path)
-            except:
+            except TypeError as e:
                 log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
-                         "Please check path and permissions and 'AR' attribute in file.")
+                            "Please check path and permissions and 'AR' attribute in file.")
+                log.error(e)
+                raise
+            except PermissionError as e:
+                log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
+                            "Please check path and permissions and 'AR' attribute in file.")
+                log.error(e)
                 raise
 
     @staticmethod

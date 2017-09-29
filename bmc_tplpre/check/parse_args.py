@@ -35,12 +35,12 @@ class ArgsParse:
         """
 
         # Args dedicated to local paths from full path extracted:
-        local_arguments_set = self.full_path_parse(known_args.full_path)
-        assert isinstance(local_arguments_set, dict)
+        local_args_set = self.full_path_parse(known_args.full_path)
+        assert isinstance(local_args_set, dict)
 
         # Args dedicated to imports logic from args parse:
-        operational_args_set = self.oper_mode(known_args)
-        assert isinstance(operational_args_set, dict)
+        oper_args_set = self.oper_mode(known_args)
+        assert isinstance(oper_args_set, dict)
 
         # Args dedicated to addm actions - gathered from addm ssh connection if available:
         addm_args_set = self.addm_args(known_args)
@@ -49,7 +49,7 @@ class ArgsParse:
         if extra_args:
             log.warning("HEY, you forgot some arguments:" + str(extra_args))
 
-        return local_arguments_set, operational_args_set, addm_args_set
+        return local_args_set, oper_args_set, addm_args_set
 
     def addm_args(self, known_args):
         """
@@ -133,9 +133,6 @@ class ArgsParse:
                         log.debug("Development path is found on this ADDM and "
                                   "will be used for upload patterns and tests.")
 
-        else:
-            log.info("SSH connection to ADDM was not established! Other arguments of SCAN will be ignored.")
-
         addm_args_set = dict(ssh_connection  = ssh,
                              disco_mode      = disco,
                              system_password = system_password,
@@ -202,7 +199,7 @@ class ArgsParse:
             else:
                 log.error("Your ADDM password is empty!")
 
-            log.info("INFO: ADDM host is: " + addm_host)
+            log.info("ADDM host: " + addm_host)
             # Open SSH session if ADDM IP and USER and PASSWORD are present
             if user and password:
                 log.debug("Trying to connect ADDM " + addm_host + " via SSH as user: " + user)
@@ -220,8 +217,6 @@ class ArgsParse:
                     # raise
             else:
                 log.error("There is no ADDM user and password found in args! I cannot connect ADDM.")
-        else:
-            log.debug("There is no ADDM IP in args!")
 
         return ssh
 
@@ -236,9 +231,7 @@ class ArgsParse:
             check = self.disco_mode_check.match(disco_mode)
             if check:
                 disco_mode = disco_mode  # Discovery mode is:         standard
-                log.info("Discovery mode is: " + str(disco_mode))
-        else:
-            log.debug("Discovery mode not set or not used.")
+                log.info("Discovery mode: " + str(disco_mode))
 
         return disco_mode
 
@@ -261,7 +254,7 @@ class ArgsParse:
                 log.warning("Host list for scan should consist of IPs.")
         else:
             if host_list != 'None':
-                log.debug("Please specify some hosts to scan for ADDM!")
+                pass
             else:
                 log.info("Pattern upload only.")
 
@@ -275,56 +268,74 @@ class ArgsParse:
         If imports used - than no test run!
         I test run used - than no imports!
 
-        {'run_test': True,
-        'related_tests': False,
-        'usual_imports': False,
-        'read_test': False,
-        'recursive_imports': False}
+        {
+            "tests": {
+                "related_tests": false,
+                "test_failfast": false,
+                "run_test": false,
+                "test_verbose": false
+            },
+            "imports": {
+                "recursive_imports": false,
+                "usual_imports": false,
+                "read_test": false
+            },
+            "tku_oper": {
+                "wipe_tku": false
+            }
+        }
 
         :param known_args:
         :return: dict of Bool actions
         """
 
         oper_args_set = dict(
-                             imports = dict(recursive_imports=False, usual_imports=False, read_test=False
-                                            ),
-                             tests = dict(related_tests=False, run_test=False
-                                          )
+                             imports = dict(recursive_imports=False,
+                                            usual_imports=False,
+                                            read_test=False),
+                             tests = dict(related_tests=False,
+                                          run_test=False,
+                                          test_verbose=False,
+                                          test_failfast=False
+                                          ),
+                             tku_oper = dict(wipe_tku=False)
                              )
 
         if known_args.read_test and known_args.recursive_import:
             oper_args_set['imports']['recursive_imports'] = True
             oper_args_set['imports']['read_test'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.usual_import and not known_args.recursive_import:
             oper_args_set['imports']['usual_imports'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.recursive_import and not known_args.usual_import:
             oper_args_set['imports']['recursive_imports'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.usual_import and known_args.recursive_import:
             log.warning("You cannot add two import scenarios in one run. Please choose only one. "
                         "But I will run usual_imports by default.")
             oper_args_set['imports']['usual_imports'] = True
-            oper_args_set['tests'] = False
 
         elif known_args.related_tests and not known_args.run_test:
             log.info("Related test run option. I will search for all related "
                      "tests which use current active pattern and run them.")
             oper_args_set['tests']['related_tests'] = True
-            oper_args_set['imports'] = False
 
         elif known_args.run_test and not known_args.related_tests:
             log.info("Single test run options. I will run only test for current pattern in its tests folder.")
             oper_args_set['tests']['run_test'] = True
-            oper_args_set['imports'] = False
 
         else:
             # When situation is not implemented - use false by default.
-            oper_args_set['tests'] = False
-            oper_args_set['imports'] = False
+            log.info("Operation mode is simple, no imports, no tests.")
+
+        if known_args.wipe_tku:
+            oper_args_set['tku_oper']['wipe_tku'] = True
+
+        if known_args.test_verbose:
+            oper_args_set['tests']['test_verbose'] = True
+
+        if known_args.test_failfast:
+            oper_args_set['tests']['test_failfast'] = True
 
         return oper_args_set

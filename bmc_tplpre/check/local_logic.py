@@ -12,7 +12,6 @@ import subprocess
 # import datetime
 import logging
 
-
 log = logging.getLogger("check.logger")
 
 
@@ -205,7 +204,7 @@ class LocalLogic:
     def addm_compose_paths(dev_vm_path, pattern_folder):
         """
         Local path will be used to compose same path in remote vm if HGFS shares confirmed.
-        To further usega I also compose path to remote test.py
+        To further usage I also compose path to remote test.py
         :return:
         """
         # Paths from local to remote:
@@ -229,56 +228,60 @@ class LocalLogic:
         return working_dir_virt, pattern_test_virt
 
     @staticmethod
-    def make_zip(path, module_name):
+    def make_zip(path, module_name, mode_single=None):
         """
         Zip pattern files in path.
+        :param mode_single: Zip files in folder or only one file.
         :param module_name: Name of pattern or its folder to create zip with its name.
         :param path: Path where tpl files are ready to be zipped.
         :return: zip path to ready zip file.
         """
 
-        norm_path = os.path.normpath(path+os.sep)
-        path = norm_path+os.sep
+        if not mode_single:
+            norm_path = os.path.normpath(path+os.sep)
+            path = norm_path+os.sep
+            log.debug("ZIP: Making zip of all .tpl in folder:"  + norm_path)
+            zip_filename = module_name + '.zip'
+            zip_path = path + zip_filename
 
-        log.debug("ZIP: Making zip of all .tpl in folder:"  + norm_path)
+            try:
+                patterns_zip = zipfile.ZipFile(zip_path, 'w')
+                log.debug("ZIP: zip_filename:" + zip_filename)
 
-        zip_filename = module_name + '.zip'
+                for foldername, subfolders, filenames in os.walk(norm_path):
+                    for filename in filenames:
+                        if filename != zip_filename:
 
-        zip_path = path + zip_filename
+                            patterns_zip.write(os.path.join(norm_path, filename), arcname=filename)
+                            log.debug("ZIP: Adding pattern:" + filename)
 
-        try:
-            patterns_zip = zipfile.ZipFile(zip_path, 'w')
-            log.debug("ZIP: zip_filename:" + zip_filename)
+                patterns_zip.close()
+                log.debug("ZIP: zip_path: " + zip_path)
+                return zip_path
 
-            for foldername, subfolders, filenames in os.walk(norm_path):
-                for filename in filenames:
-                    if filename != zip_filename:
-                        # check if file mod date is recent:
+            except FileNotFoundError as e:
+                log.error("Patterns cannot be zipped because file path does not exist: "+str(e))
+                return False
+        else:
+            norm_path = os.path.normpath(path)
+            tpl_path = norm_path + '.tpl'
+            zip_path = norm_path + '.zip'
+            log.debug("ZIP: Zipping single file: " + tpl_path)
+            zip_filename = module_name + '.zip'
 
-                        # TODO: Check current file or folder mod time?
-                        # file_time = os.path.getmtime(path+module_name)
-                        # now = datetime.datetime.now()
-                        # ago = now - datetime.timedelta(minutes=15)
-                        # file_time_stamp = datetime.datetime.fromtimestamp(file_time)
-                        #
-                        # if file_time_stamp < ago:
-                        #
-                        #     log.warning("ZIP: TPLPreprocessor result files looks like older that 15 min. "
-                        #              "Please check: " + str(file_time_stamp))
-                        #
-                        # if file_time_stamp > ago:
-                        #
-                        #     log.debug("ZIP: TPLPreprocessor result files are recent: " + str(file_time_stamp))
+            try:
+                with zipfile.ZipFile(zip_path, 'w') as zip_pattern:
+                    zip_pattern.write(tpl_path, arcname=module_name+'.tpl')
 
-                        patterns_zip.write(os.path.join(norm_path, filename), arcname=filename)
-                        log.debug("ZIP: Adding pattern:" + filename)
-            patterns_zip.close()
-            log.debug("ZIP: zip_path: " + zip_path)
-            return zip_path
+                log.debug("ZIP: zip_filename:" + zip_filename)
+                log.debug("ZIP: Adding pattern:" + tpl_path)
+                log.debug("ZIP: zip_path: " + zip_path)
 
-        except FileNotFoundError as e:
-            log.error("Patterns cannot be zipped because file path does not exist: "+str(e))
-            return False
+                return zip_path
+
+            except FileNotFoundError as e:
+                log.error("Patterns cannot be zipped because file path does not exist: "+str(e))
+                return False
 
     def file_path_decisions(self, full_file_path):
         """
@@ -309,10 +312,9 @@ class LocalLogic:
         STORAGE_t                = ''
         SYSTEM_t                 = ''
         tkn_sandbox_t            = ''
-        pattern_test_t           = ''
 
         if os.path.exists(full_file_path):
-            log.debug("-full_file_path is: " + full_file_path)
+            # log.debug("-full_file_path is: " + full_file_path)
 
             # Checking for different paths logic
             dev_path_check = self.dev_path_re.match(full_file_path)
@@ -324,7 +326,7 @@ class LocalLogic:
                 # Check full arguments:
                 path_parse = self.path_parse_re.match(full_file_path)
                 if path_parse:
-                    log.debug("Parsing path for options.")
+                    # log.debug("Parsing path for options.")
 
                     # This should be always extracted if above checks passed:
                     workspace      = path_parse.group('workspace')
@@ -356,12 +358,12 @@ class LocalLogic:
                     if re.match('tplpre', file_ext):
                         # pattern working dir, where pattern file is really lies:
                         working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder
-                        # Making prognosable place to test.py - but check if exist in global logic mod
+                        # Making prognoses place to test.py - but check if exist in global logic mod
                         pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
 
                         # Set of arguments, conditional options and paths to pattern libs:
                         args_dict = dict(
-                                         environment_condition    = 'developer_tplpre',
+                                         env_cond                 = 'developer_tplpre',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -390,7 +392,7 @@ class LocalLogic:
 
                     # Check if this is a tpl file from: PatternFolder\tpl110\PatternName.tpl
                     elif re.match('tpl', file_ext):
-                        log.debug("File extension matched tpl pattern. DEV in progress...")
+                        log.info("File extension matched tpl pattern.")
 
                         path_parse     = self.tpl_path_parse_re.match(full_file_path)
                         pattern_folder = path_parse.group('pattern_folder')
@@ -398,13 +400,18 @@ class LocalLogic:
                         file_ext       = path_parse.group('file_ext')
                         tpl_folder     = path_parse.group('tpl_folder')
 
+                        # pattern working dir, where pattern file is really lies:
+                        working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder+os.sep+tpl_folder
+                        # Making prognosable place to test.py - but check if exist in global logic mod
+                        pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
+
                         args_dict = dict(
-                                         environment_condition    = 'developer_tpl',
+                                         env_cond                 = 'developer_tpl',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
                                          file_ext                 = file_ext,
-                                         working_dir              = tpl_folder,
+                                         working_dir              = working_dir,
                                          full_path                = full_file_path,
                                          tkn_main_t               = tkn_main_t,
                                          tku_patterns_t           = tku_patterns_t,
@@ -418,21 +425,18 @@ class LocalLogic:
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
                                          STORAGE_t                = STORAGE_t,
                                          SYSTEM_t                 = SYSTEM_t,
-                                         tkn_sandbox_t            = tkn_sandbox_t
+                                         tkn_sandbox_t            = tkn_sandbox_t,
+                                         pattern_test_t           = pattern_test_t
                                         )
-                        log.debug("Arguments from file path: " + str(args_dict))
-                        log.debug("TPL: File extension mach .tpl and dev_path_check is found, "
-                                  "options will be set based on it's path.")
                         return args_dict
 
                     # Check if this is a dml file from: ..\tests\dml\DML_DATA.dml
                     elif re.match('dml', file_ext):
                         log.debug("File extension matched dml pattern. DEV in progress...")
-
                         # TODO: Add pattern folder based on regex path to dml
                         log.debug("This is DML file.")
                         args_dict = dict(
-                                         environment_condition    = 'developer_dml',
+                                         env_cond    = 'developer_dml',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -456,7 +460,8 @@ class LocalLogic:
                         log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("DML: File extension mach .dml and dev_path_check is found, "
                                   "options will be set based on it's path.")
-                        return args_dict
+                        # return args_dict
+                        raise Exception("DML Files is not supported yet.")
 
                     # Check if this is a model file from: \tests\actuals\SI_MODEL.model
                     elif re.match('model', file_ext):
@@ -465,7 +470,7 @@ class LocalLogic:
                         # TODO: Add pattern folder based on regex path to model
                         log.debug("This is model file.")
                         args_dict = dict(
-                                         environment_condition    = 'developer_model',
+                                         env_cond    = 'developer_model',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -489,7 +494,8 @@ class LocalLogic:
                         log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("MODEL: File extension mach .model and dev_path_check is found, "
                                   "options will be set based on it's path.")
-                        return args_dict
+                        # return args_dict
+                        raise Exception("MODEL Files is not supported yet.")
 
                     # Check if this is a py file from: ..\tests\test.py
                     elif re.match('py', file_ext):
@@ -497,7 +503,7 @@ class LocalLogic:
                         # TODO: Add pattern folder based on regex path to model
                         log.debug("This is py file. Will check if this is a 'test.py'")
                         args_dict = dict(
-                                         environment_condition    = 'developer_py',
+                                         env_cond    = 'developer_py',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -521,16 +527,17 @@ class LocalLogic:
                         log.debug("Arguments from file path: " + str(args_dict))
                         log.debug("PY: File extension mach .py and dev_path_check is found, "
                                   "options will be set based on it's path.")
-                        return args_dict
+                        # return args_dict
+                        raise Exception("PY Files is not supported yet.")
 
                     # If this file has an extension I do not support:
                     else:
-                        log.warning("FILE: Did not match any file extension "
-                                    "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
-                    log.debug("Path matched and parsed.")
+                        raise Exception("FILE: Did not match any file extension "
+                                        "I can use: 'tpl', 'tplpre', 'dml', 'model', 'test.py'")
+
                 else:
-                    log.warning("Did not match TKU DEV pattern path tree! Will use another way to parse.")
-                    log.debug("I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
+                    raise Exception("Did not match TKU DEV pattern path tree! Will use another way to parse."
+                                    "I expect path to file: d:\\P4\\addm\\tkn_main\\tku_patterns\\..\\..\\FileName.Ext")
 
             elif tku_path_check:
                 log.info("Found Technology-Knowledge-Update path.")
@@ -555,7 +562,7 @@ class LocalLogic:
                 # Check full arguments:
                 tku_pack_parse = self.tku_package_re.match(full_file_path)
                 if tku_pack_parse:
-                    log.debug("Parsing path for options.")
+                    # log.debug("Parsing path for options.")
 
                     # Paths to TKU Update package tree:
                     working_dir          = tku_pack_parse.group('working_dir')
@@ -572,30 +579,6 @@ class LocalLogic:
                     pattern_folder       = tku_pack_parse.group('pattern_folder')
                     file_name            = tku_pack_parse.group('file_name')
                     file_ext             = tku_pack_parse.group('file_ext')
-
-                    # print("working_dir: '{}' "
-                    #       "tku_update_path: '{}' "
-                    #       "workspace: '{}' "
-                    #       "tku_package: '{}' "
-                    #       "tku_package_year: '{}' "
-                    #       "tku_package_month: '{}' "
-                    #       "tku_package_day: '{}' "
-                    #       "tku_package_ADDM_ver: '{}' "
-                    #       "tku_package_name: '{}' "
-                    #       "pattern_folder: '{}' "
-                    #       "file_name: '{}' "
-                    #       "file_ext: '{}' ". format(working_dir,
-                    #                              tku_update_path,
-                    #                              workspace,
-                    #                              tku_package,
-                    #                              tku_package_year,
-                    #                              tku_package_month,
-                    #                              tku_package_day,
-                    #                              tku_package_ADDM_ver,
-                    #                              tku_package_name,
-                    #                              pattern_folder,
-                    #                              file_name,
-                    #                              file_ext))
 
                     log.debug("I found following TKU Package details:"
                               " tku_update_path: "                      + str(tku_update_path)      +
@@ -693,7 +676,7 @@ class LocalLogic:
                     # Compose arguments based on previous extractions:
                     # noinspection PyTypeChecker
                     args_dict = dict(
-                             environment_condition    = 'customer_tku',
+                             env_cond    = 'customer_tku',
                              workspace                = workspace,
                              pattern_folder           = pattern_folder,
                              file_name                = file_name,
@@ -768,7 +751,7 @@ class LocalLogic:
                                   "To run TPLPreproc or Syntax check - p4_path should be configured.")
                         # Set of arguments, conditional options and paths to pattern libs:
                         args_dict = dict(
-                                         environment_condition    = 'developer_tplpre',
+                                         env_cond    = 'developer_tplpre',
                                          workspace                = workspace,
                                          pattern_folder           = pattern_folder,
                                          file_name                = file_name,
@@ -807,7 +790,7 @@ class LocalLogic:
                                       "Upload to ADDM and scan could be started if arguments was set.")
                             # Set of arguments, conditional options and paths to pattern libs:
                             args_dict = dict(
-                                             environment_condition    = 'developer_tplpre',
+                                             env_cond    = 'developer_tplpre',
                                              workspace                = workspace,
                                              pattern_folder           = pattern_folder,
                                              file_name                = file_name,
@@ -832,12 +815,14 @@ class LocalLogic:
                         else:
                             log.warning("This path did not match any suitable pattern and probably not a tpl file"
                                         " Or path has superfluous symbols or spaces")
+
                 else:
-                    log.debug("FILE: Cannot match file path for alone pattern. "
-                              "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
+                    raise FileNotFoundError("FILE: Cannot match file path for alone pattern. "
+                                            "I expect: d:\\Something\\SomePattern.(tpl|tplpre)")
 
         else:
-            log.critical("No '-full_path' argument was set. Or this path is not exist!")
+            # log.critical("No '-full_path' argument was set. Or this path is not exist!")
+            raise FileNotFoundError("No '-full_path' argument was set. Or this path is not exist!")
 
     def workspace_find_p4_env(self):
         """
@@ -858,16 +843,22 @@ class LocalLogic:
 
         # noinspection PyBroadException
         try:
-            run_p4 = subprocess.Popen('p4 -F %clientRoot% -ztag info', stdout=subprocess.PIPE)
-            run_p4.wait()
-            workspace_out = run_p4.stdout.read().decode()
+            run_p4 = subprocess.Popen('p4 -F %clientRoot% -ztag info',
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+            stdout, stderr = run_p4.communicate()
+            run_p4.wait()  # wait until command finished
 
-            if workspace_out:
-                workspace = workspace_re.match(workspace_out).group(1)
+            result = stdout.decode('UTF-8').rstrip('\r|\n')
+            err_result = stderr.decode('UTF-8').rstrip('\r|\n')
+
+            if result:
+                # workspace_out = run_p4.stdout.read().decode()
+                workspace = workspace_re.match(result).group(1)
                 log.debug("Workspace was obtained from command run 'p4 -F %clientRoot% -ztag info'")
                 return workspace
 
-            if not workspace_out:
+            if not result:
                 # d:\perforce\addm\tkn_main\tku_patterns\
                 tkn_core = os.environ.get("TKN_CORE")
                 path_parse = self.tkn_core_parse_re.match(tkn_core)
@@ -876,9 +867,12 @@ class LocalLogic:
                     if workspace:
                         log.debug("Workspace was obtained from windows PATH env - '%TKN_CORE%'")
                         return workspace
+            if err_result:
+                log.error("P4 workspace cmd fail: "+str(err_result))
         except:
             log.error("CMD for p4 workspace won't run.")
 
+    # noinspection PyBroadException
     def check_addm_tpl_ver(self, ssh):
         """
         Run command "tw_pattern_management -v"
@@ -891,27 +885,31 @@ class LocalLogic:
         addm_ver = ''
         tpl_folder = ''
 
-        _, stdout, stderr = ssh.exec_command("tw_pattern_management -v")
-        if stdout:
+        try:
+            _, stdout, stderr = ssh.exec_command("tw_pattern_management -v")
+            if stdout:
 
-            output = stdout.readlines()
-            addm_version_full = self.addm_version_full_re.match(output[0])
-            addm_version = self.addm_version_re.match(addm_version_full.group(1))
-            addm_ver = str(addm_version.group(1))
+                output = stdout.readlines()
+                addm_version_full = self.addm_version_full_re.match(output[0])
+                addm_version = self.addm_version_re.match(addm_version_full.group(1))
+                addm_ver = str(addm_version.group(1))
 
-            if addm_ver in self.PRODUCT_VERSIONS:
-                addm_prod = self.PRODUCT_VERSIONS[addm_ver]
-                tpl_vers = self.TPL_VERSIONS[addm_prod]
-                if tpl_vers in self.tpl_folder_k:
-                    tpl_folder = self.tpl_folder_k[tpl_vers]
+                if addm_ver in self.PRODUCT_VERSIONS:
+                    addm_prod = self.PRODUCT_VERSIONS[addm_ver]
+                    tpl_vers = self.TPL_VERSIONS[addm_prod]
+                    if tpl_vers in self.tpl_folder_k:
+                        tpl_folder = self.tpl_folder_k[tpl_vers]
 
-        if stderr:
-            err = stderr.readlines()
-            if err:
-                log.warning("ADDM versioning command fails with error: " + str(err))
+            if stderr:
+                err = stderr.readlines()
+                if err:
+                    log.warning("ADDM versioning command fails with error: " + str(err))
+        except:
+            log.error("Cannot run 'tw_pattern_management -v' command on ADDM!")
 
         return tpl_vers, addm_prod, addm_ver, tpl_folder
 
+    # noinspection PyBroadException
     def check_hgfs(self, ssh):
         """
         Check if ADDM VM is using mount FS
@@ -944,25 +942,28 @@ class LocalLogic:
         :return:
         """
 
-        # TODO: ../TKU/.. folder should somehow documented as really MUST HAVE parameter in any ENV.
-        # TODO: Why this function is in the local logic? move to parse args or AddmOperations, maybe.
         dev_vm_check = False
         vm_dev_path = ''
-        _, stdout, stderr = ssh.exec_command("df -h")
-        if stdout:
-            output = stdout.readlines()
-            for line in output:
-                command_output_parse = self.hgfs_path_re.search(line)
-                if command_output_parse:
-                    path_search = self.vm_tkn_path_re.match(command_output_parse.group(0))
-                    if path_search:
-                        vm_dev_path = path_search.group('tkn_path')
-                        # Stop after any first match is found.
-                        break
-        if stderr:
-            err = stderr.readlines()
-            if err:
-                print(err)
+        err = ''
+        try:
+            _, stdout, stderr = ssh.exec_command("df -h")
+            if stdout:
+                output = stdout.readlines()
+                for line in output:
+                    command_output_parse = self.hgfs_path_re.search(line)
+                    if command_output_parse:
+                        path_search = self.vm_tkn_path_re.match(command_output_parse.group(0))
+                        if path_search:
+                            vm_dev_path = path_search.group('tkn_path')
+                            # Stop after any first match is found.
+                            break
+            if stderr:
+                err = stderr.readlines()
+                if err:
+                    raise Exception("ADDM VM command 'df -h' Error:" + str(err))
+        except:
+            log.error("Error during run 'df -h' command on ADDM!")
+            raise Exception("ADDM VM command 'df -h' Error:" + str(err))
 
         if vm_dev_path:
             dev_vm_check = True
@@ -971,6 +972,7 @@ class LocalLogic:
 
         return dev_vm_check, vm_dev_path
 
+    # noinspection PyBroadException
     @staticmethod
     def check_folders(ssh, path):
         """
@@ -989,55 +991,42 @@ class LocalLogic:
         :param path: path to check
         """
 
-        # TODO: Check if tideway user can run this.
-        # TODO: Create all needed dev folders here.
-
         folders = []
         ftp = ssh.open_sftp()
-        _, stdout, stderr = ssh.exec_command("ls " + path)
-        output_ok = stdout.readlines()
-        output_err = stderr.readlines()
-        if output_err:
-            if "No such file or directory" in output_err[0]:
-                log.debug("Creating folder: " + path)
-                ftp.mkdir(path)
-                ftp.mkdir(path+'Tpl_DEV')
-                ssh.exec_command("chmod 777 -R " + path)
-                log.debug("Folder created!")
-            else:
-                log.warning("ls command cannot be run on this folder or output is incorrect!")
-                folders = []
+        try:
+            _, stdout, stderr = ssh.exec_command("ls " + path)
+            output_ok = stdout.readlines()
+            output_err = stderr.readlines()
 
-        if output_ok:
-            for folder in output_ok:
-                folders.append(folder.strip('\n'))
-            log.debug("Folder exist! Content: " + ', '.join(folders)+" ls on: "+str(path))
+            if output_err:
+                if "No such file or directory" in output_err[0]:
+                    log.debug("Creating folder: " + path)
+                    try:
+                        ftp.mkdir(path)
+                        ftp.mkdir(path+'Tpl_DEV')
+                        ssh.exec_command("chmod 777 -R " + path)
+                        log.debug("Folder created!")
+                    except:
+                        log.error("ADDM Folders cannot be created in path: "+str(path))
+                else:
+                    log.warning("ls command cannot be run on this folder or output is incorrect!")
+                    folders = []
+
+            if output_ok:
+                for folder in output_ok:
+                    folders.append(folder.strip('\n'))
+                log.debug("Folder exist! Content: " + ', '.join(folders)+" ls on: "+str(path))
+        except:
+            log.error("ls command cannot be run on this path: "+str(path))
 
         return folders
 
-    # TODO: Add here test.py searching for all in tku:
     @staticmethod
-    def get_related_tests(**conditions):
+    def check_extra_folders(local_cond):
         """
 
-        UPDATE:
-
-        During search of recursive patterns + test, also check each test.py where active pattern also used,
-        then compose dict with name of patern_directory: test_path which will be used for further run to validate
-        each related test.
-
-        :return: dict
+        :return:
         """
-
-        local_cond = conditions['local_conditions']
-        # print(local_cond)
-
-        dev_vm_path = conditions['dev_vm_path']
-        active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
-        workspace = local_cond['workspace']
-
-        log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
-
         # Get extra folders from previous parse in full_path_args.
         extra_folders = []
         extra_folders_keys = ['BLADE_ENCLOSURE_t',
@@ -1050,7 +1039,7 @@ class LocalLogic:
                               'SYSTEM_t',
                               'STORAGE_t']
 
-        # Extracting matched folders from 'local_conditions':
+        # Extracting matched folders from 'local_cond':
         # Making list of all possible pattern paths and then search through them all for imports.
         for folder_key in extra_folders_keys:
             if local_cond[folder_key]:
@@ -1064,6 +1053,28 @@ class LocalLogic:
                         log.warning("Step 1.1 This path is not exist: "+str(extra_folder))
             else:
                 log.info("Be aware that this folder key is not exist: "+str(folder_key))
+        return extra_folders
+
+    def get_related_tests(self, **conditions):
+        """
+        During search of recursive patterns + test, also check each test.py where active pattern also used,
+        then compose dict with name of pattern_directory: test_path which will be used for further run to validate
+        each related test.
+
+        :return: dict
+        """
+
+        local_cond = conditions['local_cond']
+        # print(local_cond)
+
+        dev_vm_path = conditions['dev_vm_path']
+        active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
+        workspace = local_cond['workspace']
+
+        log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
+
+        # Get extra folders from previous parse in full_path_args.
+        extra_folders = self.check_extra_folders(local_cond)
 
         # Make list of all test.py in extra folders, like in files_to_read()
         exclude_dirs = ['imports'
@@ -1100,23 +1111,16 @@ class LocalLogic:
                         # Now copy released file:
                         related_tests.append(current_pattern_dict)
 
-        # {'rem_test_path': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/WebsphereAppServer/tests/test.py',
-        # 'rem_test_wd': '/usr/tideway/TKU/addm/tkn_main/tku_patterns/CORE/WebsphereAppServer/tests',
-        # 'test_path': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\WebsphereAppServer\\tests\\test.py',
-        # 'test_wd': 'D:\\perforce\\addm\\tkn_main\\tku_patterns\\CORE\\WebsphereAppServer\\tests',
-        # 'pattern': 'MicrosoftSQLServer.tplpre'}
-
-        # print(related_tests)
-        # for test in related_tests:
-        #     print(test)
         return related_tests
 
     @staticmethod
     def tests_to_read(search_path, exclude_dirs, dev_vm_path, workspace):
         """
+        Read test.py - find pattern load.
 
         :return:
         """
+
         file_candidates = []
         # Extra construction for test.py search.
         log.debug("Step 2 - Composing list of all test files in tkn path.")
