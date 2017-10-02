@@ -6,7 +6,7 @@ Allows you to automate usual routine in pattern development.
 """
 
 import logging
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 """
 Collecting data after Discovery run

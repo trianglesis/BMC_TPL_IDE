@@ -12,12 +12,12 @@ import subprocess
 import datetime
 import logging
 
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 '''
-1. If syntax_passed = True after Notepad_IDE/Sublime/check/syntax_checker.py run TPLPreprocessor (input)
+1. If syntax_passed = True after Notepad_IDE/Sublime/check_ide/syntax_checker.py run TPLPreprocessor (input)
 2. Run TPLPreprocessor with passed args - "with imports/without", "tpl ver"  (input)
-3. Check if TPLPreprocessor finished its work, check results update - tpl_preproc = False\True
+3. Check if TPLPreprocessor finished its work, check_ide results update - tpl_preproc = False\True
 4. Return Tplpreproc result (tpl_preproc = False/True) and folder path (output)
 '''
 
@@ -87,19 +87,19 @@ class Preproc:
 
                     if file_time_stamp < ago:
                         log.warning("TPLPreprocessor result files looks like older that 5 min. "
-                                    "Please check: " + str(file) + " time: " + str(file_time_stamp))
+                                    "Please check_ide: " + str(file) + " time: " + str(file_time_stamp))
 
                     if file_time_stamp > ago:
                         log.debug("TPLPreprocessor result files are recent: " + str(file_time_stamp))
                         tpl_preproc = os.path.exists(output_path)  # True
-                    # Probably no need to check each folder, if one is recent, then Preproc was run.
+                    # Probably no need to check_ide each folder, if one is recent, then Preproc was run.
                     break
                 break
         if tpl_preproc:
             log.debug("TPLPreprocessor success: " + output_path)
         if err_result:
             log.debug("Preproc cmd: "+str(cmd))
-            raise Exception("Preproc cannot run, please check input args and paths. More info in debug mode."
+            raise Exception("Preproc cannot run, please check_ide input args and paths. More info in debug mode."
                             "While TPLPreproc - this error occurs: "+str(err_result))
 
     def run_preproc_cmd(self, cmd, output_path):
@@ -131,73 +131,6 @@ class Preproc:
         Run TPLPreprocessor in two scenarios:
         1. If IMPORT or RECURSIVE_IMPORT - then run in folder passed as arg.
         2. If NOT - run only on current file.
-
-        # Active tests:
-        Run mode and result True
-        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
-        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre",
-        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\",
-        ...                            mode="usual_imports")
-        True
-
-        Run mode and result True
-        NOTE: This test should have imports folder after imports run, in othr way it fails.
-        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
-        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\imports",
-        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\imports",
-        ...                            mode="recursive_imports")
-        True
-
-        Run mode and result True
-        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
-        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tplpre",
-        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\",
-        ...                            mode="solo_mode")
-        True
-
-        # Fail tests
-        Run unsupported args and Traceback:
-        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
-        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tpl",
-        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\",
-        ...                            mode="usual_imports")
-        ... # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-            ...
-        Exception: This is not a tplpre file. TPLPreprocessor won't run! - d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\BMCRemedyARSystem.tpl
-
-        Run unsupported args and Traceback:
-        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
-        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\",
-        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\",
-        ...                            mode="recursive_imports")
-        ... # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-            ...
-        Exception: This is not a tplpre file. TPLPreprocessor won't run! - d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\BMCRemedyARSystem.tpl
-
-        Run unsupported args and Traceback:
-        >>> Preproc().tpl_preprocessor(workspace="d:\\\\perforce",
-        ...                            input_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\BMCRemedyARSystem.tpl",
-        ...                            output_path="d:\\\\perforce\\\\addm\\\\tkn_main\\\\tku_patterns\\\\CORE\\\\"
-        ...                            "BMCRemedyARSystem\\\\",
-        ...                            mode="solo_mode")
-        ... # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-            ...
-        Exception: This is not a tplpre file. TPLPreprocessor won't run! - d:\perforce\addm\tkn_main\tku_patterns\CORE\BMCRemedyARSystem\BMCRemedyARSystem.tpl
-
 
         :param workspace: str
         :param input_path:  What to preproc file\folder

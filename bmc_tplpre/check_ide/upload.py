@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class AddmOperations:
@@ -103,7 +103,7 @@ class AddmOperations:
          'Failed to activate 1 knowledge upload\n',
          'Pattern module BMC.RemedyARSystem\n',
          '\tErrors:\n',
-         "\t\tSyntax error at or near 'check' at line 15\n",
+         "\t\tSyntax error at or near 'check_ide' at line 15\n",
          'Pattern module BMC.RemedyARSystem\n',
          '\tWarnings:\n',
          '\t\tDeactivating BMC.RemedyARSystem to use newly activated module\n',
@@ -134,33 +134,23 @@ class AddmOperations:
                 baring = self.progress_bar(msg)
 
                 # Show progress with fancy progressbar:
-                if progressbar:
-                    while stdout is not None:
+                while stdout is not None:
+                    if progressbar:
                         baring.update()
-                        out = stdout.readlines()
-                        raw_out = "".join(out)
-                        result_out.append(raw_out.rstrip('\r'))
-                        if not out:
-                            break
-                        time.sleep(0.1)
-                # There is no progressbar - show just simple spinner:
-                else:
-                    while stdout is not None:
+                    else:
                         sys.stdout.write(next(baring))
                         sys.stdout.flush()
                         sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
 
-                        out = stdout.readlines()
-                        raw_out = "".join(out)
-                        result_out.append(raw_out.rstrip('\r'))
+                    out = stdout.readlines()
+                    raw_out = "".join(out)
+                    result_out.append(raw_out.rstrip('\r'))
+                    if not out:
+                        break
+                    time.sleep(0.1)
 
-                        if not out:
-                            sys.stdout.flush()  # Remove spinner from output.
-                            break
-                        time.sleep(0.1)
                 # Final result:
                 result = ''.join(result_out)
-
                 if result:
                     item = self.upload_num_item.findall(result)
                     if self.upload_activated_check.findall(result):
@@ -207,29 +197,20 @@ class AddmOperations:
             baring = self.progress_bar(msg)
 
             # Show progress with fancy progressbar:
-            if progressbar:
-                while stdout is not None:
+            while stdout is not None:
+                if progressbar:
                     baring.update()
-                    out = stdout.readlines()
-                    raw_out = "".join(out)
-                    result_out.append(raw_out.rstrip('\r'))
-                    if not out:
-                        break
-                    time.sleep(0.1)
-            # There is no progressbar - show just simple spinner:
-            else:
-                while stdout is not None:
+                else:
                     sys.stdout.write(next(baring))
                     sys.stdout.flush()
                     sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
 
-                    out = stdout.readlines()
-                    raw_out = "".join(out)
-                    result_out.append(raw_out.rstrip('\r'))
-                    if not out:
-                        sys.stdout.flush()  # Remove spinner from output.
-                        break
-                    time.sleep(0.1)
+                out = stdout.readlines()
+                raw_out = "".join(out)
+                result_out.append(raw_out.rstrip('\r'))
+                if not out:
+                    break
+                time.sleep(0.1)
 
             # Final result:
             result = ''.join(result_out)
@@ -424,7 +405,7 @@ class AddmOperations:
 
     def file_check(self, zip_on_local, zip_on_remote):
         """
-        Run MD5 sum check function. Raise error when sum not equal.
+        Run MD5 sum check_ide function. Raise error when sum not equal.
 
         :return:
         """

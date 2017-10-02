@@ -9,7 +9,7 @@ import os
 import ast
 import re
 import logging
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class TestRead:
@@ -35,18 +35,19 @@ class TestRead:
         if os.path.exists(test_py_file_dir + os.sep + "test.py"):
             log.debug("Folder tests for current patters - exist: " + str(test_py_file_dir))
 
-            raw_test_py = open(test_py_file_dir+"test.py", 'r')
-            log.debug("Reading: " + test_py_file_dir + "test.py")
+            raw_test_py = test_py_file_dir+"test.py"
+            log.debug("Reading: " + raw_test_py)
 
             try:
-                raw_test_content = raw_test_py.read()
-                test_tree = ast.parse(raw_test_content)
-                return test_tree
+                with open(raw_test_py, "r", encoding="utf8") as f:
+                    read_file = f.read()
+                    test_tree = ast.parse(read_file)
+                    return test_tree
             except UnicodeDecodeError as unicode_err:
                 log.critical("Error: Unable to parse {!r}".format(str(unicode_err)))
 
         else:
-            log.warning("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
+            log.warning("File test.py did not found. Please check_ide it in path: " + str(test_py_file_dir))
 
     def import_pattern_tests(self, working_dir):
         """

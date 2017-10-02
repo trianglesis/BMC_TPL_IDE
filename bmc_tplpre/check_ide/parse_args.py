@@ -7,10 +7,10 @@ Allows you to automate usual routine in pattern development.
 
 import re
 import paramiko
-from check.local_logic import LocalLogic
+from check_ide.local_logic import LocalLogic
 import logging
 
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class ArgsParse:
@@ -105,7 +105,7 @@ class ArgsParse:
         ssh          = self.addm_host_check(addm_host, user, password)
         if ssh:
             '''
-            Here I check ADDM VM version and tpl version supported.
+            Here I check_ide ADDM VM version and tpl version supported.
             If ADDM connection is established - run versioning command and compare its result with 
             version table to obtain latest supported tpl code version to upload.
             More in check_addm_tpl_ver() doc.
@@ -115,7 +115,7 @@ class ArgsParse:
             '''
             If result of dev_vm_check is True - there will be a string with path to 'dev_vm_check': '/usr/tideway/TKU'
             And then I can compose any needed paths to files from local to remote. More in check_hgfs() - doc.
-            If not - it will bool False and before starting upload I will check this and if it False - 
+            If not - it will bool False and before starting upload I will check_ide this and if it False - 
                 SFTP upload will be started, or REST - for the future upgrades of this code.
             '''
             dev_vm_check, dev_vm_path = addm_env_check.check_hgfs(ssh)
@@ -177,8 +177,8 @@ class ArgsParse:
         Should checked at first - before upload, scan, disco
 
         Disabling to allow use host names:
-        check = self.ip_addr_check.match(addm_host)
-        if check:
+        check_ide = self.ip_addr_check.match(addm_host)
+        if check_ide:
             addm_host = addm_host  # ADDM ip is:                192.168.5.6
 
         :param password: str
@@ -212,7 +212,7 @@ class ArgsParse:
                     ssh = False
                 except TimeoutError:
                     log.critical("Connection failed. Probably host or IP of ADDM is not set or incorrect!")
-                    log.warning("Will continue further check, but nothing will proceed on ADDM!")
+                    log.warning("Will continue further check_ide, but nothing will proceed on ADDM!")
                     ssh = False
                     # raise
             else:
@@ -264,7 +264,7 @@ class ArgsParse:
     def oper_mode(known_args):
         """
         Dict should not be empty even if there is no args for that.
-        Further Ill check and use logic.
+        Further Ill check_ide and use logic.
         If imports used - than no test run!
         I test run used - than no imports!
 

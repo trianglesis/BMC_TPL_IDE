@@ -6,7 +6,7 @@ Allows you to automate usual routine in pattern development.
 """
 
 import logging
-from check.local_logic import LocalLogic
+from check_ide.local_logic import LocalLogic
 
 
 def log_define(args):
@@ -63,7 +63,7 @@ def i_log(level, log_path):
     log = logging.getLogger(__name__)
     log.setLevel(level)
     # Usual logging to file:
-    file_handler = logging.FileHandler(log_path+'\\check.log')
+    file_handler = logging.FileHandler(log_path+'\\check_ide.log')
     file_handler.setLevel(level)
     # Usual logging to console
     console_handler = logging.StreamHandler()

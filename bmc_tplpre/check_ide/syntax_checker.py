@@ -22,23 +22,23 @@ except ImportError:
     progressbar = False
     pass
 
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class SyntaxCheck:
     """
-        1. Use working dir and tpl ver and run syntax check (input)
-        2. Save syntax check result
+        1. Use working dir and tpl ver and run syntax check_ide (input)
+        2. Save syntax check_ide result
         2.1 If pass - update var with syntax_passed = True
         2.2 If fail syntax_passed = Fail
-        3. Return syntax check results
+        3. Return syntax check_ide results
 
         Verify if tplint is present on current system.
-        If not - use something another to check common errors and typos in tpl\\tplpre files.
+        If not - use something another to check_ide common errors and typos in tpl\\tplpre files.
         to be continued...
 
         If tplint is present - use arg from ask_addm to compare the version of tpl which addm support.
-        Run check.
+        Run check_ide.
     """
 
     def __init__(self):
@@ -59,10 +59,10 @@ class SyntaxCheck:
     def syntax_check(self, working_dir, disco_ver):
         """
         Check the syntax in working dir for all found files.
-        Tpl version for check will be used from ADDM.
+        Tpl version for check_ide will be used from ADDM.
         If no ADDM ip was added in args - will latest available hardcoded.
 
-        Until tplint updated - it can check syntax only for max version 10.2.
+        Until tplint updated - it can check_ide syntax only for max version 10.2.
 
         :param disco_ver: str
         :param working_dir: str
@@ -95,7 +95,7 @@ class SyntaxCheck:
         match_result = re.compile("(?P<error>\w+\s\w+) at or near '(?P<near>\S+)', "
                                   "line (?P<line>\d+), in (?P<module>\S+)")
 
-        log.debug("Syntax: Will check all files in path: " + str(working_dir))
+        log.debug("Syntax: Will check_ide all files in path: " + str(working_dir))
 
         if disco_ver not in self.SYNTAX_SUPPORTED:
             log.info("NOTE: tplint was updated in 2016 last time, "
@@ -134,6 +134,7 @@ class SyntaxCheck:
                         bar.finish()
                     log.info("Build OK: Syntax: PASSED!")
                     syntax_passed = True
+                    sys.stdout.flush()
 
                 elif match_result.findall(result):
                     # Close bar, do not forget to.
@@ -142,14 +143,15 @@ class SyntaxCheck:
                     # error_modules = mod_re.findall(result)
                     # errors = errors_re.findall(result)
                     log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
+                    sys.stdout.flush()
                 else:
                     log.error("Syntax: Something is not OK \n" + str(result))
             except:
-                log.error("Syntax: Tplint cannot run, check if working dir is present!")
+                log.error("Syntax: Tplint cannot run, check_ide if working dir is present!")
                 log.error("Syntax: Tplint use path: " + tpl_mod_dir)
         else:
-            log.warning("Path to tplint module is not exist. Please check this: "
-                        "https://github.com/trianglesis/BMC_TPL_IDE#syntax-check")
+            log.warning("Path to tplint module is not exist. Please check_ide this: "
+                        "https://github.com/trianglesis/BMC_TPL_IDE#syntax-check_ide")
             # noinspection PyPep8
             log.debug("Those paths expected: "
                       "\ntplint_exe_path - "+str(tplint_exe_path) +
