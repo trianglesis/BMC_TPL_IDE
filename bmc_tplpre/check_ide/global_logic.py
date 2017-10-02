@@ -331,7 +331,7 @@ class GlobalLogic:
         return parse_args.gather_args(known_args=args_from_cmd['known_args'],
                                       extra_args=args_from_cmd['extra_args'])
 
-    def make_function_set(self) -> object:
+    def make_function_set(self):
         """
         Output:
         conditional_functions =
@@ -783,7 +783,7 @@ class GlobalLogic:
         else:
             log.debug("This 'self.env_cond' is not operable: "+str(self.env_cond))
 
-    def syntax_cond(self, **logical_conditions):
+    def syntax_cond(self, tpl_version):
         """
         Run syntax with options based on conditional arguments.
 
@@ -797,7 +797,6 @@ class GlobalLogic:
         """
 
         # Set examples in __init__ docstrings:
-        tpl_version = logical_conditions['tpl_version']
         import_cond = self.import_cond
 
         syntax_check_cond_f = False

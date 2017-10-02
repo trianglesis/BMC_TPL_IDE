@@ -134,6 +134,7 @@ class SyntaxCheck:
                         bar.finish()
                     log.info("Build OK: Syntax: PASSED!")
                     syntax_passed = True
+                    sys.stdout.flush()
 
                 elif match_result.findall(result):
                     # Close bar, do not forget to.
@@ -142,6 +143,7 @@ class SyntaxCheck:
                     # error_modules = mod_re.findall(result)
                     # errors = errors_re.findall(result)
                     log.error("Syntax: ERROR: Some issues found!""\n" + str(result))
+                    sys.stdout.flush()
                 else:
                     log.error("Syntax: Something is not OK \n" + str(result))
             except:
