@@ -15,7 +15,7 @@ from check_ide.logger import log_define
 # from pprint import pformat
 
 
-def parse_args_f(args):
+def parse_args_f():
     """
     Args parser function.
     Input nothing, wile exec - return tuples with known args and extra args.
@@ -99,100 +99,106 @@ def parse_args_f(args):
     common.add_argument("-l", type=str, action='store', dest="log_lvl", default="1", help=l_h)
     common.add_argument('--version', action='version', version='%(prog)s 1.1.2')
 
-    # As it ws in older version: known, extra = parser.parse_known_args()
-    return parser.parse_known_args(args)
+    return parser
 
 
-known_args, extra_args = parse_args_f(sys.argv[1:])
+if __name__ == "__main__":
+    """
+        Start execution.
+        Later function execution from below will use some logic to break the execution if something fails.
+        Now this just execute each "<operation_name>_f" if this is callable obj.
+    """
+    parser = parse_args_f()
+    known_args, extra_args = parser.parse_known_args(sys.argv[1:])
 
-log = log_define(known_args)
-log.debug("Start: "+__name__)
+    log = log_define(known_args)
+    log.debug("Start: "+__name__)
 
-funcs_run = GlobalLogic(known_args=known_args, extra_args=extra_args)
-conditional_functions, conditional_results = funcs_run.make_function_set()
+    funcs_run = GlobalLogic(known_args=known_args, extra_args=extra_args)
+    conditional_functions, conditional_results = funcs_run.make_function_set()
 
-# Manual functions execution:
-assert isinstance(conditional_functions, dict)
+    # Manual functions execution:
+    assert isinstance(conditional_functions, dict)
 
-if conditional_functions['imports_f']:
-    imports_f = conditional_functions['imports_f']
+    if conditional_functions['imports_f']:
+        imports_f = conditional_functions['imports_f']
 
-    # Executing test queries parser:
-    if callable(imports_f['parse_tests_queries']):
-        parse_tests_queries = imports_f['parse_tests_queries']
-        if parse_tests_queries:
-            log.debug("IMPORTS:\t\tparse_tests_queries")
-            parse_tests_queries()
+        # Executing test queries parser:
+        if callable(imports_f['parse_tests_queries']):
+            parse_tests_queries = imports_f['parse_tests_queries']
+            if parse_tests_queries:
+                log.debug("IMPORTS:\t\tparse_tests_queries")
+                parse_tests_queries()
 
-    # Executing test patterns list get:
-    if callable(imports_f['parse_tests_patterns']):
-        parse_tests_patterns = imports_f['parse_tests_patterns']
-        if parse_tests_patterns:
-            log.debug("IMPORTS:\t\tparse_tests_patterns")
-            parse_tests_patterns()
+        # Executing test patterns list get:
+        if callable(imports_f['parse_tests_patterns']):
+            parse_tests_patterns = imports_f['parse_tests_patterns']
+            if parse_tests_patterns:
+                log.debug("IMPORTS:\t\tparse_tests_patterns")
+                parse_tests_patterns()
 
-    # Executing all imports:
-    if callable(imports_f['import_patterns']):
-        import_patterns = imports_f['import_patterns']
-        if import_patterns:
-            log.debug("IMPORTS:\t\timport_patterns")
-            import_patterns()
+        # Executing all imports:
+        if callable(imports_f['import_patterns']):
+            import_patterns = imports_f['import_patterns']
+            if import_patterns:
+                log.debug("IMPORTS:\t\timport_patterns")
+                import_patterns()
 
-# # Executing preprocessor:
-if callable(conditional_functions['preproc_f']):
-    preproc_f = conditional_functions['preproc_f']
-    if preproc_f:
-        log.debug("PREPROC:\t\tpreproc_f")
-        preproc_f()
+    # # Executing preprocessor:
+    if callable(conditional_functions['preproc_f']):
+        preproc_f = conditional_functions['preproc_f']
+        if preproc_f:
+            log.debug("PREPROC:\t\tpreproc_f")
+            preproc_f()
 
-# Executing syntax checker:
-if callable(conditional_functions['syntax_check_f']):
-    syntax_check_f = conditional_functions['syntax_check_f']
-    if syntax_check_f:
-        log.debug("SYNTAX:\t\tsyntax_check_f")
-        syntax_check_f()
+    # Executing syntax checker:
+    if callable(conditional_functions['syntax_check_f']):
+        syntax_check_f = conditional_functions['syntax_check_f']
+        if syntax_check_f:
+            log.debug("SYNTAX:\t\tsyntax_check_f")
+            syntax_check_f()
 
-# Executing zipping files (and upload maybe?)
-if callable(conditional_functions['zip_files_f']):
-    zip_files_f = conditional_functions['zip_files_f']
-    if zip_files_f:
-        log.debug("ZIP:\t\tzip_files_f")
-        zip_files_f()
+    # Executing zipping files (and upload maybe?)
+    if callable(conditional_functions['zip_files_f']):
+        zip_files_f = conditional_functions['zip_files_f']
+        if zip_files_f:
+            log.debug("ZIP:\t\tzip_files_f")
+            zip_files_f()
 
-# Wiping TKU!:
-if callable(conditional_functions['wipe_tku_f']):
-    wipe_tku_f = conditional_functions['wipe_tku_f']
-    if wipe_tku_f:
-        log.debug("UPLOAD:\t\twipe_tku_f")
-        wipe_tku_f()
+    # Wiping TKU!:
+    if callable(conditional_functions['wipe_tku_f']):
+        wipe_tku_f = conditional_functions['wipe_tku_f']
+        if wipe_tku_f:
+            log.debug("UPLOAD:\t\twipe_tku_f")
+            wipe_tku_f()
 
-# Executing pattern upload:
-if callable(conditional_functions['upload_f']):
-    upload_f = conditional_functions['upload_f']
-    if upload_f:
-        log.debug("UPLOAD:\t\tupload_f")
-        upload_f()
+    # Executing pattern upload:
+    if callable(conditional_functions['upload_f']):
+        upload_f = conditional_functions['upload_f']
+        if upload_f:
+            log.debug("UPLOAD:\t\tupload_f")
+            upload_f()
 
-# Executing pattern activation:
-if callable(conditional_functions['addm_activate_f']):
-    addm_activate_f = conditional_functions['addm_activate_f']
-    if addm_activate_f:
-        log.debug("ACTIVATE:\t\taddm_activate_f")
-        addm_activate_f()
+    # Executing pattern activation:
+    if callable(conditional_functions['addm_activate_f']):
+        addm_activate_f = conditional_functions['addm_activate_f']
+        if addm_activate_f:
+            log.debug("ACTIVATE:\t\taddm_activate_f")
+            addm_activate_f()
 
-# Executing start scan
-# # Working in current condition. Disable to save time
-if callable(conditional_functions['scan_f']):
-    scan_f = conditional_functions['scan_f']
-    if scan_f:
-        log.debug("SCAN:\t\tscan_f")
-        scan_f()
+    # Executing start scan
+    # # Working in current condition. Disable to save time
+    if callable(conditional_functions['scan_f']):
+        scan_f = conditional_functions['scan_f']
+        if scan_f:
+            log.debug("SCAN:\t\tscan_f")
+            scan_f()
 
-if callable(conditional_functions['test_executor_f']):
-    test_executor = conditional_functions['test_executor_f']
-    if test_executor:
-        log.debug("TEST EXEC:\t\ttest_executor_f")
-        test_executor()
+    if callable(conditional_functions['test_executor_f']):
+        test_executor = conditional_functions['test_executor_f']
+        if test_executor:
+            log.debug("TEST EXEC:\t\ttest_executor_f")
+            test_executor()
 
-log.info("-=== END of Check script. ===-")
+    log.info("-=== END of Check script. ===-")
 
