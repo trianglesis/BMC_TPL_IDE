@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class AddmOperations:
@@ -103,7 +103,7 @@ class AddmOperations:
          'Failed to activate 1 knowledge upload\n',
          'Pattern module BMC.RemedyARSystem\n',
          '\tErrors:\n',
-         "\t\tSyntax error at or near 'check' at line 15\n",
+         "\t\tSyntax error at or near 'check_ide' at line 15\n",
          'Pattern module BMC.RemedyARSystem\n',
          '\tWarnings:\n',
          '\t\tDeactivating BMC.RemedyARSystem to use newly activated module\n',
@@ -405,7 +405,7 @@ class AddmOperations:
 
     def file_check(self, zip_on_local, zip_on_remote):
         """
-        Run MD5 sum check function. Raise error when sum not equal.
+        Run MD5 sum check_ide function. Raise error when sum not equal.
 
         :return:
         """

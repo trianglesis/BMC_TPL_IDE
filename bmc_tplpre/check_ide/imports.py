@@ -11,9 +11,9 @@ import os
 import shutil
 import stat
 import logging
-from check.local_logic import LocalLogic
+from check_ide.local_logic import LocalLogic
 
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class TPLimports:
@@ -190,7 +190,7 @@ class TPLimports:
 
 
         New revision of this function:
-            - no need to check folder existence - all check were done before call,
+            - no need to check_ide folder existence - all check_ide were done before call,
             - no need to list subdirs in extra_folders - now path will point to end path for each pattens lib.
             - kwargs used instead of args.
 
@@ -271,7 +271,7 @@ class TPLimports:
 
         if find_importing_modules:
             log.warning("Step 3. These modules cannot be found anywhere in 'tku_patterns' "
-                        "please check manually: "+str(find_importing_modules))
+                        "please check_ide manually: "+str(find_importing_modules))
         if current_modules_name:
             log.debug("Step 3.1 Found modules list: "+str(current_modules_name))
 
@@ -599,7 +599,7 @@ class TPLimports:
 
             Create folder 'imports'
             Copy imported patterns in folder imports
-            Then - syntax check will be started
+            Then - syntax check_ide will be started
 
             :param working_dir: string pattern folder
             :param patterns_path:
@@ -645,7 +645,7 @@ class TPLimports:
             for file in folder_content:
 
                 # This is not the best solution for customer mode, because it will parse whole patterns,
-                # leave tplpre check here:
+                # leave tplpre check_ide here:
                 if file.endswith(".tplpre"):
                     all_tplre.append(file)
                     tplpre_path.append(folder_path + os.sep + file)
@@ -655,7 +655,7 @@ class TPLimports:
 
             return tplpre_path
         else:
-            log.warning("Current folder is empty or does not exist. Please check arguments and path to current file.")
+            log.warning("Current folder is empty or does not exist. Please check_ide arguments and path to current file.")
 
     def _del_old_imports(self, path):
         """
@@ -671,12 +671,12 @@ class TPLimports:
                 # shutil.rmtree(path)
             except TypeError as e:
                 log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
-                            "Please check path and permissions and 'AR' attribute in file.")
+                            "Please check_ide path and permissions and 'AR' attribute in file.")
                 log.error(e)
                 raise
             except PermissionError as e:
                 log.warning("Step 4.1 This folder exist but program have no permission to remove it. "
-                            "Please check path and permissions and 'AR' attribute in file.")
+                            "Please check_ide path and permissions and 'AR' attribute in file.")
                 log.error(e)
                 raise
 

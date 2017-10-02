@@ -5,123 +5,105 @@ Syntax checking is based on BMC code and not included in this public version due
 Allows you to automate usual routine in pattern development.
 """
 
+import sys
 import argparse
-from check.global_logic import GlobalLogic
-from check.logger import log_define
+from check_ide.global_logic import GlobalLogic
+from check_ide.logger import log_define
 
 # # DEBUG
 # import json
 # from pprint import pformat
 
-parser = argparse.ArgumentParser(add_help=True)
-common = parser.add_argument_group("Common options")
-developer = parser.add_argument_group("Developer options")
 
-developer.add_argument("-wipe_tku",
-                       action="store_true",
-                       help="Totally wipe knowledge update with "
-                            "tw_pattern_management --remove-all --force.")
-developer.add_argument("-usual_import",
-                       action="store_true",
-                       help="Option imports patterns which only imported in currently opened pattern "
-                            "from -full_path. "
-                            "No recursive imports will run. "
-                            "If file is not a (tplpre|tpl) - this option will be ignored.")
-developer.add_argument("-recursive_import",
-                       action="store_true",
-                       help="Options imports all patterns in recursive mode including each 'imports' from "
-                            "each found pattern."
-                            "If file is not a (tplpre|tpl) - this option will be ignored.")
-developer.add_argument("-read_test",
-                       action="store_true",
-                       help="Read test.py file and get all patterns which used for test and import in recursive mode."
-                            "Also retrieve queries and use to generate model files.")
-developer.add_argument("-run_test",
-                       action="store_true",
-                       help="Run test which is related to current patten if test.py exist."
-                            "Save result in log and in current working directory.")
-developer.add_argument("-related_tests",
-                       action="store_true",
-                       help="Read each test.py file in tku_patterns and compose set of pattern:tests where active"
-                            "pattern is used. Execute each test starting from main pattern's test one by one"
-                            "and save result log in current pattern folder.")
-developer.add_argument("-test_verbose",
-                       action="store_true",
-                       help="Using --verbose can also be useful to see progress in a little more detail")
-developer.add_argument("-test_failfast",
-                       action="store_true",
-                       help="Using --failfast can be useful as the tests will stop at the first failure.")
-developer.add_argument("-tpl",
-                       type=str,
-                       action='store',
-                       dest="version_tpl",
-                       default="",
-                       help="Ignored option. In progress..."
-                            "Set this to correspond tpl version to upload folder of TPLPreprocessor output result "
-                            "ignoring ADDM tpl version check procedure. "
-                            "Use when you want upload older or newer tpl on ADDM"
-                            "If file is not a .tplpre - this option will be ignored.")
-common.add_argument("-full_path",
-                    type=str,
-                    action='store',
-                    dest="full_path",
-                    default="",
-                    help="Path to current edited or processed file.")
-common.add_argument("-u",
-                    type=str,
-                    action='store',
-                    dest="user",
-                    default="",
-                    help="Your ADDM user - root or tideway")
-common.add_argument("-p",
-                    type=str,
-                    action='store',
-                    dest="password",
-                    default="",
-                    help="Password for ADDM user")
-common.add_argument("-system_user",
-                    type=str,
-                    action='store',
-                    dest="system_user",
-                    default="",
-                    help="Your ADDM user - root or tideway")
-common.add_argument("-system_password",
-                    type=str,
-                    action='store',
-                    dest="system_password",
-                    default="",
-                    help="Password for ADDM user")
-common.add_argument("-addm",
-                    type=str,
-                    action='store',
-                    dest="addm_host",
-                    default="",
-                    help="ADDM ip address.")
-common.add_argument("-host_list",
-                    type=str,
-                    action='store',
-                    dest="scan_host_list",
-                    default="",
-                    help="Host list to Discovery scan on ADDM sep by comma.")
-common.add_argument("-disco_mode",
-                    type=str,
-                    action='store',
-                    dest="disco_mode",
-                    default="",
-                    help="Choose the discovery mode: standard|playback|record")
-common.add_argument("-l",
-                    type=str,
-                    action='store',
-                    dest="log_lvl",
-                    default="1",
-                    help="Please set log level")  # info, quiet, warning, debug, output, error
-common.add_argument('--version',
-                    action='version',
-                    version='%(prog)s 1.1.2')
+def parse_args_f(args):
+    """
+    Args parser function.
+    Input nothing, wile exec - return tuples with known args and extra args.
 
-known_args, extra_args = parser.parse_known_args()
-print(type(known_args))
-print(known_args)
+    Namespace(addm_host='',
+              disco_mode='',
+              full_path='d:\\BMCRemedyARSystem.tplpre',
+              log_lvl='debug',
+              password='',
+              read_test=False,
+              recursive_import=False,
+              related_tests=False,
+              run_test=False,
+              scan_host_list='',
+              system_password='',
+              system_user='',
+              test_failfast=False,
+              test_verbose=False,
+              user='',
+              usual_import=False,
+              version_tpl='',
+              wipe_tku=False)
+               ['-my_extra_arg']
+
+    :return: tuple
+    """
+
+    parser = argparse.ArgumentParser(add_help=True)
+    common = parser.add_argument_group("Common options")
+    developer = parser.add_argument_group("Developer options")
+
+    wipe_tku_h         = '''Totally wipe knowledge update with tw_pattern_management --remove-all --force.'''
+    usual_import_h     = '''Option imports patterns which only imported in currently opened pattern from -full_path. 
+                            No recursive imports will run. If file is not a (tplpre|tpl) - this option will be ignored.'''
+    recursive_import_h = '''Options imports all patterns in recursive mode including each 'imports' 
+                            from each found pattern.If file is not a (tplpre|tpl) - this option will be ignored. '''
+    read_test_h        = '''Read test.py file and get all patterns which used for test and import in recursive mode. 
+                            Also retrieve queries and use to generate model files. '''
+    run_test_h         = '''Run test which is related to current patten if test.py exist. 
+                            Save result in log and in current working directory. '''
+    related_tests_h    = '''Read each test.py file in tku_patterns and compose set of pattern:tests 
+                            where active pattern is used. Execute each test starting from main pattern's 
+                            test one by one and save result log in current pattern folder. '''
+    test_verbose_h     = '''Using --verbose can also be useful to see progress in a little more detail '''
+    test_failfast_h    = '''Using --failfast can be useful as the tests will stop at the first failure. '''
+    tpl_h              = '''Ignored option. In progress...Set this to correspond tpl version to upload folder of 
+                            TPLPreprocessor output result ignoring ADDM tpl version check_ide procedure. 
+                            Use when you want upload older or newer tpl on ADDM If file is not a .tplpre
+                            - this option will be ignored. '''
+    full_path_h        = '''Path to current edited or processed file. '''
+    u_h                = '''Your ADDM user - root or tideway '''
+    p_h                = '''Password for ADDM user '''
+    system_user_h      = '''Your ADDM user - root or tideway '''
+    system_pass_h      = '''Password for ADDM user '''
+    addm_h             = '''ADDM ip address. '''
+    host_list_h        = '''Host list to Discovery scan on ADDM sep by comma. '''
+    disco_mode_h       = '''Choose the discovery mode: standard|playback|record '''
+    l_h                = '''Please set log level -> info, quiet, warning, debug, output, err '''
+
+    # DEV ARGS - work only for fully configured DEV environment.
+    developer.add_argument("-wipe_tku", action="store_true", help=wipe_tku_h)
+    developer.add_argument("-usual_import", action="store_true", help=usual_import_h)
+    developer.add_argument("-recursive_import", action="store_true", help=recursive_import_h)
+    developer.add_argument("-read_test", action="store_true", help=read_test_h)
+    developer.add_argument("-run_test", action="store_true", help=run_test_h)
+    developer.add_argument("-related_tests", action="store_true", help=related_tests_h)
+    developer.add_argument("-test_verbose", action="store_true", help=test_verbose_h)
+    developer.add_argument("-test_failfast", action="store_true", help=test_failfast_h)
+    developer.add_argument("-tpl", type=str, action='store', dest="version_tpl", default="", help=tpl_h)
+
+    # COMMON ARGS - works in most usual cases.
+    common.add_argument("-full_path", type=str, action='store', dest="full_path", default="", help=full_path_h)
+    common.add_argument("-u", type=str, action='store', dest="user", default="", help=u_h)
+    common.add_argument("-p", type=str, action='store', dest="password", default="", help=p_h)
+    common.add_argument("-system_user", type=str, action='store', dest="system_user", default="", help=system_user_h)
+    common.add_argument("-system_password", type=str, action='store', dest="system_password", default="",
+                        help=system_pass_h)
+    common.add_argument("-addm", type=str, action='store', dest="addm_host", default="", help=addm_h)
+    common.add_argument("-host_list", type=str, action='store', dest="scan_host_list", default="", help=host_list_h)
+    common.add_argument("-disco_mode", type=str, action='store', dest="disco_mode", default="", help=disco_mode_h)
+    common.add_argument("-l", type=str, action='store', dest="log_lvl", default="1", help=l_h)
+    common.add_argument('--version', action='version', version='%(prog)s 1.1.2')
+
+    # As it ws in older version: known, extra = parser.parse_known_args()
+    return parser.parse_known_args(args)
+
+
+known_args, extra_args = parse_args_f(sys.argv[1:])
 
 log = log_define(known_args)
 log.debug("Start: "+__name__)

@@ -12,7 +12,7 @@ import subprocess
 # import datetime
 import logging
 
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 # noinspection PyPep8Naming
@@ -24,7 +24,7 @@ class LocalLogic:
         And some extra results from external addm machine.
         """
 
-        # TPL versions check:
+        # TPL versions check_ide:
         self.tpl_ver_check = re.compile("\d+\.\d+")  # TPl ver 10.2,11.0...
 
         """
@@ -71,7 +71,7 @@ class LocalLogic:
                              }
 
         # Compose regex for all file types and places:
-        # Firstly check if this path is usual DEV
+        # Firstly check_ide if this path is usual DEV
         self.dev_path_re = re.compile('(\S+)(\\\\addm\\\\tkn_main\\\\tku_patterns\\\\)')
 
         # These parts of regex will be used to compose different trees:
@@ -158,7 +158,7 @@ class LocalLogic:
             file_ext: 'tpl'
         '''
 
-        # This is to check and extract args from customer path, after unzip TKU Update package:
+        # This is to check_ide and extract args from customer path, after unzip TKU Update package:
         self.tku_package_re = re.compile('(?P<working_dir>'
                                          '(?P<tku_update_path>'
                                          '(?P<workspace>\S+)\\\\'
@@ -195,7 +195,7 @@ class LocalLogic:
         self.addm_version_full_re = re.compile("BMC\sDiscovery\sVersion:\s+(\d+(?:\.\d+)*)")
         self.addm_version_re = re.compile("^(\d+(?:\.\d+)?)")
 
-        # HGFS ADDM folder shares check
+        # HGFS ADDM folder shares check_ide
         self.hgfs_path_re = re.compile("(?P<tkn_path>\S+)/addm/tkn_main/tku_patterns/"
                                        "(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
         self.vm_tkn_path_re = re.compile("(?P<tkn_path>\S+)/addm/tkn_main/tku_patterns/")
@@ -354,11 +354,11 @@ class LocalLogic:
                     # Sandbox for extra functionality:
                     tkn_sandbox_t            = workspace+os.sep+'addm'+os.sep+'tkn_sandbox'
 
-                    # Now check file extensions for different options include:
+                    # Now check_ide file extensions for different options include:
                     if re.match('tplpre', file_ext):
                         # pattern working dir, where pattern file is really lies:
                         working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder
-                        # Making prognoses place to test.py - but check if exist in global logic mod
+                        # Making prognoses place to test.py - but check_ide if exist in global logic mod
                         pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
 
                         # Set of arguments, conditional options and paths to pattern libs:
@@ -402,7 +402,7 @@ class LocalLogic:
 
                         # pattern working dir, where pattern file is really lies:
                         working_dir = tku_patterns_t+os.sep+pattern_lib+os.sep+pattern_folder+os.sep+tpl_folder
-                        # Making prognosable place to test.py - but check if exist in global logic mod
+                        # Making prognosable place to test.py - but check_ide if exist in global logic mod
                         pattern_test_t = working_dir+os.sep+'tests'+os.sep+'test.py'
 
                         args_dict = dict(
@@ -501,7 +501,7 @@ class LocalLogic:
                     elif re.match('py', file_ext):
                         log.debug("File extension matched py pattern. DEV in progress...")
                         # TODO: Add pattern folder based on regex path to model
-                        log.debug("This is py file. Will check if this is a 'test.py'")
+                        log.debug("This is py file. Will check_ide if this is a 'test.py'")
                         args_dict = dict(
                                          env_cond    = 'developer_py',
                                          workspace                = workspace,
@@ -604,7 +604,7 @@ class LocalLogic:
                         if os.path.isdir(folder) and item_match_tku:
                             # For each matched package - make group with its details:
                             # Now adding each found package dir and its name to dict.
-                            # In future we may want to check each date and version before add, or not. Will see.
+                            # In future we may want to check_ide each date and version before add, or not. Will see.
                             # List of packages dicts. Further will nested in tku_dict
                             tku_package_name     = item_match_tku.group('tku_package_name')
                             tku_package_year     = item_match_tku.group('tku_package_year')
@@ -748,7 +748,7 @@ class LocalLogic:
                         working_dir = pattern_path+os.sep+pattern_folder
 
                         log.debug("TPLPRE: This is alone tplpre file - will use path 'as is' "
-                                  "To run TPLPreproc or Syntax check - p4_path should be configured.")
+                                  "To run TPLPreproc or Syntax check_ide - p4_path should be configured.")
                         # Set of arguments, conditional options and paths to pattern libs:
                         args_dict = dict(
                                          env_cond    = 'developer_tplpre',
@@ -777,10 +777,10 @@ class LocalLogic:
                     else:
                         # See no reason to act with standalone tpl file OUT of usual dev environment or not?
                         # Or just upload it to ADDM?
-                        # No imports or syntax check will be run
+                        # No imports or syntax check_ide will be run
                         #   - due unsupported set of options for single tpl in elsewhere in fs.
                         alone_tpl_check = self.alone_tpl_re.match(full_file_path)
-                        # But then check I have a proper *.tpl
+                        # But then check_ide I have a proper *.tpl
                         if alone_tpl_check:
                             pattern_folder = alone_tpl_check.group('pattern_folder')
                             file_name      = alone_tpl_check.group('file_name')
@@ -978,17 +978,17 @@ class LocalLogic:
         """
         Check if folders created, create if needed
 
-        NOTE: I should check this folders in parse_args logic and only if HGFS check = False, so this mean
+        NOTE: I should check_ide this folders in parse_args logic and only if HGFS check_ide = False, so this mean
         that ADDM hasn't shared folders and I should upload data via SFTP
 
-        Folder to check:
+        Folder to check_ide:
         /usr/tideway/TKU/
 
         If no folder:
         Error: ['ls: cannot access /usr/tideway/XYZ: No such file or directory\n']
 
         :param ssh:
-        :param path: path to check
+        :param path: path to check_ide
         """
 
         folders = []
@@ -1046,7 +1046,7 @@ class LocalLogic:
                 extra_folder = local_cond[folder_key]
                 # Add only unique folders:
                 if extra_folder not in extra_folders:
-                    # To be sure I can read files in folder - check folder existence.
+                    # To be sure I can read files in folder - check_ide folder existence.
                     if os.path.exists(extra_folder) and os.path.isdir(extra_folder):
                         extra_folders.append(extra_folder)
                     else:
@@ -1057,7 +1057,7 @@ class LocalLogic:
 
     def get_related_tests(self, **conditions):
         """
-        During search of recursive patterns + test, also check each test.py where active pattern also used,
+        During search of recursive patterns + test, also check_ide each test.py where active pattern also used,
         then compose dict with name of pattern_directory: test_path which will be used for further run to validate
         each related test.
 

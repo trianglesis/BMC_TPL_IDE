@@ -9,7 +9,7 @@ import os
 import ast
 import re
 import logging
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class TestRead:
@@ -46,7 +46,7 @@ class TestRead:
                 log.critical("Error: Unable to parse {!r}".format(str(unicode_err)))
 
         else:
-            log.warning("File test.py did not found. Please check it in path: " + str(test_py_file_dir))
+            log.warning("File test.py did not found. Please check_ide it in path: " + str(test_py_file_dir))
 
     def import_pattern_tests(self, working_dir):
         """

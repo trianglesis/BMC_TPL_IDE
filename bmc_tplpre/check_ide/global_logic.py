@@ -6,19 +6,19 @@ Allows you to automate usual routine in pattern development.
 """
 
 import os
-from check.parse_args import ArgsParse
-from check.preproc import Preproc
-from check.imports import TPLimports
-from check.test_queries import TestRead
-from check.upload import AddmOperations
-from check.syntax_checker import SyntaxCheck
-from check.local_logic import LocalLogic
-from check.scan import AddmScan
+from check_ide.parse_args import ArgsParse
+from check_ide.preproc import Preproc
+from check_ide.imports import TPLimports
+from check_ide.test_queries import TestRead
+from check_ide.upload import AddmOperations
+from check_ide.syntax_checker import SyntaxCheck
+from check_ide.local_logic import LocalLogic
+from check_ide.scan import AddmScan
 # import json
 # from pprint import pformat
 
 import logging
-log = logging.getLogger("check.logger")
+log = logging.getLogger("check_ide.logger")
 
 
 class GlobalLogic:
@@ -51,7 +51,7 @@ class GlobalLogic:
         >>> extra_args = []
         >>> cls_load = GlobalLogic(known_args=known_args, extra_args=extra_args)
         >>> print(type(cls_load))
-        <class 'global_logic.GlobalLogic'>
+        <class 'global_logic.GlobalLogic'> test
 
         :return: func
         """
@@ -257,7 +257,7 @@ class GlobalLogic:
             if self.oper_args['imports']:
                 '''
                     Set of args dedicated for imports logic.
-                    WIll check mode here and compose boolean logic.
+                    WIll check_ide mode here and compose boolean logic.
                 '''
                 imports = self.oper_args['imports']
 
@@ -279,7 +279,7 @@ class GlobalLogic:
             if self.oper_args['tests']:
                 '''
                     Set of args dedicated for test execution logic.
-                    WIll check mode here and compose boolean logic.
+                    WIll check_ide mode here and compose boolean logic.
                 '''
                 tests = self.oper_args['tests']
 
@@ -300,7 +300,7 @@ class GlobalLogic:
             if self.oper_args['tku_oper']:
                 '''
                     Set of args dedicated for ADDM management execution logic.
-                    WIll check mode here and compose boolean logic.
+                    WIll check_ide mode here and compose boolean logic.
                 '''
                 tku_oper = self.oper_args['tku_oper']
 
@@ -317,7 +317,7 @@ class GlobalLogic:
     @staticmethod
     def check_args_set(**args_from_cmd):
         """
-        This will check args set in input.
+        This will check_ide args set in input.
         Based on set of args - it will compose another set of functions.
         The set of functions will consist of all needed functions on order to execute.
 
@@ -326,7 +326,7 @@ class GlobalLogic:
                 -- 1. Imports_(for all from current pattern + all recursive patterns),
                    2. TPLPreproc_(for all in imports folder),
                    3. SyntaxCheck_(for all in imports folder), -- This probably will be removed later with AST
-                   4. AskADDM_(ADDM SSH connection - check supported tpl, working folder, save SSH session)
+                   4. AskADDM_(ADDM SSH connection - check_ide supported tpl, working folder, save SSH session)
                    5. UploadPatterns_ (zip patterns for correspond tpl ver from ADDM - upload-activate)
                    6. StartScan_(start Discovery with options)
                    7. CheckScan_(Check when scan is finished and successful)
@@ -334,7 +334,7 @@ class GlobalLogic:
                    9. SaveResults_(save model file for SI and Query file for queries with results)
                    10. ...
             - for tpl usage (without Preproc or Syntax):
-                -- 1. AskADDM_(ADDM SSH connection - check supported tpl, working folder, save SSH session)
+                -- 1. AskADDM_(ADDM SSH connection - check_ide supported tpl, working folder, save SSH session)
                    2. UploadPatterns_ (zip patterns for correspond tpl ver from ADDM - upload-activate)
                    3. StartScan_(start Discovery with options)
                    4. CheckScan_(Check when scan is finished and successful)
@@ -342,10 +342,10 @@ class GlobalLogic:
                    6. SaveResults_(save model file for SI and Query file for queries with results)
                    7. ...
             - for test.py (or something like that) if will be added:
-                -- 1. AskADDM_(ADDM SSH connection - check supported tpl, working folder, save SSH session)
+                -- 1. AskADDM_(ADDM SSH connection - check_ide supported tpl, working folder, save SSH session)
                    2. StartTH_(start TestHarness in tku_patterns folder and output results)
                    3. ExecuteTest_(run test with set of options you send)
-                   4. ValidateTests_(check something you need to)
+                   4. ValidateTests_(check_ide something you need to)
                    5. This section not even planned yet, can be changed.
 
         :param args_from_cmd: set
@@ -381,7 +381,7 @@ class GlobalLogic:
             "local_zip": "ADDM is in DEV mode - not need to point to local zip file."
         }
 
-        Draft example for future testing. Try to check types and results.
+        Draft example for future testing. Try to check_ide types and results.
         >>> class FakeArgs:
         ...    addm_host=''
         ...    disco_mode=''
@@ -554,7 +554,7 @@ class GlobalLogic:
                 
                 - Import patterns if needed on mode set in import_cond
                 - Run preproc on patterns based on conditional arguments:
-                - Run syntax check based on cond args:
+                - Run syntax check_ide based on cond args:
                 - Generate addm working dir based on DEV condition:
                 - Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
                 - If you want to wipe all TKU before:
@@ -586,11 +586,11 @@ class GlobalLogic:
         elif local_proceed_for_addm:
             """
                 When there is an active SSH connection to ADDM but no scan and host list options -
-                Make version check and zip patterns for current ADDM version.
+                Make version check_ide and zip patterns for current ADDM version.
                 
                 - Import patterns if needed on mode set in import_cond
                 - Run preproc on patterns based on conditional arguments:
-                - Run syntax check based on cond args:
+                - Run syntax check_ide based on cond args:
                 - Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
                 - tpl_vers addm_prod addm_ver
                 
@@ -614,7 +614,7 @@ class GlobalLogic:
                 
                 - Import patterns if needed on mode set in import_cond
                 - Run preproc on patterns based on conditional arguments:
-                - Run syntax check based on cond args:
+                - Run syntax check_ide based on cond args:
                 - Generate addm working dir based on DEV condition:
                 - Zipping files in working dir and compose possible path to this zip in ADDM to upload or activate.
                 - If you want to wipe all TKU before:
@@ -646,12 +646,12 @@ class GlobalLogic:
         elif import_preproc_syntax_local:
             """
             I have no active connection to ADDM so I don't know about tpl version to generate and zip
-            - SO I will just import, Preproc and check syntax
+            - SO I will just import, Preproc and check_ide syntax
             
             - Import patterns if needed on mode set in import_cond
             - Run preproc on patterns based on conditional arguments:
             
-            - Run syntax check based on cond args:
+            - Run syntax check_ide based on cond args:
             - Maybe I can add tpl_version for offline checks but what for?
             """
             log.info("Local processing, no ADDM connection.")
@@ -962,7 +962,7 @@ class GlobalLogic:
         """
         Run syntax with options based on conditional arguments.
 
-        If ADDM did not return any version - syntax check will run for all available versions.
+        If ADDM did not return any version - syntax check_ide will run for all available versions.
         Optional: arg set of tpl version can be used here.
 
         By default - results printed in raw mode. Further execution continues.
@@ -983,10 +983,10 @@ class GlobalLogic:
             if self.usual_imports:
                 """
                     - If no addm version - 
-                    it will use empty string as arg and run syntax check for all supported versions.
+                    it will use empty string as arg and run syntax check_ide for all supported versions.
                 """
-                log.info("Syntax check TPLPreprocessor result.")
-                log.debug("Syntax check will run on tpl folders after usual TPLPreproc output. (usual_imports)")
+                log.info("Syntax check_ide TPLPreprocessor result.")
+                log.debug("Syntax check_ide will run on tpl folders after usual TPLPreproc output. (usual_imports)")
                 syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
 
             # Preproc will run on all files from folder 'imports'
@@ -994,10 +994,10 @@ class GlobalLogic:
                 """
                     - After TPLPreprocessor finished its work - run Syntax Check on folder imports
                     - If no addm version - 
-                    it will use empty string as arg and run syntax check for all supported versions.
+                    it will use empty string as arg and run syntax check_ide for all supported versions.
                 """
-                log.info("Syntax check on imports.")
-                log.debug("Syntax check will run on imports folder after my importing logic. "
+                log.info("Syntax check_ide on imports.")
+                log.debug("Syntax check_ide will run on imports folder after my importing logic. "
                           "(recursive_imports or read_test)")
                 syntax_check_cond_f = self.make_syntax_check(self.working_dir+os.sep+"imports", disco_ver=tpl_version)
 
@@ -1007,21 +1007,21 @@ class GlobalLogic:
         # SOLO RUNS:
         else:
             """
-                - If no addm version - it will use empty string as arg and run syntax check for all versions.
-                - In this condition syntax check will hope that imports are already in folder after previous runs.
+                - If no addm version - it will use empty string as arg and run syntax check_ide for all versions.
+                - In this condition syntax check_ide will hope that imports are already in folder after previous runs.
             """
             if self.env_cond == 'developer_tplpre' or self.env_cond == 'developer_tpl':
-                log.info("1/1 Syntax check solo file.")
+                log.info("1/1 Syntax check_ide solo file.")
                 log.debug("1/2 Imports was already created just checking syntax for active pattern. "
                           "(not read_test not recursive_imports not usual_imports)")
                 syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
 
             elif self.env_cond == 'customer_tku':
 
-                log.warning("TPLint cannot check syntax for single tpl file!"
-                            "On other way it will check syntax for whole CORE "
+                log.warning("TPLint cannot check_ide syntax for single tpl file!"
+                            "On other way it will check_ide syntax for whole CORE "
                             "folder and this can take too much time."
-                            "To check syntax please choose usual imports option, "
+                            "To check_ide syntax please choose usual imports option, "
                             "so TPLint will run it only for 'imports' folder!")
 
             else:
@@ -1103,7 +1103,7 @@ class GlobalLogic:
         addm_zip_f     = ''
         path_to_file   = ''
 
-        # Make addm dev vm check to false for condition when this is customer mode.
+        # Make addm dev vm check_ide to false for condition when this is customer mode.
         if self.env_cond == 'customer_tku':
             addm_vm = False
         else:
@@ -1333,7 +1333,7 @@ class GlobalLogic:
 
     def test_run_cond(self):
         """
-        This function gets self.tst_cond and check if this is dict.
+        This function gets self.tst_cond and check_ide if this is dict.
         Then it run different scenarios.
 
         [{
@@ -1457,15 +1457,15 @@ class GlobalLogic:
     @staticmethod
     def make_syntax_check(working_dir, disco_ver):
         """
-        Closure for syntax check function.
+        Closure for syntax check_ide function.
 
-        Run LOCAL syntax check procedure in selected folders or files.
+        Run LOCAL syntax check_ide procedure in selected folders or files.
         Can run ONLY when imports from patter are also in the same folder.
         Should be ignored in SOLO MODE.
 
-        :param working_dir: str - input dir where run syntax check
-        :param disco_ver: str - version of discover engine to use for check, if empty - run all.
-        :return: func - syntax check with args in it.
+        :param working_dir: str - input dir where run syntax check_ide
+        :param disco_ver: str - version of discover engine to use for check_ide, if empty - run all.
+        :return: func - syntax check_ide with args in it.
         """
 
         def syntax_check():
