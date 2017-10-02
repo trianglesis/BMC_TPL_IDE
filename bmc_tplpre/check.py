@@ -97,7 +97,7 @@ def parse_args_f():
     common.add_argument("-host_list", type=str, action='store', dest="scan_host_list", default="", help=host_list_h)
     common.add_argument("-disco_mode", type=str, action='store', dest="disco_mode", default="", help=disco_mode_h)
     common.add_argument("-l", type=str, action='store', dest="log_lvl", default="1", help=l_h)
-    common.add_argument('--version', action='version', version='%(prog)s 1.1.2')
+    common.add_argument('--version', action='version', version='%(prog)s 1.1.3')
 
     return parser
 
