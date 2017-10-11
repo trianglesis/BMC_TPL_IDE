@@ -1064,12 +1064,10 @@ class LocalLogic:
         :return: dict
         """
 
-        local_cond = conditions['local_cond']
-        # print(local_cond)
-
-        dev_vm_path = conditions['dev_vm_path']
+        local_cond     = conditions['local_cond']
+        dev_vm_path    = conditions['dev_vm_path']
         active_pattern = local_cond['file_name']+'.'+local_cond['file_ext']
-        workspace = local_cond['workspace']
+        workspace      = local_cond['workspace']
 
         log.debug("Step 1. Search related tests with pattern: "+str(active_pattern))
 
@@ -1162,3 +1160,4 @@ class LocalLogic:
                     # No need when searching fot test.py:
                     # break
         return file_candidates
+

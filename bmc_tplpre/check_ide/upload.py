@@ -298,82 +298,86 @@ class AddmOperations:
             test_failfast_arg = ' --verbose'
         test_args = test_verbose_arg+test_failfast_arg
 
-        tests_len = len(tests_list)
+        if tests_list:
+            log.info("-==== START TESTS EXECUTION ====-")
+            tests_len = len(tests_list)
+            log.info("Tests related to: "+str(tests_list[0]['pattern']))
+            log.info("All tests len: "+str(tests_len))
 
-        # Run test: 0 of 10 | - should be fixed, but I have no workaround.
-        if progressbar:
-            widgets = [
-                       'Run test: ', progressbar.SimpleProgress(), ' ',
-                       progressbar.Percentage(), ' ',
-                       progressbar.Bar('#'),
-                       progressbar.Timer(), ' ',
-                       progressbar.ETA(), ' ',
-                       # ' Calculated ',
-                       # progressbar.AdaptiveETA(), ' ',
-                       progressbar.AbsoluteETA(),
-                       '.\n']
-            bar = progressbar.ProgressBar(widgets=widgets,
-                                          max_value=tests_len,
-                                          redirect_stdout=True,
-                                          redirect_stderr=True
-                                          )
-        else:
-            log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
-            pass
-
-        log.info("-==== START TESTS EXECUTION ====-")
-
-        # TODO: log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
-        log.info("Tests related to: "+str(tests_list[0]['pattern']))
-        log.info("All tests len: "+str(tests_len))
-
-        for i, test in enumerate(tests_list):
-            """
-            export TKN_MAIN=/usr/tideway/TKU/addm/tkn_main/
-            export TKN_CORE=$TKN_MAIN/tku_patterns/CORE
-            export PYTHONPATH=$PYTHONPATH:$TKN_MAIN/python
-            """
-            i = i + 1
-            log.info("Start test: " + str(test['rem_test_path'])+test_args)
-
-            pre_cmd = ". ~/.bash_profile;"
-
-            wd_cmd = "cd "+test['rem_test_wd']+";"
-
-            cmd_test = "/usr/tideway/bin/python -u "+test['rem_test_path']+test_args
-            cmd = pre_cmd + wd_cmd + cmd_test
-            log.debug("Run: "+str(cmd))
-
-            # Show output and count of running tests and ETAs:
+            # Run test: 0 of 10 | - should be fixed, but I have no workaround.
             if progressbar:
-                bar(range(tests_len))
-                bar.update(i)
-            # Print simple counter:
+                widgets = [
+                           'Run test: ',
+                           progressbar.SimpleProgress(), ' ',
+                           progressbar.Percentage(), ' ',
+                           progressbar.Bar('#'),
+                           progressbar.Timer(), ' ',
+                           progressbar.ETA(), ' ',
+                           # ' Calculated ',
+                           # progressbar.AdaptiveETA(), ' ',
+                           progressbar.AbsoluteETA(),
+                           '.\n']
+                bar = progressbar.ProgressBar(widgets=widgets,
+                                              max_value=tests_len,
+                                              redirect_stdout=True,
+                                              redirect_stderr=True)
             else:
-                log.info("%d test of "+str(tests_len), i)
+                log.debug("Module progressbar2 is not installed, will show progress in usual manner.")
+                pass
 
-            try:
-                _, stdout, stderr = self.ssh_cons.exec_command(cmd)
-                # This pipe is for messages from test_utils and dml...
-                if stdout:
-                    output = stdout.readlines()
-                    raw_out = "".join(output)
-                    log.debug("-==== DETAILED LOG ====-")
-                    sys.stdout.write('\b')
-                    log.debug("\n"+raw_out)
-                # This pipe of for unittest output only:
-                if stderr:
-                    output = stderr.readlines()
-                    raw_out = "".join(output)
-                    sys.stdout.write('\b')
-                    log.info("-==== UNITTEST LOG ====-")
-                    log.info("\n\n"+raw_out)
-            except:
-                # Not raise - see what happen with others:
-                log.error("Test execution command cannot run: "+str(cmd))
-        if progressbar:
-            bar.finish()  # Close bar, do not forget to.
-        log.info("-==== END OF TESTS EXECUTION ====-")
+            # TODO: log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
+            for i, test in enumerate(tests_list):
+                """
+                export TKN_MAIN=/usr/tideway/TKU/addm/tkn_main/
+                export TKN_CORE=$TKN_MAIN/tku_patterns/CORE
+                export PYTHONPATH=$PYTHONPATH:$TKN_MAIN/python
+                """
+                i = i + 1
+                log.info("Start test: " + str(test['rem_test_path'])+test_args)
+
+                pre_cmd = ". ~/.bash_profile;"
+
+                wd_cmd = "cd "+test['rem_test_wd']+";"
+
+                cmd_test = "/usr/tideway/bin/python -u "+test['rem_test_path']+test_args
+                cmd = pre_cmd + wd_cmd + cmd_test
+                log.debug("Run: "+str(cmd))
+
+                # Show output and count of running tests and ETAs:
+                if progressbar:
+                    bar(range(tests_len))
+                    bar.update(i)
+                # Print simple counter:
+                else:
+                    log.info("%d test of "+str(tests_len), i)
+
+                try:
+                    _, stdout, stderr = self.ssh_cons.exec_command(cmd)
+                    # This pipe is for messages from test_utils and dml...
+                    if stdout:
+                        output = stdout.readlines()
+                        raw_out = "".join(output)
+                        log.debug("-==== DETAILED LOG ====-")
+                        sys.stdout.write('\b')
+                        log.debug("\n"+raw_out)
+                    # This pipe of for unittest output only:
+                    if stderr:
+                        output = stderr.readlines()
+                        raw_out = "".join(output)
+                        sys.stdout.write('\b')
+                        log.info("-==== UNITTEST LOG ====-")
+                        log.info("\n\n"+raw_out)
+                except:
+                    # Not raise - see what happen with others:
+                    log.error("Test execution command cannot run: "+str(cmd))
+            if progressbar:
+                bar.finish()  # Close bar, do not forget to.
+            log.info("-==== END OF TESTS EXECUTION ====-")
+
+        else:
+            log.warning("There are no related tests found for current pattern!")
+
+
 
     @staticmethod
     def progress_bar(msg):

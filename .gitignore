@@ -7,3 +7,4 @@ bmc_tplpre/taxonomy/
 bmc_tplpre/DEV_TEST/
 bmc_tplpre/.idea/
 *.pyc
+*.pyc

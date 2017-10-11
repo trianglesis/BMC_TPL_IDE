@@ -1,3 +1,6 @@
+## 1.1.4 2017-10-11
+- Show warning if no related tests found.
+
 ## 1.1.2 2017-09-28
 - Additional fixes for logic;
 - Simplifying function calls;

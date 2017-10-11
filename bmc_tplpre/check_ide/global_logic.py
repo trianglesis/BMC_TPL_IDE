@@ -1186,6 +1186,7 @@ class GlobalLogic:
 
                 if local_tests_path and os.path.exists(local_tests_path):
 
+                    # This should be a list with single test, but it use same exec as related tests.
                     related_tests = []
                     remote_test_wd = test_wd.replace(self.workspace, self.dev_vm_path).replace('\\', '/')
                     remote_test_file = remote_test_wd+'/test.py'
@@ -1199,6 +1200,7 @@ class GlobalLogic:
                     related_tests.append(current_pattern_dict)
                     # print(related_tests)
 
+                    # This should be a list with single test, but it use same exec as related tests.
                     if related_tests:
                         test_executor_f = self.make_test_run(tests_list=related_tests,
                                                              tst_cond=tst_cond)
