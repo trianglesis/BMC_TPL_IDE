@@ -41,6 +41,11 @@ class LocalLogic:
         '8.3': 'tpl16',
         """
         self.tpl_folder_k = {
+                             '1.20': 'tpl120',
+                             '1.19': 'tpl119',
+                             '1.18': 'tpl118',
+                             '1.17': 'tpl117',
+                             '1.16': 'tpl116',
                              '1.15': 'tpl115',
                              '1.14': 'tpl114',
                              '1.13': 'tpl113',
@@ -53,6 +58,12 @@ class LocalLogic:
                              }
 
         self.PRODUCT_VERSIONS = {
+                                 '11.8': 'NoName_11_8',
+                                 '11.7': 'NoName_11_7',
+                                 '11.6': 'NoName_11_6',
+                                 '11.5': 'NoName_11_5',
+                                 '11.4': 'EasterEgg',
+                                 '11.3': 'DoubleDecker',
                                  '11.2': 'CustardCream',
                                  '11.1': 'Bobblehat',
                                  '11.0': 'Aardvark',
@@ -62,7 +73,12 @@ class LocalLogic:
                                  }
 
         self.TPL_VERSIONS = {
-                             'CustardCream':     '1.14',
+                             'NoName_11_8':      '1.20',
+                             'NoName_11_7':      '1.19',
+                             'NoName_11_6':      '1.18',
+                             'NoName_11_5':      '1.17',
+                             'EasterEgg':        '1.16',
+                             'DoubleDecker':     '1.15',
                              'Bobblehat':        '1.13',
                              'Aardvark':         '1.12',
                              'Zythum':           '1.10',

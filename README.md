@@ -14,6 +14,9 @@ This is IDE and automation program for [BMC Discovery (ADDM)](https://discovery.
 
 #### Syntax check ####
 
+#### NOTE: ####
+Syntax check work only for versions: 11.0, 10.2, 10.1, 10.0
+
 NOTE: syntax tests (require 3rd party [module tplint](https://communities.bmc.com/docs/DOC-42313) by Ladkau, Matthias)
 
 To use syntax check functions:

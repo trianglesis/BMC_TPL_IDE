@@ -377,8 +377,6 @@ class AddmOperations:
         else:
             log.warning("There are no related tests found for current pattern!")
 
-
-
     @staticmethod
     def progress_bar(msg):
         """
