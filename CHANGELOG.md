@@ -1,3 +1,6 @@
+## 1.1.5 2018-25-04
+- Added new versions of tpl and ADDM. Also added stubs for future version.
+
 ## 1.1.4 2017-10-11
 - Show warning if no related tests found.
 

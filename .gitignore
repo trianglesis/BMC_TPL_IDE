@@ -5,6 +5,8 @@ bmc_tplpre/check/__pycache__/
 bmc_tplpre/tplint/
 bmc_tplpre/taxonomy/
 bmc_tplpre/DEV_TEST/
-bmc_tplpre/.idea/
 *.pyc
-*.pyc
+.idea/
+bmc_tplpre/TPL_IDE_unittest/__init__.py
+bmc_tplpre/TPL_IDE_unittest/load_tests.py
+bmc_tplpre/TPL_IDE_unittest/test_runner.py
