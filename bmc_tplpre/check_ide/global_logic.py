@@ -458,7 +458,15 @@ class GlobalLogic:
             log.debug("ADDM run tests.")
         # I don't know:
         else:
+            conditional_debug = dict(
+                tpl_folder = self.tpl_folder,
+                scan_hosts = self.scan_hosts,
+                disco_mode = self.disco_mode,
+                ssh = self.ssh,
+                tst_cond = self.tst_cond,
+            )
             log.info("This set of conditional arguments is not supported by my logic, Please read docs.")
+            log.debug("Conditional statuses: %s", conditional_debug)
 
         if upload_scan:
             '''
