@@ -426,7 +426,9 @@ class TPLimports:
 
             for pattern_module in find_importing_modules:
                 # Compile re based on item from [find_importing_modules] -> module SupportingFiles.CDM_Mapping
+                # Add semicolon to not to import files where module can have one word in name
                 module_r = re.compile("{}{}".format(pattern_module, ';'))
+                # log.debug("Searching with re - %s", module_r)
                 # Check opened file with re composed from each [find_importing_modules]
                 check_modules = module_r.findall(read_file)
 
