@@ -364,7 +364,7 @@ class GlobalLogic:
 
         return conditional_functions, conditional_results
 
-# Doing business based on all decisions made:
+# Doing business based on all decisions made:syntax_check_f
     def cond_args(self):
         """
         This section will compose sets of functions to execute.
@@ -407,7 +407,8 @@ class GlobalLogic:
         # This will be re-write if success:
         imports_f                   = False
         preproc_f                   = False
-        syntax_check_f              = False
+        # LOCAL TPL Syntax check now skipped by default!
+        syntax_check_f              = True
         zip_files_f                 = False
         addm_activate_f             = False
         upload_f                    = False
@@ -489,7 +490,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
+            # syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
             addm_working_dir, tests_path = self.addm_dev_cond()
 
             zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_working_dir=addm_working_dir)
@@ -521,7 +522,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
+            # syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
             zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_working_dir  = 'Null')
 
             log.info("Zipped for ADDM: "+str(self.addm_prod) +
@@ -548,7 +549,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
+            # syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
             addm_working_dir, tests_path = self.addm_dev_cond()
 
             zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_working_dir=addm_working_dir)
@@ -580,7 +581,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = '')
+            # syntax_check_f = self.syntax_cond(tpl_version = '')
 
             _local_mode_ = 'There is no ADDM connection, program is running in local mode.'
             addm_zip         = _local_mode_
@@ -599,6 +600,7 @@ class GlobalLogic:
 
         conditional_functions = dict(imports_f       = imports_f,
                                      preproc_f       = preproc_f,
+                                     # LOCAL TPL Syntax check now skipped by default!
                                      syntax_check_f  = syntax_check_f,
                                      zip_files_f     = zip_files_f,
                                      wipe_tku_f      = wipe_tku_f,

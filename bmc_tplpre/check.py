@@ -153,10 +153,12 @@ if __name__ == "__main__":
 
     # Executing syntax checker:
     if callable(conditional_functions['syntax_check_f']):
-        syntax_check_f = conditional_functions['syntax_check_f']
-        if syntax_check_f:
-            log.debug("SYNTAX:\t\tsyntax_check_f")
-            syntax_check_f()
+        print("LOCAL TPL Syntax check now skipped by default!")
+        pass
+        # syntax_check_f = conditional_functions['syntax_check_f']
+        # if syntax_check_f:
+        #     log.debug("SYNTAX:\t\tsyntax_check_f")
+        #     syntax_check_f()
 
     # Executing zipping files (and upload maybe?)
     if callable(conditional_functions['zip_files_f']):

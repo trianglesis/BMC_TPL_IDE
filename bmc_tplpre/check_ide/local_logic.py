@@ -1121,13 +1121,14 @@ class LocalLogic:
                                               dev_vm_path=dev_vm_path,
                                               workspace=workspace)
         related_tests = []
+        pattern_r = re.compile(active_pattern)
         for test in test_files:
             file = test['test_file']
             local_tests_path = file
             with open(file, "r", encoding="utf8") as f:
                 read_file = f.read()
 
-                pattern_r = re.compile(active_pattern)
+                # pattern_r = re.compile(active_pattern)
                 check_modules = pattern_r.findall(read_file)
 
                 # When module name were found in opened file add each to list and later find them:
