@@ -65,7 +65,7 @@ def parse_args_f():
                             TPLPreprocessor output result ignoring ADDM tpl version check_ide procedure. 
                             Use when you want upload older or newer tpl on ADDM If file is not a .tplpre
                             - this option will be ignored. '''
-    # tkn_h              = ''' TKN_CORE env for TPLpreprocerssor only'''
+    tkn_h              = ''' TKN_CORE env for TPLpreprocerssor only'''
     full_path_h        = '''Path to current edited or processed file. '''
     u_h                = '''Your ADDM user - root or tideway '''
     p_h                = '''Password for ADDM user '''
@@ -86,7 +86,7 @@ def parse_args_f():
     developer.add_argument("-test_verbose", action="store_true", help=test_verbose_h)
     developer.add_argument("-test_failfast", action="store_true", help=test_failfast_h)
     developer.add_argument("-tpl", type=str, action='store', dest="version_tpl", default="", help=tpl_h)
-    # developer.add_argument("-tkn_core", type=str, action='store', dest="tkn_core", default="", help=tkn_h)
+    developer.add_argument("-tkn_core", type=str, action='store', dest="tkn_core", default="", help=tkn_h)
 
     # COMMON ARGS - works in most usual cases.
     common.add_argument("-full_path", type=str, action='store', dest="full_path", default="", help=full_path_h)
