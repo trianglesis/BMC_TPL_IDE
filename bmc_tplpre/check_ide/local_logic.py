@@ -329,6 +329,8 @@ class LocalLogic:
         STORAGE_t                = ''
         SYSTEM_t                 = ''
         tkn_sandbox_t            = ''
+        tkn_core                 = ''
+
 
         if os.path.exists(full_file_path):
             # log.debug("-full_file_path is: " + full_file_path)

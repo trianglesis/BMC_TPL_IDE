@@ -1,3 +1,6 @@
+## 1.2.5 2018-25-04
+- TPLint no longer supported. Option now will skip.
+
 ## 1.1.5 2018-25-04
 - Added new versions of tpl and ADDM. Also added stubs for future version.
 

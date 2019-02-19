@@ -122,47 +122,36 @@ class AddmOperations:
         log.info("Installing and activating modules.")
 
         # Lines will be collected in list:
-        tw_pattern_management = "/usr/tideway/bin/tw_pattern_management -u " + system_user + " -p " + system_password
-        install_activ_progress = " --show-progress " + " --install-activate "+str(zip_path)
+        tw_pattern_management = "/usr/tideway/bin/tw_pattern_management -u {} -p {}".format(system_user, system_password)
+        install_activ_progress = " --show-progress --install-activate {}".format(zip_path)
+        install_tku = '{}{}'.format(tw_pattern_management,install_activ_progress)
 
         try:
             self.ssh_cons.exec_command("chmod 777 "+str(zip_path))
             try:
-                _, stdout, stderr = self.ssh_cons.exec_command(tw_pattern_management + install_activ_progress)
-                # Show progress with fancy progressbar:
-                msg = ' Activating knowledge update. '
-                baring = self.progress_bar(msg)
-
-                # Show progress with fancy progressbar:
+                _, stdout, stderr = self.ssh_cons.exec_command(install_tku)
                 while stdout is not None:
-                    if progressbar:
-                        baring.update()
-                    else:
-                        sys.stdout.write(next(baring))
-                        sys.stdout.flush()
-                        sys.stdout.write('\b')  # Working fine in win CMD but not in PyCharm.
-
                     out = stdout.readlines()
+                    err = stderr.readlines()
                     raw_out = "".join(out)
+                    raw_err = "".join(err)
                     result_out.append(raw_out.rstrip('\r'))
+                    result_out.append(raw_err.rstrip('\r'))
                     if not out:
                         break
-                    time.sleep(0.1)
+                    time.sleep(1)
 
-                # Final result:
                 result = ''.join(result_out)
+                # log.debug("tku install cmd: '%s'", install_tku)
+                # log.error("result all: %s", result)
                 if result:
                     item = self.upload_num_item.findall(result)
                     if self.upload_activated_check.findall(result):
-                        if progressbar:
-                            baring.finish()
                         uploaded_activated = True
                         log.info("Upload activating: " + "PASSED!")
                         log.info("Upload successfully. Module: " + str(module_name) +
                                  " as "+str(item[0]))
                     else:
-                        if progressbar:
-                            baring.finish()
                         log.critical("Pattern activation run with errors or warnings!")
                         log.critical("Detailed description from ADDM: \n"+result)
             except:
