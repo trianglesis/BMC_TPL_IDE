@@ -282,9 +282,9 @@ class AddmOperations:
         test_verbose_arg = ''
         test_failfast_arg = ''
         if tst_cond['test_verbose']:
-            test_verbose_arg = ' --failfast'
+            test_verbose_arg = ' --verbose'
         if tst_cond['test_failfast']:
-            test_failfast_arg = ' --verbose'
+            test_failfast_arg = ' --failfast'
         test_args = test_verbose_arg+test_failfast_arg
 
         if tests_list:
@@ -316,15 +316,12 @@ class AddmOperations:
 
             # TODO: log.debug("Run test for: PLACE HERE NAME OF FOLDER WE TESTING NOW.")
             for i, test in enumerate(tests_list):
-                """
-                export TKN_MAIN=/usr/tideway/TKU/addm/tkn_main/
-                export TKN_CORE=$TKN_MAIN/tku_patterns/CORE
-                export PYTHONPATH=$PYTHONPATH:$TKN_MAIN/python
-                """
+                # env_prep = """TKN_MAIN='/usr/tideway/TKU/addm/tkn_main' && TKN_CORE='/usr/tideway/tku_patterns/CORE' && PYTHONPATH='$PYTHONPATH:/usr/tideway/python' && """
                 i = i + 1
                 log.info("Start test: " + str(test['rem_test_path'])+test_args)
 
                 pre_cmd = ". ~/.bash_profile;"
+                # pre_cmd = env_prep
 
                 wd_cmd = "cd "+test['rem_test_wd']+";"
 
