@@ -126,12 +126,13 @@ class Preproc:
                             "Check paths, user rights and logs. Try to execute preproc from cmd.")
         return tpl_preproc
 
-    def tpl_preprocessor(self, workspace, input_path, output_path, mode):
+    def tpl_preprocessor(self, workspace, input_path, output_path, mode, tkn_core):
         """
         Run TPLPreprocessor in two scenarios:
         1. If IMPORT or RECURSIVE_IMPORT - then run in folder passed as arg.
         2. If NOT - run only on current file.
 
+        :param tkn_core:
         :param workspace: str
         :param input_path:  What to preproc file\folder
         :param output_path: Where to output pattern folder or imports folder
@@ -140,10 +141,16 @@ class Preproc:
         """
         tpl_preproc = False
 
+        tkn_core_env = os.environ.get("TKN_CORE")
+        if not tkn_core_env:
+            tkn_core_env = os.environ['TKN_CORE'] = tkn_core
+        log.debug("ENV tkn_core %s", tkn_core_env)
+
         python_v = "C:\\Python27\\python.exe"
         _, t_pre = self.find_tplpreprocessor(workspace)
-        pre_cmd = "cmd /c " + python_v + " " + t_pre + " -q "
-        output_arg = ' -o "'+output_path+'"'
+
+        pre_cmd = '{py27} -u "{preproc}" {quiet}'.format(py27=python_v, preproc=t_pre, quiet='-q')
+        output_arg = '-o "{output}" '.format(output=output_path)
 
         if mode == "usual_imports":
             log.debug("python2.7 : TPLPreprocessor file: " + input_path)
@@ -151,8 +158,9 @@ class Preproc:
 
             if os.path.isfile(input_path) and input_path.endswith('.tplpre'):
                 # Single file and output with imports:
-                input_arg = ' -f "'+input_path+'"'
-                cmd = pre_cmd+output_arg+input_arg
+                input_arg = '{input_arg} "{input_path}"'.format(input_arg='-f', input_path=input_path)
+                cmd = '{preprocessor} {output} {input}'.format(preprocessor=pre_cmd, output=output_arg, input=input_arg)
+                log.debug("RUN Preprocessor '%s'", cmd)
                 tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
                 raise Exception("This is not a tplpre file. TPLPreprocessor won't run! - " + str(input_path))
@@ -164,8 +172,9 @@ class Preproc:
 
             if os.path.isdir(input_path) and input_path.endswith('imports'):
                 # All files in active or imports folder:
-                input_arg = ' -d "'+input_path+'"'
-                cmd = pre_cmd+input_arg
+                input_arg = '{input_arg} "{input_path}"'.format(input_arg='-d', input_path=input_path)
+                cmd = '{preprocessor} {input}'.format(preprocessor=pre_cmd, input=input_arg)
+                log.debug("RUN Preprocessor '%s'", cmd)
                 tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
                 raise Exception("This is not an 'imports' folder. TPLPreprocessor won't run! - " + str(input_path))
@@ -177,8 +186,9 @@ class Preproc:
 
             if os.path.isfile(input_path) and input_path.endswith('.tplpre'):
                 # Only active file in active folder.
-                input_arg = ' -f "'+input_path+'"'
-                cmd = pre_cmd+input_arg
+                input_arg = '{input_arg} "{input_path}"'.format(input_arg='-f', input_path=input_path)
+                cmd = '{preprocessor} {input}'.format(preprocessor=pre_cmd, input=input_arg)
+                log.debug("RUN Preprocessor '%s'", cmd)
                 tpl_preproc = self.run_preproc_cmd(cmd, output_path)
             else:
                 raise Exception("This is not a tplpre file. TPLPreprocessor won't run! - " + str(input_path))

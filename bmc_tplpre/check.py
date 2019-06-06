@@ -65,6 +65,7 @@ def parse_args_f():
                             TPLPreprocessor output result ignoring ADDM tpl version check_ide procedure. 
                             Use when you want upload older or newer tpl on ADDM If file is not a .tplpre
                             - this option will be ignored. '''
+    tkn_h              = ''' TKN_CORE env for TPLpreprocerssor only'''
     full_path_h        = '''Path to current edited or processed file. '''
     u_h                = '''Your ADDM user - root or tideway '''
     p_h                = '''Password for ADDM user '''
@@ -85,6 +86,7 @@ def parse_args_f():
     developer.add_argument("-test_verbose", action="store_true", help=test_verbose_h)
     developer.add_argument("-test_failfast", action="store_true", help=test_failfast_h)
     developer.add_argument("-tpl", type=str, action='store', dest="version_tpl", default="", help=tpl_h)
+    developer.add_argument("-tkn_core", type=str, action='store', dest="tkn_core", default="", help=tkn_h)
 
     # COMMON ARGS - works in most usual cases.
     common.add_argument("-full_path", type=str, action='store', dest="full_path", default="", help=full_path_h)
@@ -153,10 +155,12 @@ if __name__ == "__main__":
 
     # Executing syntax checker:
     if callable(conditional_functions['syntax_check_f']):
-        syntax_check_f = conditional_functions['syntax_check_f']
-        if syntax_check_f:
-            log.debug("SYNTAX:\t\tsyntax_check_f")
-            syntax_check_f()
+        print("LOCAL TPL Syntax check now skipped by default!")
+        pass
+        # syntax_check_f = conditional_functions['syntax_check_f']
+        # if syntax_check_f:
+        #     log.debug("SYNTAX:\t\tsyntax_check_f")
+        #     syntax_check_f()
 
     # Executing zipping files (and upload maybe?)
     if callable(conditional_functions['zip_files_f']):

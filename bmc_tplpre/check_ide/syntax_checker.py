@@ -25,7 +25,7 @@ except ImportError:
 log = logging.getLogger("check_ide.logger")
 
 
-class SyntaxCheck:
+class _SyntaxCheck:
     """
         1. Use working dir and tpl ver and run syntax check_ide (input)
         2. Save syntax check_ide result

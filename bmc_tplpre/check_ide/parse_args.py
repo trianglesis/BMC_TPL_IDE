@@ -122,6 +122,7 @@ class ArgsParse:
 
             tku_dev_path = '/usr/tideway/TKU/'
             if not dev_vm_check:
+                log.info("Not found any mounted shares to use as path to pattern development. Use custom.")
                 '''
                    This path should be the same for all DEV VMs to be sure the logic will find it on expected place.
                    If this path is changing - it should be changed everywhere for all users who use this program.

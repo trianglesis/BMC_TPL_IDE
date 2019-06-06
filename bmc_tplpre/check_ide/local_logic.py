@@ -214,6 +214,7 @@ class LocalLogic:
         # HGFS ADDM folder shares check_ide
         self.hgfs_path_re = re.compile("(?P<tkn_path>\S+)/addm/tkn_main/tku_patterns/"
                                        "(?:CORE|DBDETAILS|MANAGEMENT_CONTROLLERS|MIDDLEWAREDETAILS)")
+        self.alter_shares_re = re.compile(r"/usr/tideway/TKU")
         self.vm_tkn_path_re = re.compile("(?P<tkn_path>\S+)/addm/tkn_main/tku_patterns/")
 
     @staticmethod
@@ -328,6 +329,9 @@ class LocalLogic:
         STORAGE_t                = ''
         SYSTEM_t                 = ''
         tkn_sandbox_t            = ''
+        tkn_core                 = ''
+        EXTRAS_t = ''
+        NETWORK_t = ''
 
         if os.path.exists(full_file_path):
             # log.debug("-full_file_path is: " + full_file_path)
@@ -360,10 +364,12 @@ class LocalLogic:
                     BLADE_ENCLOSURE_t        = tku_patterns_t+os.sep+'BLADE_ENCLOSURE'
                     CLOUD_t                  = tku_patterns_t+os.sep+'CLOUD'
                     CORE_t                   = tku_patterns_t+os.sep+'CORE'
+                    EXTRAS_t                 = tku_patterns_t+os.sep+'EXTRAS_t'
                     DBDETAILS_t              = tku_patterns_t+os.sep+'DBDETAILS'
                     LOAD_BALANCER_t          = tku_patterns_t+os.sep+'LOAD_BALANCER'
                     MANAGEMENT_CONTROLLERS_t = tku_patterns_t+os.sep+'MANAGEMENT_CONTROLLERS'
                     MIDDLEWAREDETAILS_t      = tku_patterns_t+os.sep+'MIDDLEWAREDETAILS'
+                    NETWORK_t                = tku_patterns_t+os.sep+'NETWORK'
                     STORAGE_t                = tku_patterns_t+os.sep+'STORAGE'
                     SYSTEM_t                 = tku_patterns_t+os.sep+'SYSTEM'
 
@@ -392,10 +398,12 @@ class LocalLogic:
                                          BLADE_ENCLOSURE_t        = BLADE_ENCLOSURE_t,
                                          CLOUD_t                  = CLOUD_t,
                                          CORE_t                   = CORE_t,
+                                         EXTRAS_t                 = EXTRAS_t,
                                          DBDETAILS_t              = DBDETAILS_t,
                                          LOAD_BALANCER_t          = LOAD_BALANCER_t,
                                          MANAGEMENT_CONTROLLERS_t = MANAGEMENT_CONTROLLERS_t,
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
+                                         NETWORK_t      = NETWORK_t,
                                          STORAGE_t                = STORAGE_t,
                                          SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t,
@@ -435,10 +443,12 @@ class LocalLogic:
                                          BLADE_ENCLOSURE_t        = BLADE_ENCLOSURE_t,
                                          CLOUD_t                  = CLOUD_t,
                                          CORE_t                   = CORE_t,
+                                         EXTRAS_t                 = EXTRAS_t,
                                          DBDETAILS_t              = DBDETAILS_t,
                                          LOAD_BALANCER_t          = LOAD_BALANCER_t,
                                          MANAGEMENT_CONTROLLERS_t = MANAGEMENT_CONTROLLERS_t,
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
+                                         NETWORK_t                = NETWORK_t,
                                          STORAGE_t                = STORAGE_t,
                                          SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t,
@@ -465,12 +475,13 @@ class LocalLogic:
                                          BLADE_ENCLOSURE_t        = BLADE_ENCLOSURE_t,
                                          CLOUD_t                  = CLOUD_t,
                                          CORE_t                   = CORE_t,
+                                         EXTRAS_t                 = EXTRAS_t,
                                          DBDETAILS_t              = DBDETAILS_t,
                                          LOAD_BALANCER_t          = LOAD_BALANCER_t,
                                          MANAGEMENT_CONTROLLERS_t = MANAGEMENT_CONTROLLERS_t,
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
+                                         NETWORK_t                = NETWORK_t,
                                          STORAGE_t                = STORAGE_t,
-                                         SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
                                         )
                         log.debug("Arguments from file path: " + str(args_dict))
@@ -499,12 +510,13 @@ class LocalLogic:
                                          BLADE_ENCLOSURE_t        = BLADE_ENCLOSURE_t,
                                          CLOUD_t                  = CLOUD_t,
                                          CORE_t                   = CORE_t,
+                                         EXTRAS_t                 = EXTRAS_t,
                                          DBDETAILS_t              = DBDETAILS_t,
                                          LOAD_BALANCER_t          = LOAD_BALANCER_t,
                                          MANAGEMENT_CONTROLLERS_t = MANAGEMENT_CONTROLLERS_t,
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
+                                         NETWORK_t                = NETWORK_t,
                                          STORAGE_t                = STORAGE_t,
-                                         SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
                                         )
                         log.debug("Arguments from file path: " + str(args_dict))
@@ -532,12 +544,13 @@ class LocalLogic:
                                          BLADE_ENCLOSURE_t        = BLADE_ENCLOSURE_t,
                                          CLOUD_t                  = CLOUD_t,
                                          CORE_t                   = CORE_t,
+                                         EXTRAS_t                 = EXTRAS_t,
                                          DBDETAILS_t              = DBDETAILS_t,
                                          LOAD_BALANCER_t          = LOAD_BALANCER_t,
                                          MANAGEMENT_CONTROLLERS_t = MANAGEMENT_CONTROLLERS_t,
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
+                                         NETWORK_t                = NETWORK_t,
                                          STORAGE_t                = STORAGE_t,
-                                         SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
                                         )
                         log.debug("Arguments from file path: " + str(args_dict))
@@ -753,9 +766,11 @@ class LocalLogic:
                         CLOUD_t                  = tku_patterns_t+os.sep+'CLOUD'
                         CORE_t                   = tku_patterns_t+os.sep+'CORE'
                         DBDETAILS_t              = tku_patterns_t+os.sep+'DBDETAILS'
+                        EXTRAS_t                 = tku_patterns_t+os.sep+'EXTRAS'
                         LOAD_BALANCER_t          = tku_patterns_t+os.sep+'LOAD_BALANCER'
                         MANAGEMENT_CONTROLLERS_t = tku_patterns_t+os.sep+'MANAGEMENT_CONTROLLERS'
                         MIDDLEWAREDETAILS_t      = tku_patterns_t+os.sep+'MIDDLEWAREDETAILS'
+                        NETWORK_t                = tku_patterns_t+os.sep+'NETWORK'
                         STORAGE_t                = tku_patterns_t+os.sep+'STORAGE'
                         SYSTEM_t                 = tku_patterns_t+os.sep+'SYSTEM'
                         # Sandbox for extra functionality:
@@ -779,11 +794,13 @@ class LocalLogic:
                                          buildscripts_t           = buildscripts_t,
                                          BLADE_ENCLOSURE_t        = BLADE_ENCLOSURE_t,
                                          CLOUD_t                  = CLOUD_t,
+                                         EXTRAS_t                 = EXTRAS_t,
                                          CORE_t                   = CORE_t,
                                          DBDETAILS_t              = DBDETAILS_t,
                                          LOAD_BALANCER_t          = LOAD_BALANCER_t,
                                          MANAGEMENT_CONTROLLERS_t = MANAGEMENT_CONTROLLERS_t,
                                          MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
+                                         NETWORK_t                = NETWORK_t,
                                          STORAGE_t                = STORAGE_t,
                                          SYSTEM_t                 = SYSTEM_t,
                                          tkn_sandbox_t            = tkn_sandbox_t
@@ -818,11 +835,13 @@ class LocalLogic:
                                              buildscripts_t           = buildscripts_t,
                                              BLADE_ENCLOSURE_t        = BLADE_ENCLOSURE_t,
                                              CLOUD_t                  = CLOUD_t,
+                                             EXTRAS_t                 = EXTRAS_t,
                                              CORE_t                   = CORE_t,
                                              DBDETAILS_t              = DBDETAILS_t,
                                              LOAD_BALANCER_t          = LOAD_BALANCER_t,
                                              MANAGEMENT_CONTROLLERS_t = MANAGEMENT_CONTROLLERS_t,
                                              MIDDLEWAREDETAILS_t      = MIDDLEWAREDETAILS_t,
+                                             NETWORK_t                = NETWORK_t,
                                              STORAGE_t                = STORAGE_t,
                                              SYSTEM_t                 = SYSTEM_t,
                                              tkn_sandbox_t            = tkn_sandbox_t
@@ -955,6 +974,14 @@ class LocalLogic:
         .host:/tku_patterns/SYSTEM/                 88G 48G 41G 54% /usr/tideway/TKU/addm/tkn_main/tku_patterns/SYSTEM
         .host:/DML/                                 88G 48G 41G 54% /usr/tideway/TKU/DML
 
+        Alternative:
+        tmpfs           380M     0  380M   0% /run/user/0
+        testutils        88G   36G   53G  41% /usr/tideway/python/testutils
+        utils            88G   36G   53G  41% /usr/tideway/utils
+        perforce         88G   36G   53G  41% /usr/tideway/TKU
+        tmpfs           380M     0  380M   0% /run/user/1000
+
+
         :return:
         """
 
@@ -968,11 +995,19 @@ class LocalLogic:
                 for line in output:
                     command_output_parse = self.hgfs_path_re.search(line)
                     if command_output_parse:
+                        # Search path to shared folder in all output:
                         path_search = self.vm_tkn_path_re.match(command_output_parse.group(0))
                         if path_search:
                             vm_dev_path = path_search.group('tkn_path')
+                            log.debug("<=SHARES=> Addm tkn_path found in VM Ware shares: %s", vm_dev_path)
                             # Stop after any first match is found.
                             break
+                    else:
+                        alter_shares_check = self.alter_shares_re.findall(line)
+                        if alter_shares_check:
+                            # This is probably just anu other share mounted, we don't care if path is ok for this:
+                            vm_dev_path = '/usr/tideway/TKU'
+                            log.debug("<=SHARES=> Addm tkn_path found in other shares: %s", vm_dev_path)
             if stderr:
                 err = stderr.readlines()
                 if err:
@@ -1104,13 +1139,14 @@ class LocalLogic:
                                               dev_vm_path=dev_vm_path,
                                               workspace=workspace)
         related_tests = []
+        pattern_r = re.compile(active_pattern)
         for test in test_files:
             file = test['test_file']
             local_tests_path = file
             with open(file, "r", encoding="utf8") as f:
                 read_file = f.read()
 
-                pattern_r = re.compile(active_pattern)
+                # pattern_r = re.compile(active_pattern)
                 check_modules = pattern_r.findall(read_file)
 
                 # When module name were found in opened file add each to list and later find them:

@@ -11,9 +11,11 @@ from check_ide.preproc import Preproc
 from check_ide.imports import TPLimports
 from check_ide.test_queries import TestRead
 from check_ide.upload import AddmOperations
-from check_ide.syntax_checker import SyntaxCheck
 from check_ide.local_logic import LocalLogic
 from check_ide.scan import AddmScan
+
+# Deprecated:
+# from check_ide.syntax_checker import SyntaxCheck
 # import json
 # from pprint import pformat
 
@@ -55,6 +57,7 @@ class GlobalLogic:
         self.dev_vm_path     = ''
         self.system_user     = ''
         self.system_password = ''
+        self.tkn_core        = ''
 
         # IMPORTS ARGS:
         self.recursive_imports = ''
@@ -71,6 +74,9 @@ class GlobalLogic:
         # Get all available arguments in three sets based on its type:
         self.full_path_args, self.oper_args, self.addm_args_set = self.check_args_set(known_args=known_args,
                                                                                       extra_args=extra_args)
+        log.debug("full_path_args: %s", self.full_path_args)
+        log.debug("oper_args: %s", self.oper_args)
+        log.debug("addm_args_set: %s", self.addm_args_set)
 
         # Check args in init module to further assign on function bodies:
         # FULL PATH ARGS:
@@ -145,6 +151,9 @@ class GlobalLogic:
             self.patt_file_name   = self.full_path_args['file_name']
             self.patt_folder_name = self.full_path_args['pattern_folder']
             self.env_cond         = self.full_path_args['env_cond']
+            self.tkn_core         = self.full_path_args['CORE_t']
+
+            log.debug("self.tkn_core %s", self.tkn_core)
 
             if not self.working_dir:
                 log.error("File working dir is not extracted - I cannot proceed any function.")
@@ -187,6 +196,7 @@ class GlobalLogic:
                 self.disco_mode      = self.addm_args_set['disco_mode']
                 self.system_user     = self.addm_args_set['system_user']
                 self.system_password = self.addm_args_set['system_password']
+
                 self.addm_ver        = self.addm_args_set['addm_ver']
                 self.dev_vm_path     = self.addm_args_set['dev_vm_path']
                 self.dev_vm_check    = self.addm_args_set['dev_vm_check']
@@ -345,7 +355,7 @@ class GlobalLogic:
             "import_patterns": "<function GlobalLogic.make_imports.<locals>.importer at 0x00000000036662F0>"
         },
         "addm_activate_f": "<function GlobalLogic.make_activate_zip.<locals>.activate at 0x000000000395FF28>",
-        "syntax_check_f": "<function GlobalLogic.make_syntax_check.<locals>.syntax_check at 0x000000000395FBF8>",
+        "syntax_check_f": "<function GlobalLogic._make_syntax_check.<locals>.syntax_check at 0x000000000395FBF8>",
         "upload_f": false
         }
 
@@ -364,7 +374,7 @@ class GlobalLogic:
 
         return conditional_functions, conditional_results
 
-# Doing business based on all decisions made:
+# Doing business based on all decisions made:syntax_check_f
     def cond_args(self):
         """
         This section will compose sets of functions to execute.
@@ -407,7 +417,8 @@ class GlobalLogic:
         # This will be re-write if success:
         imports_f                   = False
         preproc_f                   = False
-        syntax_check_f              = False
+        # LOCAL TPL Syntax check now skipped by default!
+        syntax_check_f              = True
         zip_files_f                 = False
         addm_activate_f             = False
         upload_f                    = False
@@ -458,7 +469,15 @@ class GlobalLogic:
             log.debug("ADDM run tests.")
         # I don't know:
         else:
+            conditional_debug = dict(
+                tpl_folder = self.tpl_folder,
+                scan_hosts = self.scan_hosts,
+                disco_mode = self.disco_mode,
+                ssh = self.ssh,
+                tst_cond = self.tst_cond,
+            )
             log.info("This set of conditional arguments is not supported by my logic, Please read docs.")
+            log.debug("Conditional statuses: %s", conditional_debug)
 
         if upload_scan:
             '''
@@ -481,7 +500,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
+            # syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
             addm_working_dir, tests_path = self.addm_dev_cond()
 
             zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_working_dir=addm_working_dir)
@@ -513,7 +532,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
+            # syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
             zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_working_dir  = 'Null')
 
             log.info("Zipped for ADDM: "+str(self.addm_prod) +
@@ -540,7 +559,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
+            # syntax_check_f = self.syntax_cond(tpl_version = self.addm_ver)
             addm_working_dir, tests_path = self.addm_dev_cond()
 
             zip_files_f, addm_zip, local_zip = self.pattern_path_cond(addm_working_dir=addm_working_dir)
@@ -572,7 +591,7 @@ class GlobalLogic:
 
             imports_f = self.imports_cond()
             preproc_f = self.preproc_cond()
-            syntax_check_f = self.syntax_cond(tpl_version = '')
+            # syntax_check_f = self.syntax_cond(tpl_version = '')
 
             _local_mode_ = 'There is no ADDM connection, program is running in local mode.'
             addm_zip         = _local_mode_
@@ -591,6 +610,7 @@ class GlobalLogic:
 
         conditional_functions = dict(imports_f       = imports_f,
                                      preproc_f       = preproc_f,
+                                     # LOCAL TPL Syntax check now skipped by default!
                                      syntax_check_f  = syntax_check_f,
                                      zip_files_f     = zip_files_f,
                                      wipe_tku_f      = wipe_tku_f,
@@ -604,7 +624,6 @@ class GlobalLogic:
                                    addm_working_dir = addm_working_dir)
 
         return conditional_functions, conditional_results
-
 
 # Functions to make decisions based on options and create closures.
     def imports_cond(self):
@@ -734,7 +753,8 @@ class GlobalLogic:
                     preproc_cond_f = self.make_preproc(workspace   = self.workspace,
                                                        input_path  = self.full_path,
                                                        output_path = self.working_dir,
-                                                       mode        = "usual_imports")
+                                                       mode        = "usual_imports",
+                                                       tkn_core    = self.tkn_core)
                     return preproc_cond_f
 
                 # MY IMPORTS TPLPreproc on 'imports':
@@ -748,7 +768,8 @@ class GlobalLogic:
                     preproc_cond_f = self.make_preproc(workspace   = self.workspace,
                                                        input_path  = self.working_dir+os.sep+"imports",
                                                        output_path = self.working_dir+os.sep+"imports",
-                                                       mode        = "recursive_imports")
+                                                       mode        = "recursive_imports",
+                                                       tkn_core    = self.tkn_core)
                     return preproc_cond_f
 
                 # NOTHING:
@@ -764,7 +785,8 @@ class GlobalLogic:
                 preproc_cond_f = self.make_preproc(workspace   = self.workspace,
                                                    input_path  = self.full_path,
                                                    output_path = self.working_dir,
-                                                   mode        = "solo_mode")
+                                                   mode        = "solo_mode",
+                                                   tkn_core    = self.tkn_core)
 
                 return preproc_cond_f
 
@@ -809,9 +831,10 @@ class GlobalLogic:
                     - If no addm version - 
                     it will use empty string as arg and run syntax check_ide for all supported versions.
                 """
-                log.info("Syntax check_ide TPLPreprocessor result.")
-                log.debug("Syntax check_ide will run on tpl folders after usual TPLPreproc output. (usual_imports)")
-                syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
+                log.info("TPL Syntax local check no longer supported. skipping.")
+                # log.info("Syntax check_ide TPLPreprocessor result.")
+                # log.debug("Syntax check_ide will run on tpl folders after usual TPLPreproc output. (usual_imports)")
+                # syntax_check_cond_f = self._make_syntax_check(self.working_dir, disco_ver=tpl_version)
 
             # Preproc will run on all files from folder 'imports'
             elif self.recursive_imports or self.read_test:
@@ -820,10 +843,11 @@ class GlobalLogic:
                     - If no addm version - 
                     it will use empty string as arg and run syntax check_ide for all supported versions.
                 """
-                log.info("Syntax check_ide on imports.")
-                log.debug("Syntax check_ide will run on imports folder after my importing logic. "
-                          "(recursive_imports or read_test)")
-                syntax_check_cond_f = self.make_syntax_check(self.working_dir+os.sep+"imports", disco_ver=tpl_version)
+                log.info("TPL Syntax local check no longer supported. skipping.")
+                # log.info("Syntax check_ide on imports.")
+                # log.debug("Syntax check_ide will run on imports folder after my importing logic. "
+                #           "(recursive_imports or read_test)")
+                # syntax_check_cond_f = self._make_syntax_check(self.working_dir+os.sep+"imports", disco_ver=tpl_version)
 
             else:
                 log.debug("This mode is not operational: "+str(self.import_cond))
@@ -835,10 +859,11 @@ class GlobalLogic:
                 - In this condition syntax check_ide will hope that imports are already in folder after previous runs.
             """
             if self.env_cond == 'developer_tplpre' or self.env_cond == 'developer_tpl':
-                log.info("1/1 Syntax check_ide solo file.")
-                log.debug("1/2 Imports was already created just checking syntax for active pattern. "
-                          "(not read_test not recursive_imports not usual_imports)")
-                syntax_check_cond_f = self.make_syntax_check(self.working_dir, disco_ver=tpl_version)
+                log.info("TPL Syntax local check no longer supported. skipping.")
+                # log.info("1/1 Syntax check_ide solo file.")
+                # log.debug("1/2 Imports was already created just checking syntax for active pattern. "
+                #           "(not read_test not recursive_imports not usual_imports)")
+                # syntax_check_cond_f = self._make_syntax_check(self.working_dir, disco_ver=tpl_version)
 
             elif self.env_cond == 'customer_tku':
 
@@ -1229,7 +1254,6 @@ class GlobalLogic:
         else:
             log.debug("No test run, tst_cond = False.")
 
-
 # Functions to create closures for all related options:
 
     def make_test_read_query(self):
@@ -1263,7 +1287,7 @@ class GlobalLogic:
         return importer
 
     @staticmethod
-    def make_preproc(workspace, input_path, output_path, mode):
+    def make_preproc(workspace, input_path, output_path, mode, tkn_core):
         """
         Closure for preproc function.
 
@@ -1277,11 +1301,11 @@ class GlobalLogic:
 
         def pre_processing():
             preproc = Preproc()
-            preproc.tpl_preprocessor(workspace, input_path, output_path, mode)
+            preproc.tpl_preprocessor(workspace, input_path, output_path, mode, tkn_core)
         return pre_processing
 
     @staticmethod
-    def make_syntax_check(working_dir, disco_ver):
+    def _make_syntax_check(working_dir, disco_ver):
         """
         Closure for syntax check_ide function.
 
@@ -1294,12 +1318,14 @@ class GlobalLogic:
         :return: func - syntax check_ide with args in it.
         """
 
-        def syntax_check():
-            syntax = SyntaxCheck()
-            if_check = syntax.syntax_check(working_dir, disco_ver)
-            return if_check
+        log.info("TPL Syntax local check no longer supported. skipping.")
 
-        return syntax_check
+        def _syntax_check():
+            # syntax = SyntaxCheck()
+            # if_check = syntax.syntax_check(working_dir, disco_ver)
+            return True
+
+        return _syntax_check
 
     @staticmethod
     def make_zip(path, module_name, mode_single=None):
